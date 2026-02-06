@@ -1,169 +1,107 @@
 === GEOMETRIC BLUEPRINT - COORDINATES ===
 
-Here is the Geometric Blueprint generated from the provided Solution JSON.
+**DIMENSION: 3D**
+
+### Part 1: Geometric Context from Question
+
+#### 1. QUESTION OBJECTIVE
+To determine the slant height of a square pyramid with base side length 6 cm and vertical height 8 cm, specifically the distance from the apex $P$ to the midpoint $M$ of one of the base edges.
+
+#### 2. GIVEN ELEMENTS
+*   **Given Lengths:** Base side length = 6 cm, Vertical height ($h$) = 8 cm.
+*   **Given Properties:** Square pyramid; Apex $P$ is directly above the center of the base.
+*   **Target:** Slant height $PM$, where $M$ is the midpoint of a base edge.
+
+#### 3. ALL GEOMETRIC ELEMENTS
+*   **Points:** 
+    *   $O$: Center of the square base.
+    *   $A, B, C, D$: Vertices of the square base.
+    *   $P$: Apex of the pyramid.
+    *   $M$: Midpoint of base edge $AD$.
+*   **Lines:**
+    *   Base edges: $AB, BC, CD, DA$.
+    *   Lateral edges: $PA, PB, PC, PD$.
+    *   Vertical height: $PO$.
+    *   Slant height: $PM$.
+    *   Apothem of base: $OM$.
+*   **Faces:**
+    *   Base: Square $ABCD$.
+    *   Lateral faces: Triangles $PAB, PBC, PCD, PDA$.
 
 ---
-## **Geometric Blueprint for Subpart (a)**
 
-### **Part 1: Geometric Context from Solution JSON**
+### Part 2: Coordinate System and Scale Definition (Calculated)
 
-#### **1. SUBPART OBJECTIVE (EXTRACTED)**
+#### 1. ORIGIN PLACEMENT
+The origin $(0, 0, 0)$ is placed at the center of the square base ($O$).
 
-*   To find the relationship between angle 'a' (angle QPR) and angle 'b' (angle QOR) in the quadrilateral OQPR, formed by a circle with center O and two tangents PQ and PR from an external point P.
+#### 2. AXES ALIGNMENT
+*   **X-axis:** Parallel to base edges $AB$ and $DC$.
+*   **Y-axis:** Parallel to base edges $BC$ and $AD$.
+*   **Z-axis:** Vertical, passing through the apex $P$.
 
-#### **2. GIVEN ELEMENTS (FROM JSON)**
+#### 3. SCALE AND BOUNDS
+*   **X-range:** [-4.000, 4.000]
+*   **Y-range:** [-4.000, 4.000]
+*   **Z-range:** [0.000, 9.000]
+*   Scale: 1 unit = 1 cm.
 
-*   **Given Properties:**
-    *   A circle with center O.
-    *   PQ and PR are tangents to the circle from an external point P.
-    *   The radius is perpendicular to the tangent at the point of contact (∠OQP = 90° and ∠ORP = 90°).
-    *   The sum of interior angles in the quadrilateral OQPR is 360°.
+---
 
-#### **3. REFERENCED GEOMETRIC ELEMENTS (FROM JSON)**
-
-*   **Points:** O, P, Q, R
-*   **Lines/Segments:** PQ, PR, OQ, OR, OP
-*   **Angles:** QPR (labeled 'a'), QOR (labeled 'b'), OQP, ORP
-*   **Polygons:** Quadrilateral OQPR
-*   **Other Elements:** circle_main
-
-### **Part 2: Coordinate System and Scale Definition (Calculated)**
-
-#### **1. ORIGIN PLACEMENT (CRITICAL)**
-
-*   The center of the circle, point O, is the most logical anchor for the coordinate system and is defined as the origin (0, 0, 0).
-
-#### **2. AXES ALIGNMENT**
-
-*   **Primary Axis (X-axis):** The vector from the origin O to the external point P defines the positive X-axis.
-*   **Primary Plane (XY-plane):** The entire figure, including the circle and tangents, lies on the XY-plane (Z=0).
-*   **Vertical Axis (Z-axis):** The Z-axis is perpendicular to the XY-plane, passing through the origin O.
-
-#### **3. SCALE DEFINITION**
-
-*   **Method:** The radius of the circle (OQ) is a fundamental dimension. To establish a clear and representative figure, the central angle ∠QOR is set to a non-special value of 110°. The radius is set to 2.5 units.
-*   **Scale Reference:** The radius of the circle, OQ = 2.5 units, defines the scale for all subsequent calculations.
-
-### **Part 3: Geometric Elements Breakdown (Reconstructing from Solution Steps)**
+### Part 3: Geometric Elements Breakdown (Standard Geometry)
 
 **A. Intrinsic Point Coordinates Table (X, Y, Z):**
 
-> **CRITICAL CALCULATION MANDATE:**
-> The coordinates are derived from the defined scale and angles. The relationship `a + b = 180°` is established in the solution. For visualization, we set `b = ∠QOR = 110°`, which implies `a = ∠QPR = 70°`. The line OP bisects both angles, so `∠POQ = 55°`.
-> *   Radius `r = 2.5`.
-> *   In right triangle OQP, `OP = OQ / cos(∠POQ) = 2.5 / cos(55°) ≈ 4.360`.
-> *   Point P is on the X-axis at this distance.
-> *   Points Q and R are on the circle of radius 2.5, at angles of +55° and -55° relative to the line OP (the X-axis).
-
-| Point | X Coordinate | Y Coordinate | Z Coordinate |
-| :---- | :----------- | :----------- | :----------- |
-| O     | 0.000        | 0.000        | 0.000        |
-| P     | 4.360        | 0.000        | 0.000        |
-| Q     | 1.434        | 2.048        | 0.000        |
-| R     | 1.434        | -2.048       | 0.000        |
+| Point | X | Y | Z | Calculation Logic |
+| :--- | :--- | :--- | :--- | :--- |
+| **O** | 0.000 | 0.000 | 0.000 | Center of base (Origin). |
+| **A** | 3.000 | 3.000 | 0.000 | Base vertex (Side/2, Side/2). |
+| **B** | -3.000 | 3.000 | 0.000 | Base vertex (-Side/2, Side/2). |
+| **C** | -3.000 | -3.000 | 0.000 | Base vertex (-Side/2, -Side/2). |
+| **D** | 3.000 | -3.000 | 0.000 | Base vertex (Side/2, -Side/2). |
+| **P** | 0.000 | 0.000 | 8.000 | Apex at given height. |
+| **M** | 3.000 | 0.000 | 0.000 | Midpoint of edge $AD$ (3, (3-3)/2, 0). |
 
 **B. Lines, Edges, and Curves:**
 
-| Line/Segment | Start Point | End Point | Calculated Length (from coordinates) |
-| :----------- | :---------- | :-------- | :----------------------------------- |
-| OQ (Radius)  | O           | Q         | 2.500                                |
-| OR (Radius)  | O           | R         | 2.500                                |
-| OP           | O           | P         | 4.360                                |
-| PQ (Tangent) | P           | Q         | 3.572                                |
-| PR (Tangent) | P           | R         | 3.572                                |
-| QR (Chord)   | Q           | R         | 4.096                                |
+| Element ID | Start Point | End Point | Calculated Length (Units) | Logic |
+| :--- | :--- | :--- | :--- | :--- |
+| **edge_AB** | A | B | 6.000 | Base side length. |
+| **edge_BC** | B | C | 6.000 | Base side length. |
+| **edge_CD** | C | D | 6.000 | Base side length. |
+| **edge_DA** | D | A | 6.000 | Base side length. |
+| **height_PO** | P | O | 8.000 | Given vertical height. |
+| **apothem_OM** | O | M | 3.000 | Distance from center to edge midpoint. |
+| **slant_PM** | P | M | 8.544 | $\sqrt{PO^2 + OM^2} = \sqrt{8^2 + 3^2} = \sqrt{73}$. |
 
 **C. Angles:**
 
-| Angle | Vertex | Defining Points | Calculated Value (degrees) | Note                               |
-| :---- | :----- | :-------------- | :------------------------- | :--------------------------------- |
-| QPR   | P      | Q, P, R         | 70.000                     | Defined as 'a'                     |
-| QOR   | O      | Q, O, R         | 110.000                    | Defined as 'b'                     |
-| OQP   | Q      | O, Q, P         | 90.000                     | Radius is perpendicular to tangent |
-| ORP   | R      | O, R, P         | 90.000                     | Radius is perpendicular to tangent |
+| Element ID | Vertex | Point 1 | Point 2 | Calculated Value | Logic |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **angle_POM** | O | P | M | 90.000° | Height is perpendicular to base. |
+| **angle_PMO** | M | P | O | 69.444° | $\arctan(8/3)$. |
 
 **D. Faces, Surfaces, and Solids:**
 
-| Component                 | Type          | Defining Elements |
-| :------------------------ | :------------ | :---------------- |
-| circle_main               | Circle        | Center O, Radius 2.5 |
-| Quadrilateral OQPR        | Polygon       | O, Q, P, R        |
+| Element ID | Type | Component Points |
+| :--- | :--- | :--- |
+| **base_ABCD** | Polygon | A, B, C, D |
+| **face_PAB** | Polygon | P, A, B |
+| **face_PBC** | Polygon | P, B, C |
+| **face_PCD** | Polygon | P, C, D |
+| **face_PDA** | Polygon | P, D, A |
 
 ---
-## **Geometric Blueprint for Subpart (b)**
 
-### **Part 1: Geometric Context from Solution JSON**
+### Part 4: Display Rules (What to Annotate on the Diagram)
 
-#### **1. SUBPART OBJECTIVE (EXTRACTED)**
+**E. Annotation Table:**
 
-*   To find the angle between the tangents at the ends of a chord that subtends an angle of 60° at the center of a circle.
-
-#### **2. GIVEN ELEMENTS (FROM JSON)**
-
-*   **Given Angles:** The central angle subtended by the chord is 60°.
-*   **Given Properties:** The relationship derived in Part A (`angle between tangents + central angle = 180°`) is applied.
-
-#### **3. REFERENCED GEOMETRIC ELEMENTS (FROM JSON)**
-
-*   The solution for Part B reuses the geometric setup and elements from Part A (Points O, P, Q, R; Lines PQ, PR, OQ, OR; etc.) but applies a new angle constraint.
-
-### **Part 2: Coordinate System and Scale Definition (Calculated)**
-
-#### **1. ORIGIN PLACEMENT (CRITICAL)**
-
-*   The center of the circle, point O, remains the origin (0, 0, 0).
-
-#### **2. AXES ALIGNMENT**
-
-*   The coordinate system alignment is identical to Part A: P is on the positive X-axis, and the figure lies on the XY-plane.
-
-#### **3. SCALE DEFINITION**
-
-*   **Method:** The scale reference remains the same: the radius of the circle is 2.5 units. The geometry is recalculated based on the new given angle.
-*   **Scale Reference:** The radius of the circle, OQ = 2.5 units.
-
-### **Part 3: Geometric Elements Breakdown (Reconstructing from Solution Steps)**
-
-**A. Intrinsic Point Coordinates Table (X, Y, Z):**
-
-> **CRITICAL CALCULATION MANDATE:**
-> The coordinates are recalculated for the new condition. The central angle `b = ∠QOR = 60°`.
-> *   From the relation `a + b = 180°`, the angle between tangents `a = ∠QPR = 180° - 60° = 120°`.
-> *   The line OP bisects ∠QOR, so `∠POQ = 60° / 2 = 30°`.
-> *   Radius `r = 2.5`.
-> *   In right triangle OQP, `OP = OQ / cos(∠POQ) = 2.5 / cos(30°) ≈ 2.887`.
-> *   Points Q and R are on the circle of radius 2.5, at angles of +30° and -30° relative to the X-axis.
-
-| Point | X Coordinate | Y Coordinate | Z Coordinate |
-| :---- | :----------- | :----------- | :----------- |
-| O     | 0.000        | 0.000        | 0.000        |
-| P     | 2.887        | 0.000        | 0.000        |
-| Q     | 2.165        | 1.250        | 0.000        |
-| R     | 2.165        | -1.250       | 0.000        |
-
-**B. Lines, Edges, and Curves:**
-
-| Line/Segment | Start Point | End Point | Calculated Length (from coordinates) |
-| :----------- | :---------- | :-------- | :----------------------------------- |
-| OQ (Radius)  | O           | Q         | 2.500                                |
-| OR (Radius)  | O           | R         | 2.500                                |
-| OP           | O           | P         | 2.887                                |
-| PQ (Tangent) | P           | Q         | 1.443                                |
-| PR (Tangent) | P           | R         | 1.443                                |
-| QR (Chord)   | Q           | R         | 2.500                                |
-
-**C. Angles:**
-
-| Angle | Vertex | Defining Points | Calculated Value (degrees) | Note                               |
-| :---- | :----- | :-------------- | :------------------------- | :--------------------------------- |
-| QPR   | P      | Q, P, R         | 120.000                    | Calculated from 180° - 60°         |
-| QOR   | O      | Q, O, R         | 60.000                     | Given in the problem               |
-| OQP   | Q      | O, Q, P         | 90.000                     | Radius is perpendicular to tangent |
-| ORP   | R      | O, R, P         | 90.000                     | Radius is perpendicular to tangent |
-
-**D. Faces, Surfaces, and Solids:**
-
-| Component                 | Type          | Defining Elements |
-| :------------------------ | :------------ | :---------------- |
-| circle_main               | Circle        | Center O, Radius 2.5 |
-| Quadrilateral OQPR        | Polygon       | O, Q, P, R        |
+| Element | Category | Display Action |
+| :--- | :--- | :--- |
+| **P** | given | Show point, label "P (Apex)" |
+| **edge_DA** | given | Draw line, label "6 cm" |
+| **height_PO** | given | Draw dashed line, label "h = 8 cm" |
+| **M** | derived | Show point, label "M" |
+| **slant_PM** | asked | Highlight in #E63946, label "?" |
+| **angle_POM** | derived | Show right-angle symbol |
