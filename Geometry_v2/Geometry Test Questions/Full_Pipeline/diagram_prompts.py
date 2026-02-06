@@ -235,7 +235,7 @@ Generate a **single Python script** that:
 - **Display Rules are mandatory:** You MUST read Part 4E (Annotation Table) of the blueprint and follow each element's Display Action exactly. If an element says "NO length label", do not add one. If it says "NO angle arc", do not draw one.
 
 ### Figure Dimensions
-- **2D (matplotlib):** 1920 x 1080 pixels, DPI 150
+- **2D (matplotlib):** 854 x 480 pixels, DPI 100
 - **3D GIF (manim):** 640 x 360 pixels, 15 fps (keeps file size small)
 
 ---
@@ -261,7 +261,7 @@ points = {
 }
 
 # --- Create figure ---
-fig, ax = plt.subplots(1, 1, figsize=(1920/150, 1080/150), dpi=150)
+fig, ax = plt.subplots(1, 1, figsize=(8.54, 4.80), dpi=100)  # 854x480 pixels
 fig.patch.set_facecolor('#FFFFFF')
 ax.set_facecolor('#FFFFFF')
 ax.set_aspect('equal')
@@ -295,7 +295,7 @@ ax.axis('off')
 
 # --- Save ---
 Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-plt.savefig(output_path, dpi=150, bbox_inches='tight', pad_inches=0.3,
+plt.savefig(output_path, dpi=100, bbox_inches='tight', pad_inches=0.3,
             facecolor='#FFFFFF', edgecolor='none')
 plt.close()
 print(f"Saved: {output_path}")
@@ -327,7 +327,7 @@ print(f"Saved: {output_path}")
    ```
 7. **Asked line glow:** For each `asked` segment, draw TWO lines — a wide semi-transparent glow (`linewidth=8, alpha=0.2, color='#E63946'`) underneath, and the main line on top (`linewidth=4, color='#E63946'`).
 8. **Light background:** Background is `#FFFFFF`. All text, points, and labels use dark colors (`#1A1A1A`, `#333333`).
-9. **Always use `pad_inches` in savefig:** `plt.savefig(path, dpi=150, bbox_inches='tight', pad_inches=0.3, facecolor='white')` — the `pad_inches=0.3` ensures labels near edges are not clipped.
+9. **Always use `pad_inches` in savefig:** `plt.savefig(path, dpi=100, bbox_inches='tight', pad_inches=0.3, facecolor='white')` — the `pad_inches=0.3` ensures labels near edges are not clipped.
 
 ---
 
@@ -747,7 +747,7 @@ Wrap it in ```python ... ```. The code must be directly executable with `python3
 - **Measurement labels:** ONLY for `given` lengths. Show original measurement (e.g., "12 cm"). For `asked`, show "?" in accent. For `derived`, show nothing.
 
 ### Figure Dimensions
-- **2D (matplotlib):** 1920×1080 px, DPI 150
+- **2D (matplotlib):** 854×480 px, DPI 100
 - **3D GIF (manim):** 640×360 px, 15 fps
 
 ---
@@ -772,7 +772,7 @@ points = {
 }
 
 # --- Create figure ---
-fig, ax = plt.subplots(1, 1, figsize=(1920/150, 1080/150), dpi=150)
+fig, ax = plt.subplots(1, 1, figsize=(8.54, 4.80), dpi=100)  # 854x480 pixels
 fig.patch.set_facecolor('#FFFFFF')
 ax.set_facecolor('#FFFFFF')
 ax.set_aspect('equal')
@@ -783,7 +783,7 @@ ax.axis('off')
 
 # Auto-scale with 20% padding (include circles: center ± radius in bounds)
 Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-plt.savefig(output_path, dpi=150, bbox_inches='tight', pad_inches=0.3, facecolor='#FFFFFF', edgecolor='none')
+plt.savefig(output_path, dpi=100, bbox_inches='tight', pad_inches=0.3, facecolor='#FFFFFF', edgecolor='none')
 plt.close()
 print(f"Saved: {output_path}")
 ```
@@ -1026,6 +1026,503 @@ self.add_fixed_orientation_mobjects(label_asked)
 - `MathTex` (requires LaTeX)
 - LaTeX syntax like `"3\\text{ cm}"` — use plain text `"3 cm"` instead
 - `.set_weight("BOLD")` — use `weight=BOLD` in constructor
+
+## REMINDER: Output exactly ONE ```python code block. Nothing else.
+
+"""
+
+
+# ======================================================================
+# STAGE 2 (Gemini - 2D ONLY): Geometric Blueprint → Matplotlib Code
+# ======================================================================
+
+Blueprint_to_Code_2D_Gemini = """
+
+You are an expert Python developer specializing in 2D mathematical visualization with matplotlib.
+
+## Your Task
+
+Read the **Geometric Blueprint** below (with point coordinates, line segments, angles, faces, and display rules) and produce a **single, complete, self-contained Python script** that renders the geometry as a high-quality 2D diagram using matplotlib.
+
+## CRITICAL OUTPUT FORMAT
+
+Your response MUST contain exactly ONE Python code block. No explanations before or after.
+Wrap it in ```python ... ```. The code must be directly executable with `python3 render_code.py`.
+
+---
+
+## Input You Will Receive
+
+1. The full **Geometric Blueprint** (`coordinates.txt`) including **Part 4: Display Rules**.
+2. The **original question text**.
+3. The **output path** and **output format** (png or svg).
+
+---
+
+## Output Script Requirements
+
+- All imports at the top.
+- **No external dependencies** beyond matplotlib and numpy.
+- Completely self-contained — no file reading, no JSON parsing, no helper files.
+- All coordinates, colors, and styling hardcoded directly.
+- Saves output to the exact path provided.
+
+---
+
+## Styling Specification
+
+### Color Palette (Light Theme)
+- **Background:** `#FFFFFF`
+- **Points:** `#1A1A1A`, size appropriate for figure scale
+- **Point labels:** `#1A1A1A`, positioned with smart offsets away from lines
+- **Lines/Edges (normal):** Cycle through: `#2A9D8F`, `#264653`, `#457B9D`, `#6A4C93`, `#E76F51`, `#2D6A4F`, `#B5838D`. Use `#444444` for simple figures.
+- **"Asked" elements (ACCENT `#E63946`):**
+  - Asked lines: 2x thickness + glow behind (4x width, alpha=0.2)
+  - Asked angles: arc in `#E63946`, 2x stroke, "?" label
+  - Asked regions: fill `#E63946` alpha=0.20, dashed border alpha=0.6
+  - Asked lengths: "?" in `#E63946`, bold, 1.5x font size
+- **Angle arcs:** ONLY for `given` or `asked` angles per Part 4E. Right angles get square markers. Do NOT draw arcs for `derived` angles.
+- **Regions/Faces:** alpha=0.08-0.12 for non-asked; `#E63946` alpha=0.20 for asked.
+- **Measurement labels:** ONLY for `given` lengths. Show original measurement (e.g., "12 cm"). For `asked`, show "?" in accent. For `derived`, show nothing.
+
+### Figure Dimensions
+- **Size:** 854 x 480 pixels at DPI 100
+
+---
+
+## 2D Rendering Template (Matplotlib)
+
+```python
+#!/usr/bin/env python3
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+from pathlib import Path
+
+# --- Hardcoded coordinates from blueprint ---
+points = {
+    "A": np.array([x, y]),
+    "B": np.array([x, y]),
+    # ... all points from Part 3A
+}
+
+# --- Create figure ---
+fig, ax = plt.subplots(1, 1, figsize=(8.54, 4.80), dpi=100)  # 854x480 pixels
+fig.patch.set_facecolor('#FFFFFF')
+ax.set_facecolor('#FFFFFF')
+ax.set_aspect('equal')
+ax.axis('off')
+
+# Draw in Z-order: regions(0) → glow(1) → lines(2) → arcs(3) → points(4) → labels(5)
+
+# --- Draw regions/faces (z-order 0) ---
+# Non-asked: Polygon with alpha=0.08, muted colors
+# Asked: facecolor='#E63946', alpha=0.20, dashed edgecolor
+
+# --- Draw glow lines for asked elements (z-order 1) ---
+# ax.plot(..., linewidth=8, color='#E63946', alpha=0.2, zorder=1)
+
+# --- Draw normal lines (z-order 2) ---
+# ax.plot() with linewidth=2, colors from palette
+
+# --- Draw asked lines on top (z-order 2) ---
+# ax.plot(..., linewidth=4, color='#E63946', zorder=2)
+
+# --- Draw angle arcs (z-order 3) ---
+# Use matplotlib.patches.Arc for non-right angles
+# Use small square patch for right angles (90°)
+# Given angles: arc + degree label
+# Asked angles: arc in '#E63946' + "?" label
+
+# --- Draw points (z-order 4) ---
+# ax.plot() with marker='o', color='#1A1A1A', markersize=6
+
+# --- Draw labels (z-order 5) ---
+# ax.text() with color='#1A1A1A', smart offsets
+# Asked "?" labels: color='#E63946', fontweight='bold', fontsize 1.5x
+
+# --- Auto-scale with 20% padding ---
+all_x = [p[0] for p in points.values()]
+all_y = [p[1] for p in points.values()]
+# Include circles: center ± radius
+for cx, cy, r in circles:  # if any circles exist
+    all_x.extend([cx - r, cx + r])
+    all_y.extend([cy - r, cy + r])
+x_range = max(all_x) - min(all_x) or 1
+y_range = max(all_y) - min(all_y) or 1
+padding_x = x_range * 0.20
+padding_y = y_range * 0.20
+ax.set_xlim(min(all_x) - padding_x, max(all_x) + padding_x)
+ax.set_ylim(min(all_y) - padding_y, max(all_y) + padding_y)
+
+# --- Save ---
+OUTPUT_PATH = "THE_OUTPUT_PATH"
+Path(OUTPUT_PATH).parent.mkdir(parents=True, exist_ok=True)
+plt.savefig(OUTPUT_PATH, dpi=100, bbox_inches='tight', pad_inches=0.3,
+            facecolor='#FFFFFF', edgecolor='none')
+plt.close()
+print(f"Saved: {OUTPUT_PATH}")
+```
+
+---
+
+## Matplotlib Rules
+
+1. **`matplotlib.use('Agg')`** before importing pyplot (no display needed).
+2. **Z-order:** regions(0) → glow lines(1) → normal lines(2) → angle arcs(3) → points(4) → labels(5).
+3. **Angle arcs:** Compute start/sweep angles with `numpy.arctan2`. Right angles → small square marker.
+4. **Label offsets:** Direction away from centroid of adjacent points, scaled to fixed offset distance.
+5. **Auto-fit (CRITICAL):** Calculate bounds from ALL elements including circles (center ± radius), then add 20% padding.
+6. **Asked line glow:** Draw TWO lines — wide glow (`linewidth=8, alpha=0.2, #E63946`) + main line (`linewidth=4, #E63946`).
+7. **Always use `pad_inches=0.3`** in savefig to ensure labels near edges are not clipped.
+8. **Light background:** `#FFFFFF`. All text, points, labels use dark colors (`#1A1A1A`, `#333333`).
+
+---
+
+## Critical Rules
+
+1. **Parse the blueprint carefully:** Extract every point (Part 3A), line (Part 3B), angle (Part 3C), face (Part 3D), and display rule (Part 4E).
+2. **NEVER SHOW SOLUTIONS OR CALCULATED ANSWERS:** The diagram visualizes the PROBLEM, not the solution.
+   - Do NOT display calculated areas, lengths, or angles unless they were GIVEN in the question.
+   - For `asked` elements: show only a "?" label, NEVER the numerical answer.
+3. **Respect Display Rules (Part 4E):**
+   - `given` → show annotation (length label, angle arc with value)
+   - `derived` → draw but NO label/arc
+   - `asked` → highlight with `#E63946`, "?" label, NO numerical answer
+   - Point labels (A, B, C, …) always shown.
+4. **Hardcode everything.** No file I/O at runtime.
+5. **Self-contained.** Runs with just `python3 render_code.py`.
+6. **Save to exact output path.** Use `Path.mkdir(parents=True, exist_ok=True)`.
+7. **Strip `**bold**` markers** from blueprint point names.
+8. **Error handling:** Wrap main logic in try/except, print error, exit code 1 on failure.
+
+---
+
+## Label Positioning
+
+For each point label:
+1. Normalize the point's position from centroid: `direction = (coord - centroid) / (np.linalg.norm(coord - centroid) + 0.001)`
+2. Use small fixed offset: `offset = direction * 0.4`
+3. This pushes labels outward from figure center.
+
+---
+
+## Angle Arc Drawing
+
+Only for `given` or `asked` angles per Part 4E:
+1. Get vertex and two ray endpoints.
+2. Compute ray angles with `atan2(dy, dx)`.
+3. Determine start angle and sweep (interior angle).
+4. 90° → small square marker aligned to rays. Others → `matplotlib.patches.Arc`.
+5. `given` → degree label at arc midpoint. `asked` → "?" in `#E63946`.
+
+---
+
+## REMINDER: Output exactly ONE ```python code block. Nothing else.
+
+"""
+
+
+# ======================================================================
+# STAGE 2 (Gemini - 3D ONLY): Geometric Blueprint → Manim Code
+# ======================================================================
+
+Blueprint_to_Code_3D_Gemini = """
+
+You are an expert Python developer specializing in 3D mathematical visualization with Manim.
+
+## Your Task
+
+Read the **Geometric Blueprint** below (with point coordinates, line segments, angles, faces, and display rules) and produce a **single, complete, self-contained Python script** that renders the geometry as a rotating 3D animation using Manim.
+
+## CRITICAL OUTPUT FORMAT
+
+Your response MUST contain exactly ONE Python code block. No explanations before or after.
+Wrap it in ```python ... ```. The code must be directly executable with `python3 render_code.py`.
+
+---
+
+## Input You Will Receive
+
+1. The full **Geometric Blueprint** (`coordinates.txt`) including **Part 4: Display Rules**.
+2. The **original question text**.
+3. The **output path** and **output format** (gif).
+
+---
+
+## Output Script Requirements
+
+- All imports at the top.
+- **No external dependencies** beyond manim and numpy.
+- Import `manim_helpers` for angle arcs (it's in the same directory).
+- All coordinates, colors, and styling hardcoded directly.
+- Saves output GIF to the exact path provided.
+
+---
+
+## Styling Specification
+
+### Color Palette (Light Theme)
+- **Background:** `#FFFFFF`
+- **Points:** `#1A1A1A`, Dot3D with radius=0.08
+- **Point labels:** `#1A1A1A`, Text scaled to 0.8
+- **Lines/Edges (normal):** Cycle through: `#2A9D8F`, `#264653`, `#457B9D`, `#6A4C93`, `#E76F51`, `#2D6A4F`. Use `#444444` for simple figures.
+- **"Asked" elements (ACCENT `#E63946`):**
+  - Asked lines: 2x thickness (thickness=0.04), color `#E63946`
+  - Asked angles: arc in `#E63946`, "?" label
+  - Asked regions: fill `#E63946` alpha=0.20
+  - Asked lengths: "?" in `#E63946`, bold, scale(1.2)
+- **Angle arcs:** ONLY for `given` or `asked` angles per Part 4E. Use `manim_helpers`. Do NOT draw arcs for `derived` angles.
+- **Faces:** fill_opacity=0.08-0.12 for non-asked; `#E63946` fill_opacity=0.20 for asked.
+- **Measurement labels:** ONLY for `given` lengths. For `asked`, show "?" in accent. For `derived`, show nothing.
+
+### Figure Dimensions
+- **Size:** 640 x 360 pixels at 15 fps (GIF)
+
+---
+
+## 3D Rendering Template (Manim)
+
+```python
+#!/usr/bin/env python3
+from manim import *
+import numpy as np
+import shutil
+from pathlib import Path
+from manim_helpers import create_3d_angle_arc_with_connections
+
+# --- Manim config (MUST be before scene class) ---
+config.background_color = "#FFFFFF"
+config.pixel_height = 360
+config.pixel_width = 640
+config.frame_rate = 15
+config.format = "gif"
+config.output_file = "diagram"
+
+# --- Hardcoded 3D coordinates (ALWAYS use float arrays) ---
+pts_raw = {
+    "A": np.array([0.0, 0.0, 0.0]),
+    "B": np.array([5.0, 0.0, 0.0]),
+    # ... all points from Part 3A
+}
+
+# --- ADAPTIVE SCALING (CRITICAL for fitting figure in frame) ---
+all_coords = np.array(list(pts_raw.values()))
+centroid = np.mean(all_coords, axis=0)
+
+# Compute figure extent
+_extent = np.max(all_coords, axis=0) - np.min(all_coords, axis=0)
+_z_extent = _extent[2]
+_xy_extent = max(_extent[0], _extent[1])
+
+# Compute effective radius (max distance from centroid)
+_centered = all_coords - centroid
+_max_vertex_radius = max(np.linalg.norm(c) for c in _centered)
+
+# Detect tall figures
+IS_TALL = _z_extent > 1.5 * _xy_extent if _xy_extent > 0 else False
+TARGET_SIZE = 2.5 if IS_TALL else 3.5
+
+# Calculate and apply scale factor
+SCALE_FACTOR = TARGET_SIZE / _max_vertex_radius if _max_vertex_radius > 0 else 1.0
+SCALE_FACTOR = min(1.5, SCALE_FACTOR)  # Cap growth, allow shrinking
+
+# Apply centering and scaling
+pts = {k: (v - centroid) * SCALE_FACTOR for k, v in pts_raw.items()}
+
+# Emergency shrink if still too big
+_scaled_coords = np.array(list(pts.values()))
+_scaled_max = np.max(np.abs(_scaled_coords))
+if _scaled_max > 3.5:
+    _emergency_scale = 3.0 / _scaled_max
+    pts = {k: v * _emergency_scale for k, v in pts.items()}
+    SCALE_FACTOR *= _emergency_scale
+
+# Dynamic label offset
+LABEL_OFFSET = max(0.2, min(0.4, 0.35 / SCALE_FACTOR))
+
+# Label-aware validation
+_max_radius = max(np.linalg.norm(c) for c in pts.values())
+if _max_radius + LABEL_OFFSET > 4.0:
+    _label_shrink = 3.5 / (_max_radius + LABEL_OFFSET)
+    pts = {k: v * _label_shrink for k, v in pts.items()}
+    SCALE_FACTOR *= _label_shrink
+    _max_radius = max(np.linalg.norm(c) for c in pts.values())
+
+# Dynamic camera settings
+CAM_DISTANCE = max(_max_radius * 10.0, 25)
+CAM_PHI = 50 if IS_TALL else 65
+
+class GeometryScene(ThreeDScene):
+    def construct(self):
+        # 1. Create faces (fill_opacity=0.08 for normal, 0.20 for asked)
+        # faces = VGroup(...)
+
+        # 2. Create lines (Line3D with thickness=0.02, or 0.04 for asked)
+        # lines = VGroup(...)
+
+        # 3. Create points (Dot3D with radius=0.08)
+        # dots = VGroup(...)
+
+        # 4. Create labels (Text, NOT MathTex)
+        # For each point: direction = pts[name] / (np.linalg.norm(pts[name]) + 0.001)
+        # label.move_to(pts[name] + direction * LABEL_OFFSET)
+        # labels = VGroup(...)
+
+        # 5. Create angle arcs for given/asked angles
+        # angle_arc = create_3d_angle_arc_with_connections(
+        #     center=pts["B"], point1=pts["A"], point2=pts["C"],
+        #     radius=0.5, color="#444444", show_connections=False
+        # )
+
+        # Combine geometry (NOT labels)
+        figure = VGroup(faces, lines, dots)
+
+        # Add to scene
+        self.add(figure, labels)
+        self.add_fixed_orientation_mobjects(*labels)
+
+        # Camera setup
+        self.set_camera_orientation(
+            phi=CAM_PHI*DEGREES, theta=-45*DEGREES,
+            distance=CAM_DISTANCE, frame_center=np.array([0.0, 0.0, 0.0])
+        )
+
+        # 360° rotation (MANDATORY for 3D)
+        self.begin_ambient_camera_rotation(rate=PI/2)
+        self.wait(4)  # 4s × PI/2 = 2π = full 360°
+        self.stop_ambient_camera_rotation()
+
+OUTPUT_PATH = "THE_OUTPUT_PATH"
+
+if __name__ == "__main__":
+    scene = GeometryScene()
+    scene.render()
+
+    # Find GIF in media/ and copy to OUTPUT_PATH
+    media_dir = Path("media") / "videos" / "360p15"
+    gif_files = list(media_dir.glob("*.gif")) if media_dir.exists() else []
+    if not gif_files:
+        for search_dir in [Path("media"), Path(".")]:
+            gif_files = list(search_dir.rglob("*.gif"))
+            if gif_files:
+                break
+
+    if gif_files:
+        Path(OUTPUT_PATH).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(str(gif_files[0]), OUTPUT_PATH)
+        print(f"Saved: {OUTPUT_PATH}")
+    else:
+        print("Error: No GIF file found after rendering")
+        import sys
+        sys.exit(1)
+```
+
+---
+
+## Manim Rules
+
+1. **`ThreeDScene`** for 3D. All coordinates as 3D numpy arrays with floats.
+2. **Valid classes:** `Dot3D`, `Line3D`, `Polygon`, `DashedLine`, `Text`, `VGroup`, `Surface`, `Cone`, `Sphere`.
+   - **`DashedLine3D` does NOT exist** — use `DashedLine`.
+   - **`Arc3D` does NOT exist** — use `manim_helpers`.
+   - **`Polyline` does NOT exist** — use multiple `Line3D` segments.
+   - **`Prism` does NOT exist** — build from `Polygon` faces and `Line3D` edges.
+3. **Hex color codes only** (`"#FF0000"` not `RED`).
+4. **Labels SEPARATE from figure VGroup.** Use `add_fixed_orientation_mobjects` for all text.
+5. **Camera rotation (NOT object rotation):** `begin_ambient_camera_rotation(rate=PI/2)`, `wait(4)`, `stop_ambient_camera_rotation()`.
+6. **Config before class definition.** `config.format = "gif"`, `config.output_file = "diagram"`.
+7. **Import `manim_helpers`** for angle arcs — do NOT implement arc math manually.
+8. **ADAPTIVE SCALING (CRITICAL):** Use the pattern in the template to ensure figures fit in frame.
+9. **Dynamic camera:** Distance = `max(_max_radius * 10.0, 25)`. Phi = 50° (tall) or 65° (normal).
+10. **Dynamic label offset:** `LABEL_OFFSET = max(0.2, min(0.4, 0.35 / SCALE_FACTOR))`.
+11. **Use `Text` NOT `MathTex`:** `Text("A", color="#1A1A1A").scale(0.8)` for labels. MathTex requires LaTeX.
+12. **ALWAYS use float arrays:** `np.array([1.0, 0.0, 0.0])` NOT `np.array([1, 0, 0])`. Prevents dtype errors.
+13. **Cones:** Reference point is BASE CENTER, not apex. `direction` = where apex points. Use `cone.shift(pts["O"])` to position base.
+14. **Line3D parameters:** Only use `Line3D(start, end, color="#HEX", thickness=0.02)`. Do NOT pass `radius=`.
+15. **NEVER use `opacity`** — use `fill_opacity` and `stroke_opacity` instead.
+16. **Cylinders:** DO NOT use `Cylinder` class. Represent with circles + points + lines.
+
+---
+
+## Critical Rules
+
+1. **Parse the blueprint carefully:** Extract every point (Part 3A), line (Part 3B), angle (Part 3C), face (Part 3D), and display rule (Part 4E).
+2. **NEVER SHOW SOLUTIONS OR CALCULATED ANSWERS:** The diagram visualizes the PROBLEM, not the solution.
+   - Do NOT display calculated areas, lengths, or angles unless they were GIVEN in the question.
+   - For `asked` elements: show only a "?" label, NEVER the numerical answer.
+3. **Respect Display Rules (Part 4E):**
+   - `given` → show annotation
+   - `derived` → draw but NO label/arc
+   - `asked` → highlight with `#E63946`, "?" label, NO numerical answer
+   - Point labels (A, B, C, …) always shown.
+4. **Hardcode everything.** No file I/O at runtime.
+5. **Self-contained.** Runs with just `python3 render_code.py`.
+6. **Save to exact output path.** Use `Path.mkdir(parents=True, exist_ok=True)`.
+7. **Strip `**bold**` markers** from blueprint point names.
+8. **Error handling:** Wrap main logic in try/except, print error, exit code 1 on failure.
+
+---
+
+## Label Positioning
+
+For each point label:
+1. Normalize point's position from origin: `direction = coord / (np.linalg.norm(coord) + 0.001)`
+2. Use dynamic offset: `offset = direction * LABEL_OFFSET`
+3. This pushes labels outward from figure center without exceeding frame bounds.
+
+---
+
+## Angle Arc Drawing
+
+Use `from manim_helpers import create_3d_angle_arc_with_connections`. Do NOT implement manually.
+
+**EXACT function signature:**
+```python
+angle_arc = create_3d_angle_arc_with_connections(
+    center=pts["B"],      # Vertex of the angle (np.ndarray)
+    point1=pts["A"],      # First ray endpoint (np.ndarray)
+    point2=pts["C"],      # Second ray endpoint (np.ndarray)
+    radius=0.5,           # Arc radius (float)
+    color="#444444",      # Arc color (hex string)
+    show_connections=False  # Whether to show dashed lines (bool)
+)
+self.add(angle_arc)  # Add the returned VGroup to the scene
+```
+
+**IMPORTANT:** Do NOT pass `self` as a parameter. The function returns a VGroup.
+
+---
+
+## Text Labels (Use Text, NOT MathTex)
+
+**ALWAYS use `Text` instead of `MathTex`** — it works without LaTeX:
+
+```python
+# Point labels
+label_A = Text("A", color="#1A1A1A").scale(0.8)
+label_A.move_to(pts["A"] + direction * LABEL_OFFSET)
+self.add_fixed_orientation_mobjects(label_A)
+
+# Measurement labels (given)
+label_length = Text("3 cm", color="#333333").scale(0.7)
+label_length.move_to(midpoint + offset)
+self.add_fixed_orientation_mobjects(label_length)
+
+# Asked "?" label
+label_asked = Text("?", color="#E63946", weight=BOLD).scale(1.2)
+label_asked.move_to(asked_midpoint + offset)
+self.add_fixed_orientation_mobjects(label_asked)
+```
+
+**DO NOT use:**
+- `MathTex` (requires LaTeX)
+- LaTeX syntax like `"3\\text{ cm}"` — use plain text `"3 cm"`
+- `.set_weight("BOLD")` — use `weight=BOLD` in constructor
+
+---
 
 ## REMINDER: Output exactly ONE ```python code block. Nothing else.
 
@@ -1576,7 +2073,7 @@ COLORS = ["#2A9D8F", "#264653", "#457B9D", "#6A4C93", "#E76F51", "#2D6A4F", "#B5
 # FIGURE SETUP
 # =============================================================================
 
-fig, ax = plt.subplots(1, 1, figsize=(12.8, 7.2), dpi=150)
+fig, ax = plt.subplots(1, 1, figsize=(8.54, 4.80), dpi=100)  # 854x480 pixels
 fig.patch.set_facecolor('#FFFFFF')
 ax.set_facecolor('#FFFFFF')
 
@@ -1670,7 +2167,7 @@ if AXIS_ARROWS:
 # =============================================================================
 
 Path(OUTPUT_PATH).parent.mkdir(parents=True, exist_ok=True)
-plt.savefig(OUTPUT_PATH, dpi=150, bbox_inches='tight', facecolor='white', edgecolor='none')
+plt.savefig(OUTPUT_PATH, dpi=100, bbox_inches='tight', pad_inches=0.3, facecolor='white', edgecolor='none')
 plt.close()
 print(f"Saved: {OUTPUT_PATH}")
 ```
@@ -1689,7 +2186,7 @@ print(f"Saved: {OUTPUT_PATH}")
 - **Constraint lines:** Use dashed style (`linestyle='--'`)
 
 ### Figure Dimensions
-- **Size:** 12.8 × 7.2 inches (1920×1080 at 150 DPI)
+- **Size:** 8.54 × 4.80 inches (854×480 at 100 DPI)
 - **DPI:** 150
 
 ---

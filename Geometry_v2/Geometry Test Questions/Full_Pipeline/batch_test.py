@@ -98,6 +98,7 @@ from hkdse_test_questions import (
 ALL_QUESTIONS = GEOMETRY_TEST_QUESTIONS
 CURRENT_TEST_SET = "geometry"  # Track which test set is active
 CODEGEN_MODEL = "gemini"  # Track which model is used for code generation ("gemini" or "kimi")
+MAX_WORKERS = 10  # Number of concurrent workers
 
 # ======================================================================
 # Pricing (per million tokens)
@@ -387,10 +388,10 @@ async def run_batch_async(questions: List[dict], max_workers: int = 5):
     print(f"{'='*60}\n")
 
 
-def start_batch_thread():
+def start_batch_thread(max_workers: int = 10):
     """Start the batch processing in a background thread."""
     def run():
-        asyncio.run(run_batch_async(ALL_QUESTIONS, max_workers=10))
+        asyncio.run(run_batch_async(ALL_QUESTIONS, max_workers=max_workers))
 
     thread = threading.Thread(target=run, daemon=True)
     thread.start()
@@ -412,7 +413,7 @@ def index():
 def start_batch():
     if batch_status["running"]:
         return jsonify({"error": "Batch already running"}), 400
-    start_batch_thread()
+    start_batch_thread(max_workers=MAX_WORKERS)
     return jsonify({"status": "started", "total": len(ALL_QUESTIONS)})
 
 
@@ -842,6 +843,12 @@ Examples:
         action="store_true",
         help="Don't auto-open browser"
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=10,
+        help="Number of concurrent workers (default: 10)"
+    )
     return parser.parse_args()
 
 
@@ -907,6 +914,7 @@ if __name__ == "__main__":
             test_set_name = "All Questions (Geometry + HKDSE + Coordinate)"
 
     CURRENT_TEST_SET = args.test_set
+    MAX_WORKERS = args.workers
 
     # Clean up previous batch output
     batch_dir = SCRIPT_DIR / "output" / "batch"
@@ -922,6 +930,7 @@ if __name__ == "__main__":
     codegen_model_name = "Kimi K2.5" if CODEGEN_MODEL == "kimi" else "Gemini 3 Flash"
     print(f"Prompt path: {prompt_path}")
     print(f"Code generation: {codegen_model_name}")
+    print(f"Concurrent workers: {MAX_WORKERS}")
 
     if not args.no_browser:
         threading.Timer(1.5, lambda: webbrowser.open(url)).start()

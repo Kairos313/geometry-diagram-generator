@@ -25,7 +25,11 @@ from typing import Optional
 from dotenv import load_dotenv
 from google import genai
 
-from diagram_prompts import Blueprint_to_Code_Gemini, Blueprint_to_Code_Coordinate
+from diagram_prompts import (
+    Blueprint_to_Code_2D_Gemini,
+    Blueprint_to_Code_3D_Gemini,
+    Blueprint_to_Code_Coordinate,
+)
 
 load_dotenv(".env")
 
@@ -102,15 +106,16 @@ def generate_render_code(
     client = genai.Client(api_key=api_key)
 
     # Select target library and prompt based on dimension type
+    # Using split prompts: 2D-only or 3D-only for smaller, more focused prompts
     if dimension_type == "coordinate_2d":
         target_library = "matplotlib"
         system_prompt = Blueprint_to_Code_Coordinate
     elif dimension_type == "3d":
         target_library = "manim"
-        system_prompt = Blueprint_to_Code_Gemini
+        system_prompt = Blueprint_to_Code_3D_Gemini
     else:  # "2d"
         target_library = "matplotlib"
-        system_prompt = Blueprint_to_Code_Gemini
+        system_prompt = Blueprint_to_Code_2D_Gemini
 
     user_message = (
         f"{system_prompt}\n\n"
