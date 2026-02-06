@@ -40,10 +40,12 @@ class GeometryPipeline:
         question_text,       # type: str
         question_image=None, # type: str
         output_format="png", # type: str
+        compact=False,       # type: bool
     ):
         self.question_text = question_text
         self.question_image = question_image
         self.output_format = output_format
+        self.compact = compact
         self.pipeline_dir = Path(__file__).parent
         self.output_dir = self.pipeline_dir / "output"
         self.start_time = time.time()
@@ -54,7 +56,7 @@ class GeometryPipeline:
 
     def step_1_generate_blueprint(self):
         # type: () -> bool
-        """Stage 1: Question text → coordinates.txt."""
+        """Stage 1: Question text → coordinates.txt (or coordinates.json if compact)."""
         logger.info("=== Stage 1: Generating blueprint ===")
         cmd = [
             sys.executable,
@@ -63,22 +65,31 @@ class GeometryPipeline:
         ]
         if self.question_image:
             cmd.extend(["--question-image", self.question_image])
+        if self.compact:
+            cmd.append("--compact")
         if not self._run(cmd, "Stage 1"):
             return False
+        # Validate the appropriate output file
+        if self.compact:
+            return self._validate(self.pipeline_dir / "coordinates.json", "Stage 1")
         return self._validate(self.pipeline_dir / "coordinates.txt", "Stage 1")
 
     def step_2_generate_and_render(self):
         # type: () -> bool
-        """Stage 2: coordinates.txt → rendered diagram."""
+        """Stage 2: coordinates.txt/json → rendered diagram."""
         logger.info("=== Stage 2: Generating code & rendering ===")
         output_path = str(self.output_dir / f"diagram.{self.output_format}")
+        # Use appropriate coordinates file based on compact mode
+        coords_file = "coordinates.json" if self.compact else "coordinates.txt"
         cmd = [
             sys.executable,
             str(self.pipeline_dir / "generate_code.py"),
-            "--coordinates", str(self.pipeline_dir / "coordinates.txt"),
+            "--coordinates", str(self.pipeline_dir / coords_file),
             "--output", output_path,
             "--format", self.output_format,
         ]
+        if self.compact:
+            cmd.append("--compact")
         return self._run(cmd, "Stage 2")
 
     # ------------------------------------------------------------------
@@ -93,6 +104,7 @@ class GeometryPipeline:
         logger.info(f"Question: {self.question_text[:100]}...")
         logger.info(f"Image: {self.question_image or 'none'}")
         logger.info(f"Format: {self.output_format}")
+        logger.info(f"Mode: {'COMPACT (JSON)' if self.compact else 'VERBOSE (markdown)'}")
         logger.info("=" * 60)
 
         # Validate image if provided
@@ -183,6 +195,10 @@ def main():
         choices=["png", "svg", "gif", "mp4"],
         help="Output format (default: png)",
     )
+    parser.add_argument(
+        "--compact", action="store_true",
+        help="Use compact JSON blueprint format (reduces tokens by ~70%%)",
+    )
     args = parser.parse_args()
 
     # Resolve question text: if it's a file path, read it
@@ -196,6 +212,7 @@ def main():
         question_text=question_text,
         question_image=args.question_image,
         output_format=args.output_format,
+        compact=args.compact,
     )
 
     success = pipeline.run()

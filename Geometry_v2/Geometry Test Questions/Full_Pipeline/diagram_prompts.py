@@ -174,6 +174,80 @@ The rendered diagram must only annotate information that is **explicitly stated 
 
 
 # ======================================================================
+# STAGE 1 (COMPACT): Question Text → JSON Blueprint
+# ======================================================================
+
+Question_to_Blueprint_Compact = """
+You are a computational geometry engine. Analyze the geometry question and output a **minimal JSON blueprint**.
+
+## Output Format
+
+Return ONLY valid JSON (no markdown, no explanation):
+
+```json
+{
+  "dimension": "2d" | "3d",
+  "scale": {"reference": "AB", "real": "12 cm", "units": 5.0},
+  "points": {
+    "A": [x, y, z],
+    "B": [x, y, z]
+  },
+  "lines": [
+    {"id": "line_AB", "from": "A", "to": "B"},
+    {"id": "line_BC", "from": "B", "to": "C", "style": "dashed"}
+  ],
+  "circles": [
+    {"id": "circle_O", "center": "O", "radius": 3.5}
+  ],
+  "arcs": [
+    {"id": "arc_AB", "center": "O", "from": "A", "to": "B"}
+  ],
+  "faces": [
+    {"id": "face_ABC", "points": ["A", "B", "C"]}
+  ],
+  "angles": [
+    {"id": "angle_ABC", "vertex": "B", "p1": "A", "p2": "C", "value": 90.0}
+  ],
+  "given": {
+    "line_AB": "12 cm",
+    "angle_ABC": "90°"
+  },
+  "asked": ["angle_XYZ", "line_PQ"]
+}
+```
+
+## Rules
+
+1. **dimension**: Use "2d" if all Z=0, otherwise "3d"
+2. **scale**: Map first significant length to 5.0 units (e.g., AB=12cm → units=5.0, factor=5/12)
+3. **points**: All coordinates as [X, Y, Z] with 3 decimal places. For 2D, Z=0.000
+4. **lines**: Every segment. Add `"style": "dashed"` for hidden/auxiliary lines
+5. **circles**: Include center point name and computed radius in units
+6. **arcs**: For partial circles (semicircles, etc.)
+7. **faces**: For filled regions/polygons. List points in winding order
+8. **angles**: Only angles that need visual marking (given or asked). Include computed value in degrees
+9. **given**: Map element IDs to their display labels (exactly as stated in question)
+10. **asked**: List of element IDs that the question asks to find (will be highlighted, shown with "?")
+
+## Coordinate Computation
+
+- Place first logical point at origin [0, 0, 0]
+- Align first edge along positive X-axis
+- Base/floor on XY-plane (Z=0)
+- Use trigonometry, Pythagorean theorem, etc. to compute all coordinates precisely
+- Verify computed lengths/angles match given values
+
+## Critical Rules
+
+- Output ONLY the JSON object, no other text
+- All coordinates must be numbers (floats), not strings
+- Element IDs use format: line_AB, angle_ABC, circle_O, face_ABC
+- Do NOT include derived values in "given" - only explicit question data
+- "asked" elements get highlighted with accent color and "?" label (no values)
+"""
+
+
+# ======================================================================
 # STAGE 2: Geometric Blueprint → Rendering Code (render_code.py)
 # ======================================================================
 
@@ -1525,6 +1599,242 @@ self.add_fixed_orientation_mobjects(label_asked)
 ---
 
 ## REMINDER: Output exactly ONE ```python code block. Nothing else.
+
+"""
+
+
+# ======================================================================
+# STAGE 2 (COMPACT): JSON Blueprint → 2D Matplotlib Code
+# ======================================================================
+
+Blueprint_to_Code_2D_Compact = """
+You are a Python visualization expert. Convert a JSON geometry blueprint into a matplotlib script.
+
+## Input Format
+
+You receive a JSON blueprint:
+```json
+{
+  "dimension": "2d",
+  "scale": {"reference": "AB", "real": "12 cm", "units": 5.0},
+  "points": {"A": [0, 0, 0], "B": [5, 0, 0], "C": [2.5, 4.33, 0]},
+  "lines": [{"id": "line_AB", "from": "A", "to": "B"}, ...],
+  "circles": [{"id": "circle_O", "center": "O", "radius": 3.5}],
+  "faces": [{"id": "face_ABC", "points": ["A", "B", "C"]}],
+  "angles": [{"id": "angle_ABC", "vertex": "B", "p1": "A", "p2": "C", "value": 90.0}],
+  "given": {"line_AB": "12 cm", "angle_ABC": "90°"},
+  "asked": ["angle_XYZ"]
+}
+```
+
+## Output: Single Python Script
+
+Generate ONE complete `render_code.py` that:
+- Uses matplotlib with `matplotlib.use('Agg')`
+- Hardcodes all coordinates (no JSON parsing at runtime)
+- Outputs to the specified path
+
+## Styling
+
+- **Background:** `#FFFFFF`
+- **Points:** `#1A1A1A`, size 8
+- **Labels:** `#1A1A1A`, offset away from centroid
+- **Lines:** Cycle colors: `#2A9D8F`, `#264653`, `#457B9D`, `#6A4C93`, `#E76F51`
+- **Given annotations:** Show labels from `given` dict (e.g., "12 cm")
+- **Asked elements:** Use `#E63946` accent, 2x thickness, glow effect, "?" label (NO numerical value)
+- **Angle arcs:** Only for angles in `given` or `asked`
+- **Right angles (90°):** Small square marker
+
+## Figure Size
+
+854 x 480 pixels, DPI 100 (`figsize=(8.54, 4.80)`)
+
+## Template
+
+```python
+#!/usr/bin/env python3
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+from pathlib import Path
+
+# Coordinates from blueprint
+points = {
+    "A": np.array([x, y]),
+    # ...
+}
+
+fig, ax = plt.subplots(figsize=(8.54, 4.80), dpi=100)
+fig.patch.set_facecolor('#FFFFFF')
+ax.set_facecolor('#FFFFFF')
+ax.set_aspect('equal')
+ax.axis('off')
+
+# Draw faces (z=0)
+# Draw lines (z=1-2, glow for asked)
+# Draw angle arcs (z=3)
+# Draw points (z=4)
+# Draw labels (z=5)
+
+# Auto-fit with 20% padding
+all_x = [p[0] for p in points.values()]
+all_y = [p[1] for p in points.values()]
+# Include circle extents if any
+padding = 0.20
+x_range = max(all_x) - min(all_x) or 1
+y_range = max(all_y) - min(all_y) or 1
+ax.set_xlim(min(all_x) - x_range*padding, max(all_x) + x_range*padding)
+ax.set_ylim(min(all_y) - y_range*padding, max(all_y) + y_range*padding)
+
+Path("OUTPUT_PATH").parent.mkdir(parents=True, exist_ok=True)
+plt.savefig("OUTPUT_PATH", dpi=100, bbox_inches='tight', pad_inches=0.3, facecolor='white')
+plt.close()
+print("Saved: OUTPUT_PATH")
+```
+
+## Critical Rules
+
+1. **NEVER show solutions/answers** — only show "?" for asked elements
+2. Only show labels for elements in `given` dict
+3. Hardcode everything, no file I/O
+4. Use `pad_inches=0.3` to prevent label clipping
+5. Output exactly ONE ```python code block
+
+"""
+
+
+# ======================================================================
+# STAGE 2 (COMPACT): JSON Blueprint → 3D Manim Code
+# ======================================================================
+
+Blueprint_to_Code_3D_Compact = """
+You are a Python 3D visualization expert. Convert a JSON geometry blueprint into a manim script.
+
+## Input Format
+
+You receive a JSON blueprint:
+```json
+{
+  "dimension": "3d",
+  "scale": {"reference": "AB", "real": "6 cm", "units": 5.0},
+  "points": {"A": [0, 0, 0], "B": [5, 0, 0], "V": [2.5, 1.44, 4]},
+  "lines": [{"id": "line_AB", "from": "A", "to": "B", "style": "dashed"}, ...],
+  "faces": [{"id": "face_ABC", "points": ["A", "B", "C"]}],
+  "angles": [{"id": "angle_AVB", "vertex": "V", "p1": "A", "p2": "B", "value": 60.0}],
+  "given": {"line_AB": "6 cm"},
+  "asked": ["angle_AVB"]
+}
+```
+
+## Output: Single Python Script
+
+Generate ONE complete `render_code.py` that:
+- Uses manim for 3D rotating animation
+- Hardcodes all coordinates (no JSON parsing)
+- Outputs GIF to the specified path
+
+## Manim Configuration
+
+```python
+config.background_color = "#FFFFFF"
+config.pixel_height = 360
+config.pixel_width = 640
+config.frame_rate = 15
+config.format = "gif"
+config.output_file = "diagram"
+```
+
+## Styling
+
+- **Background:** `#FFFFFF`
+- **Points:** `Dot3D(color="#1A1A1A", radius=0.06)`
+- **Labels:** `Text("A", color="#1A1A1A").scale(0.8)` — use `add_fixed_orientation_mobjects`
+- **Lines:** `Line3D(start, end, color=HEX, thickness=0.02)`
+- **Dashed lines:** Use `DashedLine(start, end, color=HEX, dash_length=0.15)` — **NEVER** `DashedVMobject(Line3D(...))`
+- **Given annotations:** Show labels from `given` dict
+- **Asked elements:** Use `#E63946`, 2x thickness, "?" label (NO numerical value)
+- **Faces:** `Polygon` with `fill_opacity=0.08`, `stroke_opacity=0.3`
+
+## Adaptive Scaling (CRITICAL)
+
+```python
+# 1. Compute centroid
+all_coords = np.array(list(pts_raw.values()))
+centroid = np.mean(all_coords, axis=0)
+
+# 2. Max radius from centroid (for rotation safety)
+centered = all_coords - centroid
+max_radius = max(np.linalg.norm(c) for c in centered)
+
+# 3. Scale to fit frame
+TARGET_SIZE = 3.5  # conservative
+SCALE_FACTOR = min(1.5, TARGET_SIZE / max_radius) if max_radius > 0 else 1.0
+
+# 4. Apply
+pts = {k: (v - centroid) * SCALE_FACTOR for k, v in pts_raw.items()}
+```
+
+## Template Structure
+
+```python
+#!/usr/bin/env python3
+from manim import *
+import numpy as np
+import shutil
+from pathlib import Path
+from manim_helpers import create_3d_angle_arc_with_connections
+
+config.background_color = "#FFFFFF"
+# ... other config
+
+pts_raw = {"A": np.array([0.0, 0.0, 0.0]), ...}  # ALWAYS use floats!
+
+# Scaling code...
+
+class GeometryScene(ThreeDScene):
+    def construct(self):
+        # Camera setup
+        self.set_camera_orientation(phi=65*DEGREES, theta=-45*DEGREES, zoom=0.7)
+
+        # Draw faces, lines, points, labels
+        # ...
+
+        # Rotation animation
+        self.begin_ambient_camera_rotation(rate=0.15)
+        self.wait(8)
+
+# Post-render: move output file
+```
+
+## Critical Rules
+
+1. **ALWAYS use float arrays:** `np.array([1.0, 0.0, 0.0])` NOT `np.array([1, 0, 0])`
+2. **NEVER show solutions/answers** — only "?" for asked elements
+3. **Non-existent classes:** `Polyline`, `DashedLine3D`, `Arc3D`, `Prism` do NOT exist
+4. **Use `fill_opacity`/`stroke_opacity`** NOT `opacity`
+5. **Line3D params:** Only `Line3D(start, end, color=, thickness=)` — NO `radius=`
+6. **Dashed lines:** `DashedLine(start, end, color=HEX, dash_length=0.15)` — **NEVER** use `DashedVMobject(Line3D(...))`
+7. **Text not MathTex:** Use `Text("label")` — no LaTeX
+8. **Cone positioning:** Base at reference point, use `direction=` for apex direction
+9. **No Cylinder class:** Use circles + lines instead
+10. Use `from manim_helpers import create_3d_angle_arc_with_connections` for angle arcs
+
+## Angle Arc Usage
+
+```python
+arc = create_3d_angle_arc_with_connections(
+    center=pts["V"],
+    point1=pts["A"],
+    point2=pts["B"],
+    radius=0.5,
+    color="#E63946"  # accent for asked
+)
+self.add(arc)
+```
+
+## Output exactly ONE ```python code block.
 
 """
 

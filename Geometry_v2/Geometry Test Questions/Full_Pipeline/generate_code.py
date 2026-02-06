@@ -12,6 +12,7 @@ Usage:
 """
 
 import argparse
+import json
 import logging
 import os
 import re
@@ -29,6 +30,8 @@ from diagram_prompts import (
     Blueprint_to_Code_2D_Gemini,
     Blueprint_to_Code_3D_Gemini,
     Blueprint_to_Code_Coordinate,
+    Blueprint_to_Code_2D_Compact,
+    Blueprint_to_Code_3D_Compact,
 )
 
 load_dotenv(".env")
@@ -40,8 +43,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def detect_dimension(blueprint_text):
-    # type: (str) -> str
+def detect_dimension(blueprint_text, is_json=False):
+    # type: (str, bool) -> str
     """Detect dimension type from the blueprint.
 
     First checks for explicit DIMENSION declaration (preferred).
@@ -49,6 +52,19 @@ def detect_dimension(blueprint_text):
 
     Returns "2d", "3d", or "coordinate_2d".
     """
+    # Handle JSON blueprint
+    if is_json:
+        try:
+            data = json.loads(blueprint_text)
+            dim = data.get("dimension", "2d").lower()
+            if dim in ("2d", "3d", "coordinate_2d"):
+                logger.info(f"Found dimension in JSON blueprint: {dim}")
+                return dim
+        except json.JSONDecodeError:
+            pass
+        logger.warning("Could not parse JSON blueprint dimension; defaulting to 2d")
+        return "2d"
+
     # First, check for COORDINATE_2D declaration
     coord_match = re.search(r'\*{0,2}DIMENSION:\s*(COORDINATE_2D)\*{0,2}', blueprint_text, re.IGNORECASE)
     if coord_match:
@@ -97,30 +113,41 @@ def generate_render_code(
     dimension_type,    # type: str
     question_text="",  # type: str
     error_context=None,  # type: Optional[str]
+    compact=False,     # type: bool
 ):
     # type: (...) -> dict
     """Call Gemini 3 Flash to generate rendering code.
+
+    Args:
+        compact: If True, use compact prompts for JSON blueprints.
 
     Returns dict with keys: success, code, api_call_duration, tokens.
     """
     client = genai.Client(api_key=api_key)
 
-    # Select target library and prompt based on dimension type
-    # Using split prompts: 2D-only or 3D-only for smaller, more focused prompts
+    # Select target library and prompt based on dimension type and compact mode
     if dimension_type == "coordinate_2d":
         target_library = "matplotlib"
-        system_prompt = Blueprint_to_Code_Coordinate
+        system_prompt = Blueprint_to_Code_Coordinate  # coordinate always uses verbose prompt
     elif dimension_type == "3d":
         target_library = "manim"
-        system_prompt = Blueprint_to_Code_3D_Gemini
+        system_prompt = Blueprint_to_Code_3D_Compact if compact else Blueprint_to_Code_3D_Gemini
     else:  # "2d"
         target_library = "matplotlib"
-        system_prompt = Blueprint_to_Code_2D_Gemini
+        system_prompt = Blueprint_to_Code_2D_Compact if compact else Blueprint_to_Code_2D_Gemini
+
+    if compact:
+        logger.info(f"Using COMPACT prompt for {target_library} code generation")
+    else:
+        logger.info(f"Using VERBOSE prompt for {target_library} code generation")
+
+    # Format blueprint section label based on mode
+    blueprint_label = "JSON BLUEPRINT" if compact else "BLUEPRINT (coordinates.txt)"
 
     user_message = (
         f"{system_prompt}\n\n"
         f"--- ORIGINAL QUESTION ---\n{question_text}\n--- END QUESTION ---\n\n"
-        f"--- BLUEPRINT (coordinates.txt) ---\n{blueprint_text}\n--- END BLUEPRINT ---\n\n"
+        f"--- {blueprint_label} ---\n{blueprint_text}\n--- END BLUEPRINT ---\n\n"
         f"Target library: {target_library}\n"
         f"Output path: {output_path}\n"
         f"Output format: {output_format}\n"
@@ -188,6 +215,30 @@ def extract_python_code(response_text):
         block = block.strip()
         if "import" in block and ("matplotlib" in block or "manim" in block):
             return block
+
+    # Fallback: detect raw Python code without markdown formatting
+    # This handles cases where the model returns code directly
+    text = response_text.strip()
+    
+    # Strip trailing code block marker if present (model sometimes forgets opening marker)
+    if text.endswith("```"):
+        text = text[:-3].rstrip()
+    
+    # Strip bare language tag prefix (model returns "python\n#!/usr/bin/env..." without backticks)
+    if re.match(r"^python\s*\n", text):
+        text = re.sub(r"^python\s*\n", "", text).strip()
+    
+    # Check if it looks like raw Python code (starts with shebang or imports)
+    is_raw_python = (
+        text.startswith("#!/usr/bin/env python") or
+        text.startswith("from manim import") or
+        text.startswith("import matplotlib") or
+        text.startswith("from matplotlib")
+    )
+    
+    if is_raw_python and ("def " in text or "class " in text):
+        # Verify it has substantial code structure
+        return text
 
     return None
 
@@ -298,6 +349,10 @@ def main():
         "--question-text", default="",
         help="Original question text (helps renderer distinguish given vs derived)",
     )
+    parser.add_argument(
+        "--compact", action="store_true",
+        help="Use compact prompts for JSON blueprints (auto-detected if file is .json)",
+    )
     args = parser.parse_args()
 
     coords_path = Path(args.coordinates)
@@ -308,13 +363,24 @@ def main():
     with open(coords_path, "r", encoding="utf-8") as f:
         blueprint_text = f.read()
 
+    # Auto-detect compact mode from file extension or content
+    is_json = coords_path.suffix.lower() == ".json"
+    if not is_json:
+        # Try to detect if content is JSON
+        stripped = blueprint_text.strip()
+        is_json = stripped.startswith("{") and stripped.endswith("}")
+
+    compact_mode = args.compact or is_json
+    if is_json and not args.compact:
+        logger.info("Auto-detected JSON blueprint; using compact mode")
+
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         logger.error("GEMINI_API_KEY environment variable not set")
         sys.exit(1)
 
     # Auto-detect dimension type
-    dimension_type = detect_dimension(blueprint_text)
+    dimension_type = detect_dimension(blueprint_text, is_json=is_json)
     logger.info(f"Detected dimension type: {dimension_type}")
 
     # Validate format for dimension type
@@ -353,6 +419,7 @@ def main():
             dimension_type=dimension_type,
             question_text=question_text,
             error_context=error_context,
+            compact=compact_mode,
         )
 
         if not result["success"]:

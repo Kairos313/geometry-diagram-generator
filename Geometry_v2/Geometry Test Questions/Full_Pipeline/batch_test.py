@@ -46,6 +46,7 @@ Topic filter:
 import argparse
 import asyncio
 import json
+import logging
 import os
 import shutil
 import sys
@@ -59,6 +60,18 @@ from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template_string, send_from_directory
+
+# ======================================================================
+# Suppress noisy loggers
+# ======================================================================
+logging.getLogger("werkzeug").setLevel(logging.ERROR)   # Flask HTTP request logs
+logging.getLogger("httpx").setLevel(logging.WARNING)     # Gemini SDK HTTP logs
+logging.getLogger("httpcore").setLevel(logging.WARNING)  # httpcore transport logs
+logging.getLogger("google").setLevel(logging.WARNING)    # All google.* loggers
+logging.getLogger("google_genai").setLevel(logging.WARNING)       # google_genai SDK (AFC messages)
+logging.getLogger("generate_code").setLevel(logging.WARNING)      # Pipeline code gen
+logging.getLogger("generate_code_kimi").setLevel(logging.WARNING) # Kimi code gen
+logging.getLogger("generate_blueprint").setLevel(logging.WARNING) # Blueprint gen
 
 # Ensure pipeline modules are importable
 SCRIPT_DIR = Path(__file__).parent
@@ -99,6 +112,7 @@ ALL_QUESTIONS = GEOMETRY_TEST_QUESTIONS
 CURRENT_TEST_SET = "geometry"  # Track which test set is active
 CODEGEN_MODEL = "gemini"  # Track which model is used for code generation ("gemini" or "kimi")
 MAX_WORKERS = 10  # Number of concurrent workers
+COMPACT_MODE = False  # Use compact JSON blueprint format
 
 # ======================================================================
 # Pricing (per million tokens)
@@ -198,7 +212,6 @@ def run_single_question(question: dict) -> QuestionResult:
     run_id = f"{question['id']}_{uuid.uuid4().hex[:8]}"
     output_dir = str(SCRIPT_DIR / "output" / "batch" / run_id)
     os.makedirs(output_dir, exist_ok=True)
-    print(f"[{question['id']}] Created dir: {output_dir} (exists: {Path(output_dir).exists()})")
 
     # --- Stage 1: Blueprint ---
     try:
@@ -206,6 +219,7 @@ def run_single_question(question: dict) -> QuestionResult:
             api_key=blueprint_api_key,
             question_text=question["text"],
             output_dir=output_dir,
+            compact=COMPACT_MODE,
         )
 
         if bp_result["success"]:
@@ -227,7 +241,6 @@ def run_single_question(question: dict) -> QuestionResult:
             # Get dimension from blueprint (Stage 1 now declares it explicitly)
             dimension_type = bp_result.get("dimension", "2d")
             result.dimension = dimension_type
-            print(f"[{question['id']}] Dimension: {dimension_type}")
         else:
             result.blueprint.error = bp_result.get("error", "Unknown error")
             result.total_duration = time.time() - start_time
@@ -257,6 +270,7 @@ def run_single_question(question: dict) -> QuestionResult:
                 output_format=output_format,
                 dimension_type=dimension_type,
                 question_text=question["text"],
+                compact=COMPACT_MODE,
             )
 
             if code_result["success"]:
@@ -369,9 +383,22 @@ async def run_batch_async(questions: List[dict], max_workers: int = 5):
                 result = await task
                 results[q_id] = result
                 batch_status["completed"] += 1
-                print(f"[{batch_status['completed']}/{batch_status['total']}] "
-                      f"{result.question_name}: {'SUCCESS' if result.success else 'FAILED'} "
-                      f"({result.total_duration:.1f}s, ${result.total_cost:.4f})")
+                status = "SUCCESS" if result.success else "FAILED"
+                msg = (f"[{batch_status['completed']}/{batch_status['total']}] "
+                       f"{result.question_name}: {status} "
+                       f"({result.total_duration:.1f}s, ${result.total_cost:.4f})")
+                if not result.success:
+                    # Show which stage failed and why
+                    if result.blueprint.error:
+                        msg += f"\n  -> Blueprint error: {result.blueprint.error[:120]}"
+                    elif result.codegen.error:
+                        msg += f"\n  -> CodeGen error: {result.codegen.error[:120]}"
+                    elif result.execution.error:
+                        err_lines = result.execution.error.strip().split("\n")
+                        # Show last meaningful error line
+                        last_err = err_lines[-1] if err_lines else "Unknown"
+                        msg += f"\n  -> Execution error: {last_err[:120]}"
+                print(msg)
             except Exception as e:
                 print(f"Error processing {q_id}: {e}")
                 batch_status["completed"] += 1
@@ -849,6 +876,11 @@ Examples:
         default=10,
         help="Number of concurrent workers (default: 10)"
     )
+    parser.add_argument(
+        "--compact",
+        action="store_true",
+        help="Use compact JSON blueprint format (reduces tokens by ~70%%)"
+    )
     return parser.parse_args()
 
 
@@ -860,6 +892,9 @@ if __name__ == "__main__":
     # Set code generation model and pricing
     CODEGEN_MODEL = args.codegen_model
     PRICING = PRICING_KIMI if CODEGEN_MODEL == "kimi" else PRICING_GEMINI
+
+    # Set compact mode for JSON blueprints
+    COMPACT_MODE = args.compact
 
     # Build question list based on CLI args
     if args.test_set == "geometry":

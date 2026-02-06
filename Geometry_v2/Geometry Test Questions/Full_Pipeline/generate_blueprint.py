@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import json
 import logging
 import os
 import re
@@ -25,7 +26,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-from diagram_prompts import Question_to_Blueprint_Coordinate_included
+from diagram_prompts import Question_to_Blueprint_Coordinate_included, Question_to_Blueprint_Compact
 
 load_dotenv(".env")
 
@@ -66,23 +67,77 @@ def extract_dimension(blueprint_text):
     return "2d"
 
 
+def extract_dimension_from_json(blueprint_json):
+    # type: (dict) -> str
+    """Extract dimension from a compact JSON blueprint.
+
+    Returns '2d', '3d', or 'coordinate_2d'.
+    """
+    dim = blueprint_json.get("dimension", "2d").lower()
+    if dim in ("2d", "3d", "coordinate_2d"):
+        logger.info(f"Extracted dimension from JSON blueprint: {dim}")
+        return dim
+    logger.info(f"Unknown dimension '{dim}'; defaulting to 2d")
+    return "2d"
+
+
+def parse_compact_blueprint(response_text):
+    # type: (str) -> Optional[dict]
+    """Parse a compact JSON blueprint from the response text.
+
+    Handles markdown code blocks and raw JSON.
+    Returns the parsed dict or None if parsing fails.
+    """
+    text = response_text.strip()
+
+    # Remove markdown code block if present
+    if text.startswith("```"):
+        # Find the end of the opening fence
+        first_newline = text.find("\n")
+        if first_newline != -1:
+            text = text[first_newline + 1:]
+        # Remove closing fence
+        if text.endswith("```"):
+            text = text[:-3].strip()
+        elif "```" in text:
+            text = text[:text.rfind("```")].strip()
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse JSON blueprint: {e}")
+        return None
+
+
 def generate_blueprint(
     api_key,          # type: str
     question_text,    # type: str
     output_dir,       # type: str
     image_path=None,  # type: Optional[str]
+    compact=False,    # type: bool
 ):
     # type: (...) -> dict
     """Call Gemini to generate the geometric blueprint.
+
+    Args:
+        compact: If True, use the compact JSON prompt for reduced output tokens.
 
     Returns a dict with keys: success, blueprint, coordinates_file,
     api_call_duration, prompt_tokens, completion_tokens, total_tokens.
     """
     client = genai.Client(api_key=api_key)
 
+    # Select prompt based on compact mode
+    if compact:
+        prompt_template = Question_to_Blueprint_Compact
+        logger.info("Using COMPACT JSON blueprint prompt")
+    else:
+        prompt_template = Question_to_Blueprint_Coordinate_included
+        logger.info("Using VERBOSE markdown blueprint prompt")
+
     # Build content parts
     text_prompt = (
-        f"{Question_to_Blueprint_Coordinate_included}\n\n"
+        f"{prompt_template}\n\n"
         f"--- QUESTION ---\n{question_text}\n--- END QUESTION ---"
     )
     content_parts = [text_prompt]
@@ -114,15 +169,34 @@ def generate_blueprint(
         blueprint_text = response.text
         usage = response.usage_metadata
 
-        # Extract dimension from the blueprint
-        dimension = extract_dimension(blueprint_text)
-
-        os.makedirs(output_dir, exist_ok=True)
-        coords_file = os.path.join(output_dir, "coordinates.txt")
-        with open(coords_file, "w", encoding="utf-8") as f:
-            f.write("=== GEOMETRIC BLUEPRINT - COORDINATES ===\n\n")
-            f.write(blueprint_text)
-        logger.info(f"Blueprint saved to: {coords_file}")
+        # Extract dimension based on mode
+        if compact:
+            parsed_json = parse_compact_blueprint(blueprint_text)
+            if parsed_json:
+                dimension = extract_dimension_from_json(parsed_json)
+                # Save as JSON file
+                os.makedirs(output_dir, exist_ok=True)
+                coords_file = os.path.join(output_dir, "coordinates.json")
+                with open(coords_file, "w", encoding="utf-8") as f:
+                    json.dump(parsed_json, f, indent=2)
+                logger.info(f"Compact JSON blueprint saved to: {coords_file}")
+            else:
+                # Fallback: save raw text if JSON parsing fails
+                dimension = extract_dimension(blueprint_text)
+                os.makedirs(output_dir, exist_ok=True)
+                coords_file = os.path.join(output_dir, "coordinates.txt")
+                with open(coords_file, "w", encoding="utf-8") as f:
+                    f.write("=== GEOMETRIC BLUEPRINT (JSON PARSE FAILED) ===\n\n")
+                    f.write(blueprint_text)
+                logger.warning(f"JSON parsing failed; saved raw text to: {coords_file}")
+        else:
+            dimension = extract_dimension(blueprint_text)
+            os.makedirs(output_dir, exist_ok=True)
+            coords_file = os.path.join(output_dir, "coordinates.txt")
+            with open(coords_file, "w", encoding="utf-8") as f:
+                f.write("=== GEOMETRIC BLUEPRINT - COORDINATES ===\n\n")
+                f.write(blueprint_text)
+            logger.info(f"Blueprint saved to: {coords_file}")
 
         return {
             "success": True,
@@ -159,6 +233,10 @@ def main():
         "--output-dir", default=None,
         help="Output directory for coordinates.txt (default: script directory)",
     )
+    parser.add_argument(
+        "--compact", action="store_true",
+        help="Use compact JSON blueprint format (reduces output tokens by ~70%%)",
+    )
     args = parser.parse_args()
 
     # Resolve question text: if it's a file path, read the file
@@ -187,6 +265,7 @@ def main():
         question_text=question_text,
         output_dir=output_dir,
         image_path=args.question_image,
+        compact=args.compact,
     )
 
     if result["success"]:
