@@ -69,9 +69,15 @@ logging.getLogger("httpx").setLevel(logging.WARNING)     # Gemini SDK HTTP logs
 logging.getLogger("httpcore").setLevel(logging.WARNING)  # httpcore transport logs
 logging.getLogger("google").setLevel(logging.WARNING)    # All google.* loggers
 logging.getLogger("google_genai").setLevel(logging.WARNING)       # google_genai SDK (AFC messages)
-logging.getLogger("generate_code").setLevel(logging.WARNING)      # Pipeline code gen
-logging.getLogger("generate_code_kimi").setLevel(logging.WARNING) # Kimi code gen
-logging.getLogger("generate_blueprint").setLevel(logging.WARNING) # Blueprint gen
+logging.getLogger("generate_code").setLevel(logging.WARNING)          # Pipeline code gen
+logging.getLogger("generate_code_kimi").setLevel(logging.WARNING)     # Kimi code gen
+logging.getLogger("generate_code_deepseek").setLevel(logging.WARNING) # DeepSeek code gen
+logging.getLogger("generate_code_deepseek_direct").setLevel(logging.WARNING) # DeepSeek Direct code gen
+logging.getLogger("generate_blueprint").setLevel(logging.WARNING)     # Blueprint gen
+logging.getLogger("generate_blueprint_deepseek").setLevel(logging.WARNING) # DeepSeek blueprint gen
+logging.getLogger("generate_blueprint_deepseek_direct").setLevel(logging.WARNING) # DeepSeek Direct blueprint gen
+logging.getLogger("openai").setLevel(logging.WARNING)  # Suppress OpenAI retry messages
+logging.getLogger("httpx").setLevel(logging.WARNING)   # Suppress HTTP retry messages
 
 # Ensure pipeline modules are importable
 SCRIPT_DIR = Path(__file__).parent
@@ -110,7 +116,8 @@ from hkdse_test_questions import (
 # Default to geometry questions; will be updated by CLI args
 ALL_QUESTIONS = GEOMETRY_TEST_QUESTIONS
 CURRENT_TEST_SET = "geometry"  # Track which test set is active
-CODEGEN_MODEL = "gemini"  # Track which model is used for code generation ("gemini" or "kimi")
+CODEGEN_MODEL = "deepseek"  # Track which model is used for code generation ("gemini", "kimi", or "deepseek")
+BLUEPRINT_MODEL = "deepseek"  # Track which model is used for blueprint generation ("gemini" or "deepseek")
 MAX_WORKERS = 10  # Number of concurrent workers
 COMPACT_MODE = False  # Use compact JSON blueprint format
 
@@ -126,6 +133,16 @@ PRICING_GEMINI = {
 PRICING_KIMI = {
     "blueprint": {"input": 0.50, "output": 3.00},  # Gemini 3 Flash (blueprint always uses Gemini)
     "codegen": {"input": 0.45, "output": 2.50},    # Kimi K2.5
+}
+
+PRICING_DEEPSEEK = {
+    "blueprint": {"input": 0.50, "output": 3.00},  # Gemini 3 Flash (blueprint always uses Gemini)
+    "codegen": {"input": 0.28, "output": 0.42},    # DeepSeek-V3.2 on Azure (cache miss rate)
+}
+
+PRICING_DEEPSEEK_DIRECT = {
+    "blueprint": {"input": 0.28, "output": 0.42},  # DeepSeek-Reasoner (direct API, cache miss rate)
+    "codegen": {"input": 0.28, "output": 0.42},    # DeepSeek-Chat (direct API, cache miss rate)
 }
 
 # Will be set based on CODEGEN_MODEL
@@ -170,27 +187,47 @@ batch_status = {"running": False, "completed": 0, "total": 0, "start_time": 0}
 
 def run_single_question(question: dict) -> QuestionResult:
     """Run the full pipeline for a single question."""
-    from generate_blueprint import generate_blueprint
+
+    # Import blueprint generation based on selected model
+    if BLUEPRINT_MODEL == "deepseek":
+        from generate_blueprint_deepseek import generate_blueprint
+        blueprint_api_key = os.getenv("DEEPSEEK_API_KEY")
+        blueprint_key_name = "DEEPSEEK_API_KEY"
+    elif BLUEPRINT_MODEL == "deepseek-direct":
+        from generate_blueprint_deepseek_direct import generate_blueprint
+        blueprint_api_key = os.getenv("NEW_DEEPSEEK_API_KEY")
+        blueprint_key_name = "NEW_DEEPSEEK_API_KEY"
+    else:  # gemini (default)
+        from generate_blueprint import generate_blueprint
+        blueprint_api_key = os.getenv("GEMINI_API_KEY")
+        blueprint_key_name = "GEMINI_API_KEY"
 
     # Import code generation based on selected model
     if CODEGEN_MODEL == "kimi":
         from generate_code_kimi import generate_render_code, execute_code
         codegen_api_key = os.getenv("OPENROUTER_API_KEY")
         codegen_key_name = "OPENROUTER_API_KEY"
+    elif CODEGEN_MODEL == "deepseek":
+        from generate_code_deepseek import generate_render_code, execute_code
+        codegen_api_key = os.getenv("DEEPSEEK_API_KEY")
+        codegen_key_name = "DEEPSEEK_API_KEY"
+    elif CODEGEN_MODEL == "deepseek-direct":
+        from generate_code_deepseek_direct import generate_render_code, execute_code
+        codegen_api_key = os.getenv("NEW_DEEPSEEK_API_KEY")
+        codegen_key_name = "NEW_DEEPSEEK_API_KEY"
     else:  # gemini (default)
         from generate_code import generate_render_code, execute_code
         codegen_api_key = os.getenv("GEMINI_API_KEY")
         codegen_key_name = "GEMINI_API_KEY"
 
-    # Blueprint always uses Gemini
-    blueprint_api_key = os.getenv("GEMINI_API_KEY")
+    # Check blueprint API key
     if not blueprint_api_key:
         result = QuestionResult(
             question_id=question["id"],
             question_name=question["name"],
             question_text=question["text"],
         )
-        result.blueprint.error = "GEMINI_API_KEY not set"
+        result.blueprint.error = f"{blueprint_key_name} not set"
         return result
 
     if not codegen_api_key:
@@ -215,12 +252,13 @@ def run_single_question(question: dict) -> QuestionResult:
 
     # --- Stage 1: Blueprint ---
     try:
-        bp_result = generate_blueprint(
+        bp_kwargs = dict(
             api_key=blueprint_api_key,
             question_text=question["text"],
             output_dir=output_dir,
             compact=COMPACT_MODE,
         )
+        bp_result = generate_blueprint(**bp_kwargs)
 
         if bp_result["success"]:
             result.blueprint.success = True
@@ -263,7 +301,7 @@ def run_single_question(question: dict) -> QuestionResult:
 
     for attempt in range(1, max_codegen_attempts + 1):
         try:
-            code_result = generate_render_code(
+            codegen_kwargs = dict(
                 api_key=codegen_api_key,
                 blueprint_text=blueprint_text,
                 output_path=output_path,
@@ -272,6 +310,7 @@ def run_single_question(question: dict) -> QuestionResult:
                 question_text=question["text"],
                 compact=COMPACT_MODE,
             )
+            code_result = generate_render_code(**codegen_kwargs)
 
             if code_result["success"]:
                 result.codegen.duration = code_result["api_call_duration"]
@@ -339,7 +378,7 @@ def run_single_question(question: dict) -> QuestionResult:
     try:
         use_manim = (dimension_type == "3d")
         timeout = 300 if use_manim else 120
-        exec_result = execute_code(code_path, timeout=timeout, use_manim_cli=use_manim, output_path=output_path)
+        exec_result = execute_code(code_path, timeout=timeout, use_manim_cli=use_manim, output_path=output_path, dimension_type=dimension_type)
 
         result.execution.duration = time.time() - exec_start
         result.execution.success = exec_result["success"] and Path(output_path).exists()
@@ -495,6 +534,7 @@ def get_status():
                 "pending": True,
             })
 
+    _model_names = {"kimi": "Kimi K2.5", "deepseek": "DeepSeek-V3.2", "deepseek-direct": "DeepSeek-Reasoner/Chat", "gemini": "Gemini 3 Flash"}
     return jsonify({
         "running": batch_status["running"],
         "completed": batch_status["completed"],
@@ -504,6 +544,8 @@ def get_status():
         "success_count": success_count,
         "results": results_list,
         "pricing": PRICING,
+        "blueprint_model": _model_names.get(BLUEPRINT_MODEL, BLUEPRINT_MODEL),
+        "codegen_model": _model_names.get(CODEGEN_MODEL, CODEGEN_MODEL),
     })
 
 
@@ -543,6 +585,19 @@ body{background:#0C0C0C;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFo
 .summary-card .label{color:#888;font-size:.75rem;text-transform:uppercase}
 .summary-card .sub-value{color:#E9C46A;font-size:.9rem;font-weight:600;margin-top:.25rem}
 .summary-card.highlight{border-color:#4ECDC4;background:#1a2a2a}
+
+.model-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.model-panel{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:1rem}
+.model-panel-title{font-size:.85rem;font-weight:700;color:#4ECDC4;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.model-panel-title .model-tag{background:#2a2a2a;color:#aaa;font-size:.7rem;font-weight:400;padding:.15rem .5rem;border-radius:3px}
+.token-row{display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;font-size:.82rem}
+.token-row:not(:last-child){border-bottom:1px solid #222}
+.token-label{color:#888}
+.token-val{color:#e0e0e0;font-weight:600}
+.token-cost{color:#E9C46A;font-size:.78rem;margin-left:.5rem}
+.model-total{margin-top:.5rem;padding-top:.5rem;border-top:1px solid #333;display:flex;justify-content:space-between;font-size:.85rem;font-weight:700}
+.model-total .token-label{color:#aaa}
+.model-total .token-val{color:#4ECDC4}
 
 .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(450px,1fr));gap:1rem}
 .result-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;overflow:hidden}
@@ -618,6 +673,44 @@ body{background:#0C0C0C;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFo
   <div class="summary-card highlight">
     <div class="value" id="total-cost">$0.0000</div>
     <div class="label">Total Cost</div>
+  </div>
+  <div class="summary-card">
+    <div class="value" id="cost-per-gen">$0.0000</div>
+    <div class="label">Per Diagram</div>
+    <div class="sub-value" id="cost-per-gen-hkd">HK$0.0000</div>
+  </div>
+</div>
+
+<div class="model-breakdown" id="model-breakdown" style="display:none">
+  <div class="model-panel">
+    <div class="model-panel-title">Blueprint <span class="model-tag" id="bp-model-tag">Gemini 3 Flash</span></div>
+    <div class="token-row">
+      <span class="token-label">Input Tokens</span>
+      <span><span class="token-val" id="bp-input-tokens">0</span><span class="token-cost" id="bp-input-cost">$0.0000</span></span>
+    </div>
+    <div class="token-row">
+      <span class="token-label">Output Tokens</span>
+      <span><span class="token-val" id="bp-output-tokens">0</span><span class="token-cost" id="bp-output-cost">$0.0000</span></span>
+    </div>
+    <div class="model-total">
+      <span class="token-label">Total</span>
+      <span class="token-val" id="bp-total-cost">$0.0000</span>
+    </div>
+  </div>
+  <div class="model-panel">
+    <div class="model-panel-title">CodeGen <span class="model-tag" id="cg-model-tag">—</span></div>
+    <div class="token-row">
+      <span class="token-label">Input Tokens</span>
+      <span><span class="token-val" id="cg-input-tokens">0</span><span class="token-cost" id="cg-input-cost">$0.0000</span></span>
+    </div>
+    <div class="token-row">
+      <span class="token-label">Output Tokens</span>
+      <span><span class="token-val" id="cg-output-tokens">0</span><span class="token-cost" id="cg-output-cost">$0.0000</span></span>
+    </div>
+    <div class="model-total">
+      <span class="token-label">Total</span>
+      <span class="token-val" id="cg-total-cost">$0.0000</span>
+    </div>
   </div>
 </div>
 
@@ -707,6 +800,52 @@ function updateUI(data) {
   document.getElementById('output-tokens').textContent = outputTokens.toLocaleString();
   document.getElementById('input-cost').textContent = '$' + inputCost.toFixed(4);
   document.getElementById('output-cost').textContent = '$' + outputCost.toFixed(4);
+
+  // Per-diagram cost (USD and HKD)
+  var USD_TO_HKD = 7.8;
+  var completedCount = data.completed || 0;
+  var costPerGen = completedCount > 0 ? data.total_cost / completedCount : 0;
+  var costPerGenHKD = costPerGen * USD_TO_HKD;
+  document.getElementById('cost-per-gen').textContent = '$' + costPerGen.toFixed(4);
+  document.getElementById('cost-per-gen-hkd').textContent = 'HK$' + costPerGenHKD.toFixed(4);
+
+  // Model breakdown panel
+  var bpIn = 0, bpOut = 0, cgIn = 0, cgOut = 0;
+  data.results.forEach(function(r) {
+    if (r.blueprint) {
+      bpIn += r.blueprint.prompt_tokens || 0;
+      bpOut += r.blueprint.completion_tokens || 0;
+    }
+    if (r.codegen) {
+      cgIn += r.codegen.prompt_tokens || 0;
+      cgOut += r.codegen.completion_tokens || 0;
+    }
+  });
+
+  var bpInCost = (bpIn / 1e6) * bpInputPrice;
+  var bpOutCost = (bpOut / 1e6) * bpOutputPrice;
+  var cgInCost = (cgIn / 1e6) * cgInputPrice;
+  var cgOutCost = (cgOut / 1e6) * cgOutputPrice;
+
+  document.getElementById('bp-input-tokens').textContent = bpIn.toLocaleString();
+  document.getElementById('bp-output-tokens').textContent = bpOut.toLocaleString();
+  document.getElementById('bp-input-cost').textContent = '$' + bpInCost.toFixed(4);
+  document.getElementById('bp-output-cost').textContent = '$' + bpOutCost.toFixed(4);
+  document.getElementById('bp-total-cost').textContent = '$' + (bpInCost + bpOutCost).toFixed(4);
+
+  document.getElementById('cg-input-tokens').textContent = cgIn.toLocaleString();
+  document.getElementById('cg-output-tokens').textContent = cgOut.toLocaleString();
+  document.getElementById('cg-input-cost').textContent = '$' + cgInCost.toFixed(4);
+  document.getElementById('cg-output-cost').textContent = '$' + cgOutCost.toFixed(4);
+  document.getElementById('cg-total-cost').textContent = '$' + (cgInCost + cgOutCost).toFixed(4);
+
+  if (data.blueprint_model) document.getElementById('bp-model-tag').textContent = data.blueprint_model;
+  if (data.codegen_model) document.getElementById('cg-model-tag').textContent = data.codegen_model;
+
+  // Show breakdown panel once we have results
+  if (data.completed > 0) {
+    document.getElementById('model-breakdown').style.display = 'grid';
+  }
 
   renderResults(data.results);
 
@@ -861,9 +1000,15 @@ Examples:
     )
     parser.add_argument(
         "--codegen-model",
-        choices=["gemini", "kimi"],
+        choices=["gemini", "kimi", "deepseek", "deepseek-direct"],
         default="gemini",
-        help="Model for code generation: gemini (default) or kimi (Kimi K2.5)"
+        help="Model for code generation: gemini (default), kimi (Kimi K2.5), deepseek (DeepSeek-V3.2 Azure), or deepseek-direct (DeepSeek-Chat direct API)"
+    )
+    parser.add_argument(
+        "--blueprint-model",
+        choices=["gemini", "deepseek", "deepseek-direct"],
+        default="gemini",
+        help="Model for blueprint generation: gemini (default), deepseek (DeepSeek-V3.2 Azure), or deepseek-direct (DeepSeek-Reasoner direct API with thinking)"
     )
     parser.add_argument(
         "--no-browser",
@@ -891,7 +1036,24 @@ if __name__ == "__main__":
 
     # Set code generation model and pricing
     CODEGEN_MODEL = args.codegen_model
-    PRICING = PRICING_KIMI if CODEGEN_MODEL == "kimi" else PRICING_GEMINI
+    BLUEPRINT_MODEL = args.blueprint_model
+
+    if CODEGEN_MODEL == "kimi":
+        PRICING = PRICING_KIMI
+    elif CODEGEN_MODEL == "deepseek":
+        PRICING = PRICING_DEEPSEEK
+    elif CODEGEN_MODEL == "deepseek-direct":
+        PRICING = PRICING_DEEPSEEK_DIRECT
+    else:
+        PRICING = PRICING_GEMINI
+
+    # Override blueprint pricing if using DeepSeek for blueprints too
+    if BLUEPRINT_MODEL == "deepseek":
+        PRICING = dict(PRICING)  # shallow copy so we don't mutate the original
+        PRICING["blueprint"] = PRICING_DEEPSEEK["codegen"]  # DeepSeek pricing for blueprint stage
+    elif BLUEPRINT_MODEL == "deepseek-direct":
+        PRICING = dict(PRICING)  # shallow copy
+        PRICING["blueprint"] = PRICING_DEEPSEEK_DIRECT["blueprint"]  # DeepSeek-Reasoner pricing
 
     # Set compact mode for JSON blueprints
     COMPACT_MODE = args.compact
@@ -962,9 +1124,12 @@ if __name__ == "__main__":
     print(f"Test set: {test_set_name}")
     print(f"Questions: {len(ALL_QUESTIONS)}")
     prompt_path = "Coordinate prompts" if args.test_set == "coordinate" else "Original prompts" if args.test_set in ("geometry", "hkdse") else "Mixed"
-    codegen_model_name = "Kimi K2.5" if CODEGEN_MODEL == "kimi" else "Gemini 3 Flash"
+    model_names = {"kimi": "Kimi K2.5", "deepseek": "DeepSeek-V3.2", "gemini": "Gemini 3 Flash"}
+    bp_model_name = model_names.get(BLUEPRINT_MODEL, BLUEPRINT_MODEL)
+    cg_model_name = model_names.get(CODEGEN_MODEL, CODEGEN_MODEL)
     print(f"Prompt path: {prompt_path}")
-    print(f"Code generation: {codegen_model_name}")
+    print(f"Blueprint: {bp_model_name}")
+    print(f"Code generation: {cg_model_name}")
     print(f"Concurrent workers: {MAX_WORKERS}")
 
     if not args.no_browser:
