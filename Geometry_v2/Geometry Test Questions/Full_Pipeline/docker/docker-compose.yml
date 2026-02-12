@@ -1,0 +1,171 @@
+# ============================================================================
+# SANDBOXED MANIM RENDERER - DOCKER COMPOSE
+# ============================================================================
+# This docker-compose file provides a secure, isolated environment for
+# rendering AI-generated Manim animations. It implements multiple layers
+# of security to contain potentially malicious code.
+#
+# Usage:
+#   docker-compose run --rm renderer render
+#   docker-compose run --rm renderer test
+#
+# ============================================================================
+
+services:
+  renderer:
+    # Build configuration
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: manim-sandbox:latest
+
+    # ========================================================================
+    # SECURITY: NETWORK ISOLATION
+    # ========================================================================
+    # Completely disable network access - the renderer has no legitimate
+    # need to make network connections
+    network_mode: none
+
+    # ========================================================================
+    # SECURITY: USER NAMESPACE
+    # ========================================================================
+    # Run as non-root user (defined in Dockerfile)
+    # Additional user namespace mapping can be configured in Docker daemon
+
+    # ========================================================================
+    # SECURITY: RESOURCE LIMITS
+    # ========================================================================
+    # Prevent resource exhaustion attacks (fork bombs, memory bombs, etc.)
+    #
+    # NOTE: 'deploy.resources' only works in Swarm mode.
+    # For standalone 'docker compose run', use mem_limit and cpus directly.
+    mem_limit: 8g             # Max 8GB RAM (Manim can be memory-hungry)
+    memswap_limit: 8g         # Prevent swap usage beyond memory limit
+    cpus: 4                   # Max 4 CPU cores
+
+    # Process limits
+    ulimits:
+      nproc: 256              # Max 256 processes (prevents fork bombs)
+      nofile:
+        soft: 1024
+        hard: 2048
+
+    # ========================================================================
+    # SECURITY: CAPABILITY DROPPING
+    # ========================================================================
+    # Drop all Linux capabilities - we don't need any elevated privileges
+    cap_drop:
+      - ALL
+
+    # ========================================================================
+    # SECURITY: SECURITY OPTIONS
+    # ========================================================================
+    security_opt:
+      # Prevent privilege escalation
+      - no-new-privileges:true
+      # Use Docker's default seccomp profile (blocks ~44 dangerous syscalls)
+
+    # ========================================================================
+    # SECURITY: READ-ONLY FILESYSTEM
+    # ========================================================================
+    # Make root filesystem read-only where practical
+    read_only: false  # Set to true for maximum security (needs tmpfs mounts)
+
+    # ========================================================================
+    # VOLUME MOUNTS
+    # ========================================================================
+    volumes:
+      # Input directory - READ ONLY
+      # Contains: all_scenes.py, figure.py, Audio/, Scene/
+      - type: bind
+        source: ./input
+        target: /input
+        read_only: true
+
+      # Output directory - WRITE ENABLED
+      # Rendered videos will be placed here
+      - type: bind
+        source: ./output
+        target: /output
+        read_only: false
+
+      # Temporary filesystem for /tmp (in-memory, auto-cleaned)
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 1G
+          mode: 1777
+
+    # ========================================================================
+    # ENVIRONMENT VARIABLES
+    # ========================================================================
+    environment:
+      # Render quality: ql (480p), qm (720p), qh (1080p)
+      - QUALITY=${QUALITY:-ql}
+      # Max render time per scene (seconds)
+      - MAX_TIME=${MAX_TIME:-600}
+      # Disable Python bytecode (security)
+      - PYTHONDONTWRITEBYTECODE=1
+
+    # ========================================================================
+    # RUNTIME CONFIGURATION
+    # ========================================================================
+    working_dir: /work
+    stdin_open: false
+    tty: false
+
+    # Stop container after this many seconds if hung
+    stop_grace_period: 30s
+
+    # ========================================================================
+    # LOGGING
+    # ========================================================================
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# ============================================================================
+# HIGH SECURITY PROFILE (Alternative)
+# ============================================================================
+# Uncomment this service for maximum security at the cost of some convenience
+
+  renderer-hardened:
+    extends:
+      service: renderer
+
+    # Additional hardening
+    read_only: true
+
+    # Additional tmpfs mounts needed for read-only mode
+    volumes:
+      - type: bind
+        source: ./input
+        target: /input
+        read_only: true
+      - type: bind
+        source: ./output
+        target: /output
+        read_only: false
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 1G
+      - type: tmpfs
+        target: /work
+        tmpfs:
+          size: 2G
+      - type: tmpfs
+        target: /home/sandbox
+        tmpfs:
+          size: 100M
+
+    # Even stricter resource limits
+    mem_limit: 4g
+    memswap_limit: 4g
+    cpus: 2
+
+    profiles:
+      - hardened

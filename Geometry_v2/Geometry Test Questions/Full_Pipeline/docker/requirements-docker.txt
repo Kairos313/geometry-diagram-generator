@@ -1,0 +1,27 @@
+# ============================================================================
+# REQUIREMENTS FOR SANDBOXED MANIM RENDERER
+# ============================================================================
+# Minimal dependencies needed for rendering only (Step 5 of the pipeline)
+# No API clients or network-dependent packages included for security
+# ============================================================================
+
+# Core animation framework
+manim==0.18.1
+
+# Video processing
+moviepy==2.0.0
+
+# Numerical computation (required by Manim)
+numpy>=1.24.0,<2.0.0
+
+# Image processing
+pillow>=10.0.0
+
+# Audio file handling (for synchronized audio)
+pydub>=0.25.0
+
+# Progress bars (used by Manim)
+tqdm>=4.65.0
+
+# Type hints compatibility
+typing-extensions>=4.7.0
