@@ -115,8 +115,10 @@ def generate_render_code(
         target_library = "matplotlib"
         system_prompt = Blueprint_to_Code_Gemini
 
+    # NOTE: We intentionally do NOT pass the original question text to avoid
+    # contamination (e.g., question phrases appearing as labels in the diagram).
+    # The blueprint should be self-contained with all necessary information.
     user_message = (
-        f"--- ORIGINAL QUESTION ---\n{question_text}\n--- END QUESTION ---\n\n"
         f"--- BLUEPRINT (coordinates.txt) ---\n{blueprint_text}\n--- END BLUEPRINT ---\n\n"
         f"Target library: {target_library}\n"
         f"Output path: {output_path}\n"
@@ -209,21 +211,27 @@ def extract_python_code(response_text):
 
 
 MANIM_HELPERS_PATH = Path(__file__).parent / "manim_helpers.py"
+MATPLOTLIB_HELPERS_PATH = Path(__file__).parent / "matplotlib_helpers.py"
 
 
-def ensure_helpers(code_dir):
-    # type: (str) -> None
-    """Copy manim_helpers.py into the code directory so render_code.py can import it."""
-    dst = Path(code_dir) / "manim_helpers.py"
-    if MANIM_HELPERS_PATH.exists() and not dst.exists():
-        shutil.copy2(str(MANIM_HELPERS_PATH), str(dst))
+def ensure_helpers(code_dir, dimension_type="3d"):
+    # type: (str, str) -> None
+    """Copy helper files into the code directory so render_code.py can import them."""
+    if dimension_type == "3d":
+        dst = Path(code_dir) / "manim_helpers.py"
+        if MANIM_HELPERS_PATH.exists() and not dst.exists():
+            shutil.copy2(str(MANIM_HELPERS_PATH), str(dst))
+    if dimension_type in ("2d", "coordinate_2d"):
+        dst = Path(code_dir) / "matplotlib_helpers.py"
+        if MATPLOTLIB_HELPERS_PATH.exists() and not dst.exists():
+            shutil.copy2(str(MATPLOTLIB_HELPERS_PATH), str(dst))
 
 
 MANIM_CLI_PATH = "/Users/kairos/.local/bin/manim"
 
 
-def execute_code(code_path, timeout=120, use_manim_cli=False, output_path=None):
-    # type: (str, int, bool, Optional[str]) -> dict
+def execute_code(code_path, timeout=120, use_manim_cli=False, output_path=None, dimension_type="3d"):
+    # type: (str, int, bool, Optional[str], str) -> dict
     """Execute the generated Python script.
 
     For 3D manim code, use_manim_cli=True to invoke the manim CLI directly
@@ -232,7 +240,7 @@ def execute_code(code_path, timeout=120, use_manim_cli=False, output_path=None):
     Returns dict with keys: success, stdout, stderr, returncode.
     """
     code_dir = str(Path(code_path).parent)
-    ensure_helpers(code_dir)
+    ensure_helpers(code_dir, dimension_type=dimension_type)
 
     try:
         if use_manim_cli and Path(MANIM_CLI_PATH).exists():

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Stage 2: Generate rendering code from a geometric blueprint, then execute it.
+Stage 2: Generate rendering code from a geometric blueprint using DeepSeek-V3.2.
 
-Uses Gemini 3 Flash via the Google GenAI client to write a self-contained
+Uses DeepSeek-V3.2 via Azure OpenAI endpoint to write a self-contained
 Python script that renders the geometry described in coordinates.txt.
 
 Auto-detects 2D vs 3D from the blueprint's Z coordinates.
 
 Usage:
-    python3 generate_code.py --coordinates coordinates.txt --output output/diagram.png --format png
+    python3 generate_code_deepseek.py --coordinates coordinates.txt --output output/diagram.png --format png
 """
 
 import argparse
@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 
 from diagram_prompts import (
     Blueprint_to_Code_2D_Gemini,
@@ -32,6 +32,8 @@ from diagram_prompts import (
     Blueprint_to_Code_Coordinate,
     Blueprint_to_Code_2D_Compact,
     Blueprint_to_Code_3D_Compact,
+    Blueprint_to_Code_2D_DeepSeek,
+    Blueprint_to_Code_3D_DeepSeek,
 )
 
 load_dotenv(".env")
@@ -41,6 +43,10 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Azure endpoint for DeepSeek-V3.2
+DEEPSEEK_ENDPOINT = "https://raksh-m4jj47jc-japaneast.services.ai.azure.com/openai/v1/"
+DEEPSEEK_MODEL = "DeepSeek-V3.2"
 
 
 def detect_dimension(blueprint_text, is_json=False):
@@ -81,13 +87,11 @@ def detect_dimension(blueprint_text, is_json=False):
     # Fallback: parse Z coordinates from the point table
     logger.info("No explicit dimension declaration; parsing Z coordinates...")
     z_values = []
-    # Match rows like:  | A | 0.000 | 0.000 | 0.000 | ...
-    # or with bold:     | **A** | 0.000 | 0.000 | 0.000 | ...
     row_pattern = re.compile(
-        r"\|\s*\*{0,2}\w+\*{0,2}\s*\|"   # Point name (optionally bold)
-        r"\s*(-?[\d.]+)\s*\|"              # X
-        r"\s*(-?[\d.]+)\s*\|"              # Y
-        r"\s*(-?[\d.]+)\s*\|",             # Z
+        r"\|\s*\*{0,2}\w+\*{0,2}\s*\|"
+        r"\s*(-?[\d.]+)\s*\|"
+        r"\s*(-?[\d.]+)\s*\|"
+        r"\s*(-?[\d.]+)\s*\|",
     )
     for m in row_pattern.finditer(blueprint_text):
         try:
@@ -99,7 +103,6 @@ def detect_dimension(blueprint_text, is_json=False):
         logger.warning("Could not parse Z coordinates; defaulting to 2D")
         return "2d"
 
-    # If all Z values are identical (typically 0), it's 2D
     if len(set(round(z, 3) for z in z_values)) <= 1:
         return "2d"
     return "3d"
@@ -116,30 +119,42 @@ def generate_render_code(
     compact=False,     # type: bool
 ):
     # type: (...) -> dict
-    """Call Gemini 3 Flash to generate rendering code.
+    """Call DeepSeek-V3.2 via Azure OpenAI to generate rendering code.
 
     Args:
         compact: If True, use compact prompts for JSON blueprints.
 
     Returns dict with keys: success, code, api_call_duration, tokens.
     """
-    client = genai.Client(api_key=api_key)
+    client = OpenAI(
+        base_url=DEEPSEEK_ENDPOINT,
+        api_key=api_key,
+    )
 
     # Select target library and prompt based on dimension type and compact mode
+    # DeepSeek-specific prompts have stronger guardrails (helper imports, prohibited APIs)
     if dimension_type == "coordinate_2d":
         target_library = "matplotlib"
-        system_prompt = Blueprint_to_Code_Coordinate  # coordinate always uses verbose prompt
+        system_prompt = Blueprint_to_Code_Coordinate
+        prompt_label = "COORDINATE"
     elif dimension_type == "3d":
         target_library = "manim"
-        system_prompt = Blueprint_to_Code_3D_Compact if compact else Blueprint_to_Code_3D_Gemini
+        if compact:
+            system_prompt = Blueprint_to_Code_3D_DeepSeek
+            prompt_label = "DEEPSEEK-3D"
+        else:
+            system_prompt = Blueprint_to_Code_3D_Gemini
+            prompt_label = "VERBOSE-3D"
     else:  # "2d"
         target_library = "matplotlib"
-        system_prompt = Blueprint_to_Code_2D_Compact if compact else Blueprint_to_Code_2D_Gemini
+        if compact:
+            system_prompt = Blueprint_to_Code_2D_DeepSeek
+            prompt_label = "DEEPSEEK-2D"
+        else:
+            system_prompt = Blueprint_to_Code_2D_Gemini
+            prompt_label = "VERBOSE-2D"
 
-    if compact:
-        logger.info(f"Using COMPACT prompt for {target_library} code generation")
-    else:
-        logger.info(f"Using VERBOSE prompt for {target_library} code generation")
+    logger.info(f"Using {prompt_label} prompt for {target_library} code generation")
 
     # Format blueprint section label based on mode
     blueprint_label = "JSON BLUEPRINT" if compact else "BLUEPRINT (coordinates.txt)"
@@ -148,7 +163,6 @@ def generate_render_code(
     # contamination (e.g., question phrases appearing as labels in the diagram).
     # The blueprint should be self-contained with all necessary information.
     user_message = (
-        f"{system_prompt}\n\n"
         f"--- {blueprint_label} ---\n{blueprint_text}\n--- END BLUEPRINT ---\n\n"
         f"Target library: {target_library}\n"
         f"Output path: {output_path}\n"
@@ -163,22 +177,26 @@ def generate_render_code(
             f"--- END ERROR ---\n"
         )
 
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message},
+    ]
+
     try:
         start = time.time()
-        logger.info(f"Calling Gemini 3 Flash for {target_library} code generation...")
-        response = client.models.generate_content(
-            model="gemini-3-flash-preview",
-            contents=user_message,
-            config={
-                "max_output_tokens": 65536,
-                "temperature": 0.0,
-                "thinking_config": {"thinking_budget": 4096},
-            },
+        logger.info(f"Calling DeepSeek-V3.2 for {target_library} code generation...")
+
+        response = client.chat.completions.create(
+            model=DEEPSEEK_MODEL,
+            messages=messages,
+            max_tokens=16384,
+            temperature=0.0,
         )
         elapsed = time.time() - start
 
-        response_text = response.text
-        usage = response.usage_metadata
+        message = response.choices[0].message
+        response_text = message.content
+        usage = response.usage
 
         logger.debug(f"Response text length: {len(response_text) if response_text else 0}")
         logger.debug(f"Response text (first 500): {response_text[:500] if response_text else 'EMPTY'}")
@@ -189,26 +207,32 @@ def generate_render_code(
             logger.error(f"Full response text:\n{response_text}")
             return {"success": False, "error": "No Python code block found in response"}
 
+        # Apply defensive post-processing
+        code = postprocess_code(code, dimension_type)
+
         return {
             "success": True,
             "code": code,
             "api_call_duration": elapsed,
-            "prompt_tokens": usage.prompt_token_count if usage else 0,
-            "completion_tokens": usage.candidates_token_count if usage else 0,
-            "total_tokens": usage.total_token_count if usage else 0,
+            "prompt_tokens": usage.prompt_tokens if usage else 0,
+            "completion_tokens": usage.completion_tokens if usage else 0,
+            "total_tokens": usage.total_tokens if usage else 0,
         }
 
     except Exception as e:
+        logger.error(f"API call failed: {e}")
         return {"success": False, "error": str(e)}
 
 
 def extract_python_code(response_text):
     # type: (str) -> Optional[str]
     """Extract Python code from a markdown response."""
+    if not response_text:
+        return None
+
     # Try ```python ... ``` blocks first
     blocks = re.findall(r"```python\s*(.*?)```", response_text, re.DOTALL)
     if blocks:
-        # Return the longest block (likely the main script)
         return max(blocks, key=len).strip()
 
     # Try generic ``` ... ``` blocks
@@ -219,27 +243,25 @@ def extract_python_code(response_text):
             return block
 
     # Fallback: detect raw Python code without markdown formatting
-    # This handles cases where the model returns code directly
     text = response_text.strip()
-    
-    # Strip trailing code block marker if present (model sometimes forgets opening marker)
+
+    # Strip trailing code block marker if present
     if text.endswith("```"):
         text = text[:-3].rstrip()
-    
-    # Strip bare language tag prefix (model returns "python\n#!/usr/bin/env..." without backticks)
+
+    # Strip bare language tag prefix
     if re.match(r"^python\s*\n", text):
         text = re.sub(r"^python\s*\n", "", text).strip()
-    
-    # Check if it looks like raw Python code (starts with shebang or imports)
+
+    # Check if it looks like raw Python code
     is_raw_python = (
         text.startswith("#!/usr/bin/env python") or
         text.startswith("from manim import") or
         text.startswith("import matplotlib") or
         text.startswith("from matplotlib")
     )
-    
+
     if is_raw_python and ("def " in text or "class " in text):
-        # Verify it has substantial code structure
         return text
 
     return None
@@ -248,14 +270,186 @@ def extract_python_code(response_text):
 MANIM_HELPERS_PATH = Path(__file__).parent / "manim_helpers.py"
 MATPLOTLIB_HELPERS_PATH = Path(__file__).parent / "matplotlib_helpers.py"
 
+# Defense-in-depth: auto-patch common DeepSeek code generation mistakes.
+# Set to False to disable post-processing and pass generated code through as-is.
+ENABLE_CODE_POSTPROCESSING = True
+
+
+def postprocess_code(code, dimension_type):
+    # type: (str, str) -> str
+    """Apply defensive patches to generated code to fix known DeepSeek mistakes.
+
+    Only runs when ENABLE_CODE_POSTPROCESSING is True.
+    Returns the (potentially modified) code string.
+    """
+    if not ENABLE_CODE_POSTPROCESSING:
+        return code
+
+    original = code
+    patches_applied = []
+
+    # --- 3D Manim patches ---
+    if dimension_type == "3d":
+        # 1. Replace Polyline(...) with VMobject(stroke_width=2).set_points_as_corners([...])
+        #    Handles:  Polyline(*arc_points, color=X, stroke_width=N)
+        polyline_pattern = re.compile(
+            r'Polyline\(\s*\*(\w+)\s*,\s*color\s*=\s*([^,)]+)\s*,\s*stroke_width\s*=\s*(\d+)\s*\)'
+        )
+        if polyline_pattern.search(code):
+            code = polyline_pattern.sub(
+                r'VMobject(stroke_color=\2, stroke_width=\3).set_points_as_corners(\1)',
+                code,
+            )
+            patches_applied.append("Polyline→VMobject.set_points_as_corners")
+
+        # Simpler Polyline(*points) without keyword args
+        simple_polyline = re.compile(r'Polyline\(\s*\*(\w+)\s*\)')
+        if simple_polyline.search(code):
+            code = simple_polyline.sub(
+                r'VMobject(stroke_width=2).set_points_as_corners(\1)',
+                code,
+            )
+            patches_applied.append("Polyline(simple)→VMobject.set_points_as_corners")
+
+        # 2. Replace DashedLine3D with DashedLine
+        if "DashedLine3D" in code:
+            code = code.replace("DashedLine3D", "DashedLine")
+            patches_applied.append("DashedLine3D→DashedLine")
+
+        # 3. Replace rotation_matrix( with manual Rodrigues (common DeepSeek mistake)
+        if "rotation_matrix(" in code and "from manim" in code:
+            # Don't patch if it's defined locally — just warn
+            patches_applied.append("WARNING: rotation_matrix() used (may not exist)")
+
+        # 4. Ensure manim_helpers import for angle arc helper
+        if "from manim_helpers import" not in code:
+            if "create_3d_angle_arc_with_connections" in code:
+                code = code.replace(
+                    "from manim import *",
+                    "from manim import *\nfrom manim_helpers import create_3d_angle_arc_with_connections",
+                    1,
+                )
+                patches_applied.append("injected manim_helpers import")
+
+        # 5. If model re-defined the helper function, strip it and ensure import
+        redef_pattern = re.compile(
+            r'^def create_3d_angle_arc_with_connections\(.*?\n(?:(?:    .*|)\n)*',
+            re.MULTILINE,
+        )
+        if redef_pattern.search(code) and "from manim_helpers import" in code:
+            code = redef_pattern.sub("", code)
+            patches_applied.append("stripped re-defined helper function")
+
+        # 6. Replace bare `opacity=` with `fill_opacity=` in Mobject constructors
+        #    Manim Mobjects (Sphere, Polygon, etc.) don't accept `opacity` — they need `fill_opacity`.
+        #    Only replace when it's a keyword arg (not inside .set_stroke() or .set_fill() which accept it).
+        opacity_pattern = re.compile(
+            r'(\b(?:Sphere|Polygon|Surface|Cube|Prism|Cone|Cylinder|Torus|Mobject)\s*\([^)]*?)'
+            r'\bopacity\s*=',
+        )
+        if opacity_pattern.search(code):
+            code = opacity_pattern.sub(r'\1fill_opacity=', code)
+            patches_applied.append("opacity=→fill_opacity= in Mobject constructors")
+
+        # 7. Fix aligned_left=True → aligned_edge=LEFT in next_to()
+        #    DeepSeek sometimes uses the non-existent `aligned_left` kwarg.
+        if "aligned_left" in code:
+            code = code.replace("aligned_left=True", "aligned_edge=LEFT")
+            patches_applied.append("aligned_left=True→aligned_edge=LEFT")
+
+        # 8. Enforce frame_rate=10 and wait(4) for faster GIF rendering
+        code = re.sub(r'config\.frame_rate\s*=\s*\d+', 'config.frame_rate = 10', code)
+        code = re.sub(r'self\.wait\(\s*8\s*\)', 'self.wait(4)', code)
+        # Fix Manim media path to match new frame rate
+        code = re.sub(r'360p15', '360p10', code)
+
+    # --- 2D Matplotlib patches ---
+    if dimension_type in ("2d", "coordinate_2d"):
+        # 1. Replace bare matplotlib.patheffects usage
+        if "matplotlib.patheffects" in code and "import matplotlib.patheffects" not in code:
+            # Remove the path_effects kwarg entirely — it's not worth fixing
+            pe_pattern = re.compile(r',?\s*path_effects\s*=\s*\[.*?\]', re.DOTALL)
+            if pe_pattern.search(code):
+                code = pe_pattern.sub("", code)
+                patches_applied.append("removed matplotlib.patheffects usage")
+
+        # 2. Ensure matplotlib_helpers import if draw_angle_arc is used
+        if "draw_angle_arc" in code and "from matplotlib_helpers import" not in code:
+            code = code.replace(
+                "from pathlib import Path",
+                "from pathlib import Path\nfrom matplotlib_helpers import draw_angle_arc, draw_right_angle_marker",
+                1,
+            )
+            patches_applied.append("injected matplotlib_helpers import")
+
+        # 3. Fix centroid bug: points[p] for p in points.values() → list(points.values())
+        #    DeepSeek sometimes generates: np.mean([points[p] for p in points.values()], axis=0)
+        #    which fails with TypeError: unhashable type 'numpy.ndarray'
+        centroid_bug = re.compile(
+            r'np\.mean\(\[(\w+)\[(\w+)\]\s+for\s+\2\s+in\s+\1\.values\(\)\]'
+        )
+        if centroid_bug.search(code):
+            code = centroid_bug.sub(
+                lambda m: f'np.mean(list({m.group(1)}.values())',
+                code,
+            )
+            patches_applied.append("fixed centroid unhashable-ndarray bug")
+
+        # 4. Inject landscape aspect-ratio padding if only simple set_xlim/set_ylim present
+        #    This prevents portrait-shaped images when Y range >> X range.
+        simple_xlim = re.compile(
+            r'ax\.set_xlim\(min\(all_x\)\s*-\s*x_range\s*\*\s*padding\s*,\s*max\(all_x\)\s*\+\s*x_range\s*\*\s*padding\)\s*\n'
+            r'\s*ax\.set_ylim\(min\(all_y\)\s*-\s*y_range\s*\*\s*padding\s*,\s*max\(all_y\)\s*\+\s*y_range\s*\*\s*padding\)'
+        )
+        if simple_xlim.search(code) and "target_ratio" not in code:
+            replacement = (
+                "target_ratio = 8.54 / 4.80\n"
+                "    data_ratio = x_range / y_range if y_range > 0 else target_ratio\n"
+                "    x_center = (min(all_x) + max(all_x)) / 2\n"
+                "    y_center = (min(all_y) + max(all_y)) / 2\n"
+                "    if data_ratio < target_ratio:\n"
+                "        x_range = y_range * target_ratio\n"
+                "    if data_ratio > target_ratio:\n"
+                "        y_range = x_range / target_ratio\n"
+                "    ax.set_xlim(x_center - x_range/2 * (1 + padding), x_center + x_range/2 * (1 + padding))\n"
+                "    ax.set_ylim(y_center - y_range/2 * (1 + padding), y_center + y_range/2 * (1 + padding))"
+            )
+            code = simple_xlim.sub(replacement, code)
+            patches_applied.append("injected landscape aspect-ratio padding")
+
+        # 5. Remove bbox_inches='tight' from savefig — it overrides figsize and creates
+        #    portrait images when data is taller than wide, even with landscape padding.
+        bbox_tight = re.compile(r",?\s*bbox_inches\s*=\s*['\"]tight['\"]")
+        if bbox_tight.search(code):
+            code = bbox_tight.sub("", code)
+            patches_applied.append("removed bbox_inches='tight' from savefig")
+
+        # 6. Inject fig.subplots_adjust to remove default matplotlib margins
+        #    Without this, ~12% white borders surround the axes even with axis('off').
+        if "subplots_adjust" not in code and "plt.subplots(" in code:
+            code = re.sub(
+                r'(fig\s*,\s*ax\s*=\s*plt\.subplots\([^)]*\))',
+                r"\1\nfig.subplots_adjust(left=0, right=1, top=1, bottom=0)",
+                code,
+            )
+            patches_applied.append("injected fig.subplots_adjust for zero margins")
+
+    if patches_applied:
+        logger.info(f"Post-processing applied {len(patches_applied)} patch(es): {', '.join(patches_applied)}")
+
+    return code
+
 
 def ensure_helpers(code_dir, dimension_type="3d"):
     # type: (str, str) -> None
     """Copy helper files into the code directory so render_code.py can import them."""
+    # Always copy manim_helpers for 3D
     if dimension_type == "3d":
         dst = Path(code_dir) / "manim_helpers.py"
         if MANIM_HELPERS_PATH.exists() and not dst.exists():
             shutil.copy2(str(MANIM_HELPERS_PATH), str(dst))
+
+    # Always copy matplotlib_helpers for 2D
     if dimension_type in ("2d", "coordinate_2d"):
         dst = Path(code_dir) / "matplotlib_helpers.py"
         if MATPLOTLIB_HELPERS_PATH.exists() and not dst.exists():
@@ -279,7 +473,6 @@ def execute_code(code_path, timeout=120, use_manim_cli=False, output_path=None, 
 
     try:
         if use_manim_cli and Path(MANIM_CLI_PATH).exists():
-            # Use manim CLI for 3D rendering (Python 3.13)
             result = subprocess.run(
                 [MANIM_CLI_PATH, "render", str(code_path), "GeometryScene", "-ql", "--format", "gif"],
                 capture_output=True,
@@ -287,8 +480,6 @@ def execute_code(code_path, timeout=120, use_manim_cli=False, output_path=None, 
                 timeout=timeout,
                 cwd=code_dir,
             )
-            # Manim CLI writes to media/videos/render_code/480p15/diagram.gif
-            # We need to copy the output to the expected location
             if result.returncode == 0 and output_path:
                 media_dir = Path(code_dir) / "media"
                 gif_files = list(media_dir.rglob("*.gif")) if media_dir.exists() else []
@@ -303,7 +494,6 @@ def execute_code(code_path, timeout=120, use_manim_cli=False, output_path=None, 
                         stderr=result.stderr,
                     )
         else:
-            # Use system Python for 2D matplotlib rendering
             result = subprocess.run(
                 [sys.executable, str(code_path)],
                 capture_output=True,
@@ -339,7 +529,7 @@ def execute_code(code_path, timeout=120, use_manim_cli=False, output_path=None, 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate rendering code from blueprint and execute it"
+        description="Generate rendering code from blueprint using DeepSeek-V3.2 and execute it"
     )
     parser.add_argument(
         "--coordinates", required=True,
@@ -374,7 +564,6 @@ def main():
     # Auto-detect compact mode from file extension or content
     is_json = coords_path.suffix.lower() == ".json"
     if not is_json:
-        # Try to detect if content is JSON
         stripped = blueprint_text.strip()
         is_json = stripped.startswith("{") and stripped.endswith("}")
 
@@ -382,9 +571,9 @@ def main():
     if is_json and not args.compact:
         logger.info("Auto-detected JSON blueprint; using compact mode")
 
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
-        logger.error("GEMINI_API_KEY environment variable not set")
+        logger.error("DEEPSEEK_API_KEY environment variable not set")
         sys.exit(1)
 
     # Auto-detect dimension type
@@ -414,7 +603,6 @@ def main():
     for attempt in range(1, max_attempts + 1):
         logger.info(f"--- Attempt {attempt}/{max_attempts} ---")
 
-        # Step A: Generate code
         question_text = args.question_text
         if question_text and os.path.isfile(question_text):
             with open(question_text, "r", encoding="utf-8") as f:
@@ -440,22 +628,19 @@ def main():
             f"in {result['api_call_duration']:.1f}s"
         )
 
-        # Write the generated code
         with open(code_path, "w", encoding="utf-8") as f:
             f.write(result["code"])
         logger.info(f"Saved render code to: {code_path}")
 
-        # Step B: Execute the code
         logger.info("Executing generated code...")
-        use_manim = (dimension_type == "3d")  # coordinate_2d and 2d both use matplotlib
-        exec_result = execute_code(str(code_path), use_manim_cli=use_manim, output_path=output_path)
+        use_manim = (dimension_type == "3d")
+        exec_result = execute_code(str(code_path), use_manim_cli=use_manim, output_path=output_path, dimension_type=dimension_type)
 
         if exec_result["stdout"]:
             for line in exec_result["stdout"].strip().split("\n"):
                 logger.info(f"  [render] {line}")
 
         if exec_result["success"]:
-            # Verify output file exists
             if Path(output_path).exists():
                 size_kb = Path(output_path).stat().st_size / 1024
                 logger.info(f"Rendered: {output_path} ({size_kb:.1f} KB)")

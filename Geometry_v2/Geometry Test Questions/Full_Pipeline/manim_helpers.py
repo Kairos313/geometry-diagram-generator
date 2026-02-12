@@ -1,11 +1,49 @@
 """
 Manim helper functions for the Geometry Diagram Pipeline.
 
-Provides battle-tested angle arc drawing for 2D and 3D scenes.
+Provides battle-tested angle arc drawing for 2D and 3D scenes,
+plus smart label offset computation to prevent overlapping labels.
 Copied automatically to each run's output directory before execution.
+
+Usage:
+    from manim_helpers import (
+        create_3d_angle_arc_with_connections,
+        compute_label_offsets,
+    )
 """
 from manim import *
 import numpy as np
+
+
+def compute_label_offsets(pts, offset_distance=0.35):
+    # type: (dict, float) -> dict
+    """Compute outward-facing label offsets for every point so labels don't overlap.
+
+    Each label is pushed away from the figure centroid along the direction
+    from centroid to that point.  Points very close to the centroid get an
+    upward offset instead.
+
+    Args:
+        pts:             Dict mapping label names to 3-D numpy arrays
+                         (already scaled / centered).
+        offset_distance: Distance to push each label from its point.
+
+    Returns:
+        Dict mapping label names to 3-D offset vectors (np.ndarray).
+    """
+    coords = np.array(list(pts.values()))
+    centroid = np.mean(coords, axis=0)
+
+    offsets = {}
+    for name, coord in pts.items():
+        direction = coord - centroid
+        norm = np.linalg.norm(direction)
+        if norm > 1e-6:
+            offsets[name] = (direction / norm) * offset_distance
+        else:
+            # Point is at the centroid — push upward
+            offsets[name] = np.array([0.0, 0.0, offset_distance])
+    return offsets
 
 
 def create_2d_angle_arc_geometric(center, point1, point2, radius=0.5,

@@ -188,14 +188,14 @@ HKDSE_ADVANCED_2D = [
     # --- Advanced Circle Theorems ---
     {
         "id": "hkdse_adv_2d_01",
-        "name": "Intersecting Chords and Tangent",
-        "text": "In a circle with center O, chords AB and CD intersect at point P inside the circle. PA = 3cm, PB = 8cm, and PC = 4cm. A tangent from P to the circle touches at point T. Find the length of PD and the length of the tangent PT.",
+        "name": "Secants and Tangent from External Point",
+        "text": "From a point P outside a circle with center O, two secants are drawn: one passes through points A and B on the circle (with A between P and B) such that PA = 3cm and PB = 8cm, and another passes through points C and D on the circle (with C between P and D) such that PC = 4cm. A tangent from P touches the circle at point T. Find the length of PD and the length of the tangent PT.",
         "expected_type": "2d",
         "topic": "circles",
     },
     {
         "id": "hkdse_adv_2d_02",
-        "name": "Excircle and Incircle",
+        "name": "Incircle of Triangle",
         "text": "Triangle ABC has sides AB = 13cm, BC = 14cm, and CA = 15cm. The incircle touches BC at point D. Find the length of BD and the radius of the incircle.",
         "expected_type": "2d",
         "topic": "circles",
@@ -218,7 +218,7 @@ HKDSE_ADVANCED_2D = [
     {
         "id": "hkdse_adv_2d_05",
         "name": "Menelaus Theorem",
-        "text": "In triangle ABC, points D, E, F lie on sides BC, CA, AB respectively such that D, E, F are collinear. If BD = 2cm, DC = 3cm, CE = 4cm, EA = 2cm, find the ratio AF:FB.",
+        "text": "In triangle ABC, point D lies on side BC and point E lies on side CA such that D, E, and a point F on line AB (or its extension) are collinear. If BD = 2cm, DC = 3cm, CE = 4cm, EA = 2cm, find the ratio AF:FB.",
         "expected_type": "2d",
         "topic": "triangles",
     },
