@@ -1,11 +1,16 @@
 """
 Matplotlib helper functions for the Geometry Diagram Pipeline.
 
-Provides battle-tested angle arc drawing for 2D matplotlib scenes.
-Copied automatically to each run's output directory before execution.
+Provides battle-tested angle arc drawing and coordinate axes rendering
+for 2D matplotlib scenes. Copied automatically to each run's output
+directory before execution.
 
 Usage:
-    from matplotlib_helpers import draw_angle_arc, draw_right_angle_marker
+    from matplotlib_helpers import (
+        draw_angle_arc,
+        draw_right_angle_marker,
+        draw_coordinate_axes,
+    )
 """
 import numpy as np
 import matplotlib.patches as patches
@@ -139,3 +144,47 @@ def draw_right_angle_marker(ax, vertex, p1, p2, size=0.3,
     ys = [corner1[1], corner2[1], corner3[1]]
 
     ax.plot(xs, ys, color=color, linewidth=linewidth, zorder=zorder, solid_capstyle='round')
+
+
+def draw_coordinate_axes(ax, x_min, x_max, y_min, y_max,
+                         arrow_size=0.15, color='#1A1A1A', linewidth=1.5,
+                         label_fontsize=11, zorder=0):
+    """
+    Draw 2D coordinate axes with arrows and axis labels.
+
+    Renders the X and Y axes as lines through the origin with arrow heads
+    at the positive ends, plus small text labels ("x" and "y").
+
+    Args:
+        ax:              matplotlib Axes.
+        x_min, x_max:    X-axis range (data coordinates).
+        y_min, y_max:    Y-axis range (data coordinates).
+        arrow_size:      Arrow head width/height in data units.
+        color:           Axis color.
+        linewidth:       Axis line width.
+        label_fontsize:  Font size for "x" and "y" labels.
+        zorder:          Drawing z-order (typically 0 for axes).
+    """
+    # X-axis line
+    ax.axhline(0, color=color, linewidth=linewidth, zorder=zorder)
+
+    # X-axis arrow
+    ax.arrow(x_max * 0.95, 0, x_max * 0.04, 0,
+             head_width=arrow_size, head_length=arrow_size * 0.67,
+             fc=color, ec=color, linewidth=linewidth, zorder=zorder)
+
+    # Y-axis line
+    ax.axvline(0, color=color, linewidth=linewidth, zorder=zorder)
+
+    # Y-axis arrow
+    ax.arrow(0, y_max * 0.95, 0, y_max * 0.04,
+             head_width=arrow_size, head_length=arrow_size * 0.67,
+             fc=color, ec=color, linewidth=linewidth, zorder=zorder)
+
+    # Axis labels
+    ax.text(x_max * 0.98, -arrow_size * 2, 'x',
+            fontsize=label_fontsize, ha='right', va='top',
+            color=color, zorder=zorder + 1)
+    ax.text(arrow_size * 2, y_max * 0.98, 'y',
+            fontsize=label_fontsize, ha='left', va='bottom',
+            color=color, zorder=zorder + 1)

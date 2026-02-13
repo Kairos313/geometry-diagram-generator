@@ -365,7 +365,19 @@ def postprocess_code(code, dimension_type):
 
     # --- 2D Matplotlib patches ---
     if dimension_type in ("2d", "coordinate_2d"):
-        # 1. Replace bare matplotlib.patheffects usage
+        # 1. Fix malformed plt.subplots() syntax error
+        #    DeepSeek sometimes generates: fig, ax = plt.subplots(1, 1, figsize=(8.54, 4.80)
+        #                                    fig.subplots_adjust(...), dpi=150)
+        #    Should be: fig, ax = plt.subplots(1, 1, figsize=(8.54, 4.80), dpi=150)
+        #               fig.subplots_adjust(...)
+        subplots_bug = re.compile(
+            r'(fig,\s*ax\s*=\s*plt\.subplots\([^)]*\([^)]*\))\s*\n\s*fig\.subplots_adjust\(([^)]*)\),\s*dpi=(\d+)\)'
+        )
+        if subplots_bug.search(code):
+            code = subplots_bug.sub(r'\1, dpi=\3)\nfig.subplots_adjust(\2)', code)
+            patches_applied.append("fixed plt.subplots() syntax error")
+
+        # 2. Replace bare matplotlib.patheffects usage
         if "matplotlib.patheffects" in code and "import matplotlib.patheffects" not in code:
             # Remove the path_effects kwarg entirely — it's not worth fixing
             pe_pattern = re.compile(r',?\s*path_effects\s*=\s*\[.*?\]', re.DOTALL)
@@ -373,7 +385,7 @@ def postprocess_code(code, dimension_type):
                 code = pe_pattern.sub("", code)
                 patches_applied.append("removed matplotlib.patheffects usage")
 
-        # 2. Ensure matplotlib_helpers import if draw_angle_arc is used
+        # 3. Ensure matplotlib_helpers import if draw_angle_arc is used
         if "draw_angle_arc" in code and "from matplotlib_helpers import" not in code:
             code = code.replace(
                 "from pathlib import Path",
@@ -382,7 +394,7 @@ def postprocess_code(code, dimension_type):
             )
             patches_applied.append("injected matplotlib_helpers import")
 
-        # 3. Fix centroid bug: points[p] for p in points.values() → list(points.values())
+        # 4. Fix centroid bug: points[p] for p in points.values() → list(points.values())
         #    DeepSeek sometimes generates: np.mean([points[p] for p in points.values()], axis=0)
         #    which fails with TypeError: unhashable type 'numpy.ndarray'
         centroid_bug = re.compile(
