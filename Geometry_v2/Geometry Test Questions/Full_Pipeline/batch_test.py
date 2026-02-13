@@ -32,6 +32,8 @@ Usage:
     python3 batch_test.py --test-set all               # Run all tests
     python3 batch_test.py --dim 3d                     # Run only 3D geometry tests
     python3 batch_test.py --test-set coordinate --topic circles
+    python3 batch_test.py --blueprint-model focused    # Use LLM classifier + focused prompts (38% cost savings)
+    python3 batch_test.py --blueprint-model comprehensive  # Use comprehensive coordinate geometry prompt
 
 Dimension filter (for geometry/hkdse):
     --dim 2d   Only 2D questions
@@ -98,9 +100,12 @@ from geometry_test_questions import (
     get_questions_by_topic as get_geometry_by_topic,
 )
 
-# Import coordinate geometry test questions - uses coordinate prompts
+# Import coordinate geometry test questions - uses coordinate prompts (2D) / original prompts (3D)
 from coordinate_test_questions import (
     COORDINATE_TEST_QUESTIONS,
+    COORDINATE_ALL_2D,
+    COORDINATE_ALL_3D,
+    get_questions_by_dimension as get_coordinate_by_dimension,
     get_questions_by_topic as get_coordinate_by_topic,
 )
 
@@ -119,7 +124,7 @@ CURRENT_TEST_SET = "geometry"  # Track which test set is active
 CODEGEN_MODEL = "deepseek"  # Track which model is used for code generation ("gemini", "kimi", or "deepseek")
 BLUEPRINT_MODEL = "deepseek"  # Track which model is used for blueprint generation ("gemini" or "deepseek")
 MAX_WORKERS = 10  # Number of concurrent workers
-COMPACT_MODE = False  # Use compact JSON blueprint format
+STRUCTURED_MODE = False  # Use Gemini structured JSON output (response_schema)
 
 # ======================================================================
 # Pricing (per million tokens)
@@ -188,8 +193,23 @@ batch_status = {"running": False, "completed": 0, "total": 0, "start_time": 0}
 def run_single_question(question: dict) -> QuestionResult:
     """Run the full pipeline for a single question."""
 
-    # Import blueprint generation based on selected model
-    if BLUEPRINT_MODEL == "deepseek":
+    # Import blueprint generation based on selected model and mode
+    if STRUCTURED_MODE:
+        # Use structured output (Gemini only)
+        from generate_blueprint_structured import generate_blueprint
+        blueprint_api_key = os.getenv("GEMINI_API_KEY")
+        blueprint_key_name = "GEMINI_API_KEY"
+    elif BLUEPRINT_MODEL == "focused":
+        # Use LLM classifier + focused prompts (70% smaller prompts)
+        from generate_blueprint_focused import generate_blueprint
+        blueprint_api_key = os.getenv("GEMINI_API_KEY")
+        blueprint_key_name = "GEMINI_API_KEY"
+    elif BLUEPRINT_MODEL == "comprehensive":
+        # Use comprehensive prompt (handles all 4 geometry types)
+        from generate_blueprint_comprehensive import generate_blueprint
+        blueprint_api_key = os.getenv("GEMINI_API_KEY")
+        blueprint_key_name = "GEMINI_API_KEY"
+    elif BLUEPRINT_MODEL == "deepseek":
         from generate_blueprint_deepseek import generate_blueprint
         blueprint_api_key = os.getenv("DEEPSEEK_API_KEY")
         blueprint_key_name = "DEEPSEEK_API_KEY"
@@ -256,8 +276,8 @@ def run_single_question(question: dict) -> QuestionResult:
             api_key=blueprint_api_key,
             question_text=question["text"],
             output_dir=output_dir,
-            compact=COMPACT_MODE,
         )
+
         bp_result = generate_blueprint(**bp_kwargs)
 
         if bp_result["success"]:
@@ -308,7 +328,7 @@ def run_single_question(question: dict) -> QuestionResult:
                 output_format=output_format,
                 dimension_type=dimension_type,
                 question_text=question["text"],
-                compact=COMPACT_MODE,
+                compact=True,
             )
             code_result = generate_render_code(**codegen_kwargs)
 
@@ -534,7 +554,7 @@ def get_status():
                 "pending": True,
             })
 
-    _model_names = {"kimi": "Kimi K2.5", "deepseek": "DeepSeek-V3.2", "deepseek-direct": "DeepSeek-Reasoner/Chat", "gemini": "Gemini 3 Flash"}
+    _model_names = {"kimi": "Kimi K2.5", "deepseek": "DeepSeek-V3.2", "deepseek-direct": "DeepSeek-Reasoner/Chat", "gemini": "Gemini 3 Flash", "focused": "Gemini 3 Flash (Focused)", "comprehensive": "Gemini 3 Flash (Comprehensive)"}
     return jsonify({
         "running": batch_status["running"],
         "completed": batch_status["completed"],
@@ -1006,9 +1026,9 @@ Examples:
     )
     parser.add_argument(
         "--blueprint-model",
-        choices=["gemini", "deepseek", "deepseek-direct"],
+        choices=["gemini", "focused", "comprehensive", "deepseek", "deepseek-direct"],
         default="gemini",
-        help="Model for blueprint generation: gemini (default), deepseek (DeepSeek-V3.2 Azure), or deepseek-direct (DeepSeek-Reasoner direct API with thinking)"
+        help="Model for blueprint generation: gemini (default), focused (LLM classifier + 4 focused prompts, 38%% cost savings), comprehensive (Gemini with comprehensive coordinate geometry prompt), deepseek (DeepSeek-V3.2 Azure), or deepseek-direct (DeepSeek-Reasoner direct API with thinking)"
     )
     parser.add_argument(
         "--no-browser",
@@ -1022,9 +1042,9 @@ Examples:
         help="Number of concurrent workers (default: 10)"
     )
     parser.add_argument(
-        "--compact",
+        "--structured",
         action="store_true",
-        help="Use compact JSON blueprint format (reduces tokens by ~70%%)"
+        help="Use Gemini structured JSON output (response_schema) - guarantees valid JSON"
     )
     return parser.parse_args()
 
@@ -1054,9 +1074,14 @@ if __name__ == "__main__":
     elif BLUEPRINT_MODEL == "deepseek-direct":
         PRICING = dict(PRICING)  # shallow copy
         PRICING["blueprint"] = PRICING_DEEPSEEK_DIRECT["blueprint"]  # DeepSeek-Reasoner pricing
+    # comprehensive uses Gemini, so default pricing applies
 
-    # Set compact mode for JSON blueprints
-    COMPACT_MODE = args.compact
+    STRUCTURED_MODE = args.structured
+
+    # Validate: structured mode requires Gemini for blueprints
+    if STRUCTURED_MODE and BLUEPRINT_MODEL not in ("gemini", "focused", "comprehensive"):
+        print("ERROR: --structured mode requires --blueprint-model gemini, focused, or comprehensive")
+        sys.exit(1)
 
     # Build question list based on CLI args
     if args.test_set == "geometry":
@@ -1072,13 +1097,16 @@ if __name__ == "__main__":
             test_set_name = "Geometry (2D + 3D)"
 
     elif args.test_set == "coordinate":
-        # Coordinate geometry - uses coordinate prompts
-        if args.topic and args.topic != "all":
+        # Coordinate geometry - uses coordinate prompts (2D) / original prompts (3D)
+        if args.dim and args.dim != "all":
+            ALL_QUESTIONS = get_coordinate_by_dimension(args.dim)
+            test_set_name = f"Coordinate ({args.dim.upper()})"
+        elif args.topic and args.topic != "all":
             ALL_QUESTIONS = get_coordinate_by_topic(args.topic)
             test_set_name = f"Coordinate ({args.topic})"
         else:
             ALL_QUESTIONS = COORDINATE_TEST_QUESTIONS
-            test_set_name = "Coordinate Geometry"
+            test_set_name = "Coordinate Geometry (2D + 3D)"
 
     elif args.test_set == "hkdse":
         # HKDSE Grade 12 geometry - uses original prompts
@@ -1097,8 +1125,9 @@ if __name__ == "__main__":
         if args.dim and args.dim != "all":
             geom_questions = get_geometry_by_dimension(args.dim)
             hkdse_questions = get_hkdse_by_dimension(args.dim)
-            ALL_QUESTIONS = geom_questions + hkdse_questions + COORDINATE_TEST_QUESTIONS
-            test_set_name = f"All ({args.dim.upper()} Geometry + HKDSE + Coordinate)"
+            coord_questions = get_coordinate_by_dimension(args.dim)
+            ALL_QUESTIONS = geom_questions + hkdse_questions + coord_questions
+            test_set_name = f"All ({args.dim.upper()})"
         elif args.topic and args.topic != "all":
             # Try to filter all sets by topic
             geom_by_topic = get_geometry_by_topic(args.topic)
@@ -1124,11 +1153,17 @@ if __name__ == "__main__":
     print(f"Test set: {test_set_name}")
     print(f"Questions: {len(ALL_QUESTIONS)}")
     prompt_path = "Coordinate prompts" if args.test_set == "coordinate" else "Original prompts" if args.test_set in ("geometry", "hkdse") else "Mixed"
-    model_names = {"kimi": "Kimi K2.5", "deepseek": "DeepSeek-V3.2", "gemini": "Gemini 3 Flash"}
+    model_names = {"kimi": "Kimi K2.5", "deepseek": "DeepSeek-V3.2", "gemini": "Gemini 3 Flash", "focused": "Gemini 3 Flash (Focused)", "comprehensive": "Gemini 3 Flash (Comprehensive)"}
     bp_model_name = model_names.get(BLUEPRINT_MODEL, BLUEPRINT_MODEL)
     cg_model_name = model_names.get(CODEGEN_MODEL, CODEGEN_MODEL)
     print(f"Prompt path: {prompt_path}")
-    print(f"Blueprint: {bp_model_name}")
+
+    # Show blueprint mode
+    if STRUCTURED_MODE:
+        print(f"Blueprint: {bp_model_name} (STRUCTURED OUTPUT)")
+    else:
+        print(f"Blueprint: {bp_model_name}")
+
     print(f"Code generation: {cg_model_name}")
     print(f"Concurrent workers: {MAX_WORKERS}")
 

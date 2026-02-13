@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-from diagram_prompts import Question_to_Blueprint_Coordinate_included, Question_to_Blueprint_Compact
+from diagram_prompts import Question_to_Blueprint_Compact
 
 load_dotenv(".env")
 
@@ -114,26 +114,16 @@ def generate_blueprint(
     question_text,    # type: str
     output_dir,       # type: str
     image_path=None,  # type: Optional[str]
-    compact=False,    # type: bool
 ):
     # type: (...) -> dict
     """Call Gemini to generate the geometric blueprint.
-
-    Args:
-        compact: If True, use the compact JSON prompt for reduced output tokens.
 
     Returns a dict with keys: success, blueprint, coordinates_file,
     api_call_duration, prompt_tokens, completion_tokens, total_tokens.
     """
     client = genai.Client(api_key=api_key)
 
-    # Select prompt based on compact mode
-    if compact:
-        prompt_template = Question_to_Blueprint_Compact
-        logger.info("Using COMPACT JSON blueprint prompt")
-    else:
-        prompt_template = Question_to_Blueprint_Coordinate_included
-        logger.info("Using VERBOSE markdown blueprint prompt")
+    prompt_template = Question_to_Blueprint_Compact
 
     # Build content parts
     text_prompt = (
@@ -169,34 +159,23 @@ def generate_blueprint(
         blueprint_text = response.text
         usage = response.usage_metadata
 
-        # Extract dimension based on mode
-        if compact:
-            parsed_json = parse_compact_blueprint(blueprint_text)
-            if parsed_json:
-                dimension = extract_dimension_from_json(parsed_json)
-                # Save as JSON file
-                os.makedirs(output_dir, exist_ok=True)
-                coords_file = os.path.join(output_dir, "coordinates.json")
-                with open(coords_file, "w", encoding="utf-8") as f:
-                    json.dump(parsed_json, f, indent=2)
-                logger.info(f"Compact JSON blueprint saved to: {coords_file}")
-            else:
-                # Fallback: save raw text if JSON parsing fails
-                dimension = extract_dimension(blueprint_text)
-                os.makedirs(output_dir, exist_ok=True)
-                coords_file = os.path.join(output_dir, "coordinates.txt")
-                with open(coords_file, "w", encoding="utf-8") as f:
-                    f.write("=== GEOMETRIC BLUEPRINT (JSON PARSE FAILED) ===\n\n")
-                    f.write(blueprint_text)
-                logger.warning(f"JSON parsing failed; saved raw text to: {coords_file}")
+        # Parse JSON blueprint and extract dimension
+        parsed_json = parse_compact_blueprint(blueprint_text)
+        os.makedirs(output_dir, exist_ok=True)
+        if parsed_json:
+            dimension = extract_dimension_from_json(parsed_json)
+            coords_file = os.path.join(output_dir, "coordinates.json")
+            with open(coords_file, "w", encoding="utf-8") as f:
+                json.dump(parsed_json, f, indent=2)
+            logger.info(f"JSON blueprint saved to: {coords_file}")
         else:
+            # Fallback: save raw text if JSON parsing fails
             dimension = extract_dimension(blueprint_text)
-            os.makedirs(output_dir, exist_ok=True)
             coords_file = os.path.join(output_dir, "coordinates.txt")
             with open(coords_file, "w", encoding="utf-8") as f:
-                f.write("=== GEOMETRIC BLUEPRINT - COORDINATES ===\n\n")
+                f.write("=== GEOMETRIC BLUEPRINT (JSON PARSE FAILED) ===\n\n")
                 f.write(blueprint_text)
-            logger.info(f"Blueprint saved to: {coords_file}")
+            logger.warning(f"JSON parsing failed; saved raw text to: {coords_file}")
 
         return {
             "success": True,
@@ -233,10 +212,6 @@ def main():
         "--output-dir", default=None,
         help="Output directory for coordinates.txt (default: script directory)",
     )
-    parser.add_argument(
-        "--compact", action="store_true",
-        help="Use compact JSON blueprint format (reduces output tokens by ~70%%)",
-    )
     args = parser.parse_args()
 
     # Resolve question text: if it's a file path, read the file
@@ -265,7 +240,6 @@ def main():
         question_text=question_text,
         output_dir=output_dir,
         image_path=args.question_image,
-        compact=args.compact,
     )
 
     if result["success"]:
