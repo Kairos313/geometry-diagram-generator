@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  manim:
+    build: .
+    mem_limit: 4g
+    cpus: 2
+    volumes:
+      - ./input:/app/input:ro
+      - ./output:/app/output
+      - ../manim_helpers.py:/app/manim_helpers.py:ro
+    working_dir: /app
+    command: python3 /app/input/render_code.py

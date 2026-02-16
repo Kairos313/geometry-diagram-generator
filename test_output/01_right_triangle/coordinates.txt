@@ -1,0 +1,85 @@
+=== GEOMETRIC BLUEPRINT - COORDINATES ===
+
+## Geometric Blueprint
+
+### Part 1: Geometric Context from Question
+
+#### 1. QUESTION OBJECTIVE
+*   Calculate the length of the hypotenuse $AB$ in a right-angled triangle $ABC$ where $\angle ACB = 90^\circ$, $AC = 6$ cm, and $BC = 8$ cm.
+
+#### 2. GIVEN ELEMENTS
+*   **Given Lengths:** $AC = 6$ cm, $BC = 8$ cm.
+*   **Given Angles:** $\angle ACB = 90^\circ$.
+*   **Given Properties:** Triangle $ABC$ is a right triangle with the right angle at $C$.
+
+#### 3. ALL GEOMETRIC ELEMENTS
+*   **Points:** $A, B, C$.
+*   **Lines/Segments:** $AC$ (leg), $BC$ (leg), $AB$ (hypotenuse).
+*   **Angles:** $\angle ACB$ (right angle), $\angle BAC$, $\angle ABC$.
+*   **Polygons/Shapes:** Triangle $ABC$.
+
+### Part 2: Coordinate System and Scale Definition (Calculated)
+
+#### 1. ORIGIN PLACEMENT (CRITICAL)
+*   Point **A** is chosen as the origin: **(0.000, 0.000, 0.000)**.
+
+#### 2. AXES ALIGNMENT
+*   **Primary Axis (X-axis):** The vector from $A$ to $C$ defines the positive X-axis.
+*   **Primary Plane (XY-plane):** The triangle $ABC$ lies on the XY-plane ($Z = 0$).
+*   **Vertical Axis (Z-axis):** Not applicable (2D problem).
+
+#### 3. SCALE DEFINITION
+*   **Method:** The first significant distance mentioned is $AC = 6$ cm. Set $AC = 5.0$ units.
+*   **Scale Reference:** $AC = 6$ cm = $5.0$ units. Scale factor = $5/6 \approx 0.8333$.
+*   **Subsequent Lengths:**
+    *   $BC = 8$ cm $\times (5/6) = 6.667$ units.
+    *   $AB = \sqrt{6^2 + 8^2} = 10$ cm. $10$ cm $\times (5/6) = 8.333$ units.
+
+### Part 3: Geometric Elements Breakdown
+
+**A. Intrinsic Point Coordinates Table (X, Y, Z):**
+
+| Point | X | Y | Z | Calculation Logic |
+| :--- | :--- | :--- | :--- | :--- |
+| **A** | 0.000 | 0.000 | 0.000 | Origin. |
+| **C** | 5.000 | 0.000 | 0.000 | Placed on X-axis based on scale ($AC = 5.0$ units). |
+| **B** | 5.000 | 6.667 | 0.000 | Since $\angle ACB = 90^\circ$ and $AC$ is on X-axis, $CB$ is parallel to Y-axis. $Y_B = BC = 6.667$. |
+
+**B. Lines, Edges, and Curves:**
+
+| Element ID | Start Point | End Point | Calculated Length (Units) | Logic |
+| :--- | :--- | :--- | :--- | :--- |
+| **line_AC** | A | C | 5.000 | Given length 6 cm (scaled). |
+| **line_CB** | C | B | 6.667 | Given length 8 cm (scaled). |
+| **line_AB** | A | B | 8.333 | Hypotenuse: $\sqrt{5^2 + 6.667^2} = 8.333$. |
+
+**C. Angles:**
+
+| Element ID | Vertex | Point 1 | Point 2 | Calculated Value | Logic |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **angle_ACB** | C | A | B | 90.000° | Given right angle. |
+| **angle_BAC** | A | C | B | 53.130° | $\arctan(BC/AC) = \arctan(8/6)$. |
+| **angle_ABC** | B | C | A | 36.870° | $180 - 90 - 53.130$. |
+
+**D. Faces, Surfaces, and Solids:**
+
+| Element ID | Type | Component Points |
+| :--- | :--- | :--- |
+| **region_triangle_ABC** | Polygon | A, C, B |
+
+### Part 4: Display Rules (What to Annotate on the Diagram)
+
+**E. Annotation Table:**
+
+| Element | Category | Display Action |
+| :--- | :--- | :--- |
+| **Point A** | given | Show label "A" |
+| **Point B** | given | Show label "B" |
+| **Point C** | given | Show label "C" |
+| **line_AC** | given | Show length label "6 cm" |
+| **line_CB** | given | Show length label "8 cm" |
+| **line_AB** | asked | Draw in accent color (#FFD700), show label "?" |
+| **angle_ACB** | given | Show right-angle marker |
+| **angle_BAC** | derived | Draw nothing |
+| **angle_ABC** | derived | Draw nothing |
+| **region_triangle_ABC** | derived | Standard fill |

@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     # Post-render: move output file to the expected path
     source = Path("media/videos/360p10/diagram.gif")
-    destination = Path("/Users/kairos/Desktop/geometry-video-generator/Geometry_v2/Geometry Test Questions/Full_Pipeline/output/diagram.gif")
+    destination = Path("/Users/kairos/Desktop/geometry-video-generator/output/diagram.gif")
     
     if source.exists():
         destination.parent.mkdir(parents=True, exist_ok=True)

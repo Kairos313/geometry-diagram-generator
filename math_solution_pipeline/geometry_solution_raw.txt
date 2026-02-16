@@ -1,0 +1,200 @@
+```json
+{
+  "dimension_type": "2d",
+  "solution_steps": [
+    {
+      "step_id": "part_a_identify_givens",
+      "sentences": [
+        {
+          "text": "To prove that the two triangles are congruent, let's first list the information we are given about triangles ABC and BAD.",
+          "khan_academy_text": "$\\text{In } \\triangle ABC \\text{ and } \\triangle BAD:$",
+          "geometric_elements": [
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_ABC"
+            },
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_BAD"
+            }
+          ]
+        },
+        {
+          "text": "We are told that both triangles contain a right angle.",
+          "khan_academy_text": "$\\angle ACB = \\angle ADB = 90^\\circ \\text{ (Given)}$",
+          "geometric_elements": [
+            {
+              "element_type": "angle",
+              "element_id": "angle_ACB"
+            },
+            {
+              "element_type": "angle",
+              "element_id": "angle_ADB"
+            }
+          ]
+        },
+        {
+          "text": "We are also given that the side AD is equal in length to the side BC.",
+          "khan_academy_text": "$BC = AD \\text{ (Given)}$",
+          "geometric_elements": [
+            {
+              "element_type": "line",
+              "element_id": "line_BC"
+            },
+            {
+              "element_type": "line",
+              "element_id": "line_AD"
+            }
+          ]
+        },
+        {
+          "text": "Notice that both triangles share the exact same hypotenuse, which is the line segment AB.",
+          "khan_academy_text": "$AB = BA \\text{ (Common side)}$",
+          "geometric_elements": [
+            {
+              "element_type": "line",
+              "element_id": "line_AB"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "step_id": "part_a_congruence_conclusion",
+      "sentences": [
+        {
+          "text": "Since both are right-angled triangles sharing the same hypotenuse and having one other side equal, they are congruent by the RHS (Right angle-Hypotenuse-Side) theorem.",
+          "khan_academy_text": "$\\therefore \\triangle ABC \\cong \\triangle BAD \\text{ (RHS)}$",
+          "geometric_elements": [
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_ABC"
+            },
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_BAD"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "step_id": "part_b_find_lengths",
+      "sentences": [
+        {
+          "text": "Now, let's find the area of the pentagon ABCED. We can think of this pentagon as the sum of the areas of triangle ABE and triangle DCE, or more simply, the area of triangle ABC plus the area of triangle ADE.",
+          "khan_academy_text": "$\\text{Area of } ABCED = \\text{Area of } \\triangle ABC + \\text{Area of } \\triangle ADE$",
+          "geometric_elements": [
+            {
+              "element_type": "region",
+              "element_id": "region_pentagon_ABCED"
+            }
+          ]
+        },
+        {
+          "text": "Because the triangles are congruent, we know that angle DAE must equal angle CBE. Also, since angle ADB and angle ACB are both 90 degrees, and AD = BC, triangles ADE and BCE are also congruent (by AAS).",
+          "khan_academy_text": "$\\triangle ADE \\cong \\triangle BCE$",
+          "geometric_elements": [
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_ADE"
+            },
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_BCE"
+            }
+          ]
+        },
+        {
+          "text": "In the right-angled triangle ADE, we can use the Pythagorean theorem to find the length of AE.",
+          "khan_academy_text": "$AE^2 = AD^2 + DE^2$",
+          "geometric_elements": [
+            {
+              "element_type": "line",
+              "element_id": "line_AE"
+            },
+            {
+              "element_type": "line",
+              "element_id": "line_AD"
+            },
+            {
+              "element_type": "line",
+              "element_id": "line_DE"
+            }
+          ]
+        },
+        {
+          "text": "Plugging in the values AD = 12 and DE = 9, we get AE = 15 cm.",
+          "khan_academy_text": "$AE = \\sqrt{12^2 + 9^2} = \\sqrt{144 + 81} = \\sqrt{225} = 15\\text{ cm}$",
+          "geometric_elements": [
+            {
+              "element_type": "measurement",
+              "element_id": "length_AE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "step_id": "part_b_calculate_area",
+      "sentences": [
+        {
+          "text": "The area of triangle ADE is half the base times the height.",
+          "khan_academy_text": "$\\text{Area of } \\triangle ADE = \\frac{1}{2} \\times 12 \\times 9 = 54\\text{ cm}^2$",
+          "geometric_elements": [
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_ADE"
+            }
+          ]
+        },
+        {
+          "text": "Since triangle ABC is congruent to triangle BAD, its area is the same as triangle BAD. Triangle BAD is composed of triangle ADE and triangle ABE.",
+          "khan_academy_text": "$\\text{Area of } \\triangle ABC = \\text{Area of } \\triangle BAD$",
+          "geometric_elements": []
+        },
+        {
+          "text": "By symmetry, AE = BE = 15 cm. In triangle ABC, AC = AE + EC. Since triangles ADE and BCE are congruent, EC = DE = 9 cm. Thus AC = 15 + 9 = 24 cm.",
+          "khan_academy_text": "$AC = 15 + 9 = 24\\text{ cm}$",
+          "geometric_elements": [
+            {
+              "element_type": "line",
+              "element_id": "line_AC"
+            }
+          ]
+        },
+        {
+          "text": "Now we calculate the area of triangle ABC using base AC and height BC (which is 12).",
+          "khan_academy_text": "$\\text{Area of } \\triangle ABC = \\frac{1}{2} \\times 24 \\times 12 = 144\\text{ cm}^2$",
+          "geometric_elements": [
+            {
+              "element_type": "region",
+              "element_id": "region_triangle_ABC"
+            }
+          ]
+        },
+        {
+          "text": "Finally, the area of the pentagon is the area of triangle ABC plus the area of triangle ADE.",
+          "khan_academy_text": "$\\text{Total Area} = 144 + 54 = 198\\text{ cm}^2$",
+          "geometric_elements": [
+            {
+              "element_type": "region",
+              "element_id": "region_pentagon_ABCED"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "step_id": "key_takeaways",
+      "sentences": [
+        {
+          "text": "The RHS congruence theorem is a powerful tool for right-angled triangles. When calculating areas of complex shapes like pentagons, look for ways to decompose them into simpler triangles.",
+          "khan_academy_text": "$\\text{Key Takeaways: RHS Congruence and Area Decomposition}$",
+          "geometric_elements": []
+        }
+      ]
+    }
+  ]
+}
+```

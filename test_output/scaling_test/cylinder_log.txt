@@ -1,0 +1,25 @@
+2026-02-06 12:26:22,951 - INFO - ============================================================
+2026-02-06 12:26:22,951 - INFO - GEOMETRY DIAGRAM PIPELINE (v2)
+2026-02-06 12:26:22,951 - INFO - Question: A cylinder has radius 3cm and height 8cm. Point A is on the top circle and point B is on the bottom ...
+2026-02-06 12:26:22,951 - INFO - Image: none
+2026-02-06 12:26:22,951 - INFO - Format: gif
+2026-02-06 12:26:22,951 - INFO - ============================================================
+2026-02-06 12:26:22,952 - INFO - === Stage 1: Generating blueprint ===
+2026-02-06 12:26:42,056 - INFO -   [Stage 1] Validated: coordinates.txt (3.6 KB)
+2026-02-06 12:26:42,056 - INFO - === Stage 2: Generating code & rendering ===
+2026-02-06 12:27:53,457 - INFO - ============================================================
+2026-02-06 12:27:53,458 - INFO - Pipeline COMPLETED in 90.5s
+2026-02-06 12:27:53,458 - INFO -   Output: cli_test_a.png (52.6 KB)
+2026-02-06 12:27:53,458 - INFO -   Output: cli_test_b.png (53.5 KB)
+2026-02-06 12:27:53,458 - INFO -   Output: diagram.gif (4630.0 KB)
+2026-02-06 12:27:53,458 - INFO -   Output: diagram.png (24.8 KB)
+2026-02-06 12:27:53,458 - INFO -   Output: diagram_frame.png (59.0 KB)
+2026-02-06 12:27:53,458 - INFO -   Output: geometry_a.png (52.6 KB)
+2026-02-06 12:27:53,459 - INFO -   Output: geometry_annotated_a.png (76.4 KB)
+2026-02-06 12:27:53,459 - INFO -   Output: geometry_annotated_b.png (73.3 KB)
+2026-02-06 12:27:53,459 - INFO -   Output: geometry_b.png (53.5 KB)
+2026-02-06 12:27:53,459 - INFO -   Output: question_1.png_a.png (20.3 KB)
+2026-02-06 12:27:53,459 - INFO -   Output: question_1.png_b.png (20.6 KB)
+2026-02-06 12:27:53,459 - INFO -   Output: svg_test_a.svg (11.5 KB)
+2026-02-06 12:27:53,459 - INFO -   Output: svg_test_b.svg (12.5 KB)
+2026-02-06 12:27:53,459 - INFO - ============================================================

@@ -1,0 +1,9 @@
+2026-02-06 12:29:15,722 - INFO - ============================================================
+2026-02-06 12:29:15,723 - INFO - GEOMETRY DIAGRAM PIPELINE (v2)
+2026-02-06 12:29:15,723 - INFO - Question: A square pyramid has a base with side length 6cm. The apex P is directly above the center of the bas...
+2026-02-06 12:29:15,723 - INFO - Image: none
+2026-02-06 12:29:15,723 - INFO - Format: gif
+2026-02-06 12:29:15,723 - INFO - ============================================================
+2026-02-06 12:29:15,723 - INFO - === Stage 1: Generating blueprint ===
+2026-02-06 12:29:30,567 - INFO -   [Stage 1] Validated: coordinates.txt (3.8 KB)
+2026-02-06 12:29:30,567 - INFO - === Stage 2: Generating code & rendering ===

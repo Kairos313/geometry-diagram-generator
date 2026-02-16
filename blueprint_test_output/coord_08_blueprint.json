@@ -1,0 +1,111 @@
+{
+  "question_id": "coord_08",
+  "question_text": "Maximize P = 5x + 4y subject to: x + y <= 6, 2x + y <= 10, x >= 0, y >= 0. Sketch the feasible region and find the optimal point.",
+  "dimension_type": "coordinate_2d",
+  "blueprint": {
+    "dimension": "2d",
+    "axes": true,
+    "grid": true,
+    "coordinate_range": {
+      "x_min": -1.0,
+      "x_max": 8.0,
+      "y_min": -1.0,
+      "y_max": 11.0
+    },
+    "scale": {
+      "reference": "auto",
+      "real": "1 unit",
+      "units": 1.0
+    },
+    "points": {
+      "O": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "A": [
+        5.0,
+        0.0,
+        0.0
+      ],
+      "B": [
+        4.0,
+        2.0,
+        0.0
+      ],
+      "C": [
+        0.0,
+        6.0,
+        0.0
+      ],
+      "D": [
+        6.0,
+        0.0,
+        0.0
+      ],
+      "E": [
+        0.0,
+        10.0,
+        0.0
+      ]
+    },
+    "lines": [
+      {
+        "id": "line_x_plus_y_6",
+        "from": "C",
+        "to": "D",
+        "equation": "x + y = 6"
+      },
+      {
+        "id": "line_2x_plus_y_10",
+        "from": "A",
+        "to": "E",
+        "equation": "2x + y = 10"
+      },
+      {
+        "id": "x_axis",
+        "from": "O",
+        "to": "D",
+        "style": "axis"
+      },
+      {
+        "id": "y_axis",
+        "from": "O",
+        "to": "E",
+        "style": "axis"
+      }
+    ],
+    "faces": [
+      {
+        "id": "region_feasible",
+        "points": [
+          "O",
+          "A",
+          "B",
+          "C"
+        ],
+        "style": "shaded"
+      }
+    ],
+    "given": {
+      "objective_function": "P = 5x + 4y",
+      "constraint_1": "x + y <= 6",
+      "constraint_2": "2x + y <= 10",
+      "constraint_3": "x >= 0",
+      "constraint_4": "y >= 0"
+    },
+    "asked": [
+      "feasible_region",
+      "optimal_point",
+      "maximum_value"
+    ]
+  },
+  "raw_output": "{\n  \"dimension\": \"2d\",\n  \"axes\": true,\n  \"grid\": true,\n  \"coordinate_range\": {\n    \"x_min\": -1.0,\n    \"x_max\": 8.0,\n    \"y_min\": -1.0,\n    \"y_max\": 11.0\n  },\n  \"scale\": {\n    \"reference\": \"auto\",\n    \"real\": \"1 unit\",\n    \"units\": 1.0\n  },\n  \"points\": {\n    \"O\": [0.0, 0.0, 0.0],\n    \"A\": [5.0, 0.0, 0.0],\n    \"B\": [4.0, 2.0, 0.0],\n    \"C\": [0.0, 6.0, 0.0],\n    \"D\": [6.0, 0.0, 0.0],\n    \"E\": [0.0, 10.0, 0.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"line_x_plus_y_6\",\n      \"from\": \"C\",\n      \"to\": \"D\",\n      \"equation\": \"x + y = 6\"\n    },\n    {\n      \"id\": \"line_2x_plus_y_10\",\n      \"from\": \"A\",\n      \"to\": \"E\",\n      \"equation\": \"2x + y = 10\"\n    },\n    {\n      \"id\": \"x_axis\",\n      \"from\": \"O\",\n      \"to\": \"D\",\n      \"style\": \"axis\"\n    },\n    {\n      \"id\": \"y_axis\",\n      \"from\": \"O\",\n      \"to\": \"E\",\n      \"style\": \"axis\"\n    }\n  ],\n  \"faces\": [\n    {\n      \"id\": \"region_feasible\",\n      \"points\": [\n        \"O\",\n        \"A\",\n        \"B\",\n        \"C\"\n      ],\n      \"style\": \"shaded\"\n    }\n  ],\n  \"given\": {\n    \"objective_function\": \"P = 5x + 4y\",\n    \"constraint_1\": \"x + y <= 6\",\n    \"constraint_2\": \"2x + y <= 10\",\n    \"constraint_3\": \"x >= 0\",\n    \"constraint_4\": \"y >= 0\"\n  },\n  \"asked\": [\n    \"feasible_region\",\n    \"optimal_point\",\n    \"maximum_value\"\n  ]\n}",
+  "validation_issues": [],
+  "error": null,
+  "duration": 17.148022890090942,
+  "tokens_input": 1172,
+  "tokens_output": 627,
+  "cost_hkd": 0.0192426,
+  "finish_reason": "FinishReason.STOP"
+}
