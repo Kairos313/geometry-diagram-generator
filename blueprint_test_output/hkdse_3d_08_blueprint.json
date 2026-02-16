@@ -1,0 +1,189 @@
+{
+  "question_id": "hkdse_3d_08",
+  "question_text": "In a right pyramid VABCD with square base ABCD of side 10cm and apex V at height 12cm above the center, M is the midpoint of edge VA. Find the perpendicular distance from M to the base plane.",
+  "dimension_type": "3d",
+  "blueprint": {
+    "dimension": "3d",
+    "axes": false,
+    "scale": {
+      "reference": "AB",
+      "real": "10 cm",
+      "units": 5.0
+    },
+    "points": {
+      "A": [
+        2.5,
+        -2.5,
+        0.0
+      ],
+      "B": [
+        2.5,
+        2.5,
+        0.0
+      ],
+      "C": [
+        -2.5,
+        2.5,
+        0.0
+      ],
+      "D": [
+        -2.5,
+        -2.5,
+        0.0
+      ],
+      "V": [
+        0.0,
+        0.0,
+        6.0
+      ],
+      "O": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "M": [
+        1.25,
+        -1.25,
+        3.0
+      ],
+      "M_proj": [
+        1.25,
+        -1.25,
+        0.0
+      ]
+    },
+    "lines": [
+      {
+        "id": "line_AB",
+        "from": "A",
+        "to": "B"
+      },
+      {
+        "id": "line_BC",
+        "from": "B",
+        "to": "C"
+      },
+      {
+        "id": "line_CD",
+        "from": "C",
+        "to": "D",
+        "style": "dashed"
+      },
+      {
+        "id": "line_DA",
+        "from": "D",
+        "to": "A",
+        "style": "dashed"
+      },
+      {
+        "id": "line_VA",
+        "from": "V",
+        "to": "A"
+      },
+      {
+        "id": "line_VB",
+        "from": "V",
+        "to": "B"
+      },
+      {
+        "id": "line_VC",
+        "from": "V",
+        "to": "C"
+      },
+      {
+        "id": "line_VD",
+        "from": "V",
+        "to": "D",
+        "style": "dashed"
+      },
+      {
+        "id": "line_VO",
+        "from": "V",
+        "to": "O",
+        "style": "dashed"
+      },
+      {
+        "id": "line_MM_proj",
+        "from": "M",
+        "to": "M_proj",
+        "style": "dashed"
+      }
+    ],
+    "circles": [],
+    "faces": [
+      {
+        "id": "face_ABCD",
+        "points": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      {
+        "id": "face_VAB",
+        "points": [
+          "V",
+          "A",
+          "B"
+        ]
+      },
+      {
+        "id": "face_VBC",
+        "points": [
+          "V",
+          "B",
+          "C"
+        ]
+      },
+      {
+        "id": "face_VCD",
+        "points": [
+          "V",
+          "C",
+          "D"
+        ]
+      },
+      {
+        "id": "face_VDA",
+        "points": [
+          "V",
+          "D",
+          "A"
+        ]
+      }
+    ],
+    "angles": [
+      {
+        "id": "angle_VOA",
+        "vertex": "O",
+        "p1": "V",
+        "p2": "A",
+        "value": 90.0
+      },
+      {
+        "id": "angle_MM_proj_A",
+        "vertex": "M_proj",
+        "p1": "M",
+        "p2": "A",
+        "value": 90.0
+      }
+    ],
+    "given": {
+      "line_AB": "10 cm",
+      "height_VO": "12 cm",
+      "M": "midpoint of VA"
+    },
+    "asked": [
+      "line_MM_proj"
+    ]
+  },
+  "raw_output": "{\n  \"dimension\": \"3d\",\n  \"axes\": false,\n  \"scale\": {\n    \"reference\": \"AB\",\n    \"real\": \"10 cm\",\n    \"units\": 5.0\n  },\n  \"points\": {\n    \"A\": [2.5, -2.5, 0.0],\n    \"B\": [2.5, 2.5, 0.0],\n    \"C\": [-2.5, 2.5, 0.0],\n    \"D\": [-2.5, -2.5, 0.0],\n    \"V\": [0.0, 0.0, 6.0],\n    \"O\": [0.0, 0.0, 0.0],\n    \"M\": [1.25, -1.25, 3.0],\n    \"M_proj\": [1.25, -1.25, 0.0]\n  },\n  \"lines\": [\n    {\"id\": \"line_AB\", \"from\": \"A\", \"to\": \"B\"},\n    {\"id\": \"line_BC\", \"from\": \"B\", \"to\": \"C\"},\n    {\"id\": \"line_CD\", \"from\": \"C\", \"to\": \"D\", \"style\": \"dashed\"},\n    {\"id\": \"line_DA\", \"from\": \"D\", \"to\": \"A\", \"style\": \"dashed\"},\n    {\"id\": \"line_VA\", \"from\": \"V\", \"to\": \"A\"},\n    {\"id\": \"line_VB\", \"from\": \"V\", \"to\": \"B\"},\n    {\"id\": \"line_VC\", \"from\": \"V\", \"to\": \"C\"},\n    {\"id\": \"line_VD\", \"from\": \"V\", \"to\": \"D\", \"style\": \"dashed\"},\n    {\"id\": \"line_VO\", \"from\": \"V\", \"to\": \"O\", \"style\": \"dashed\"},\n    {\"id\": \"line_MM_proj\", \"from\": \"M\", \"to\": \"M_proj\", \"style\": \"dashed\"}\n  ],\n  \"circles\": [],\n  \"faces\": [\n    {\"id\": \"face_ABCD\", \"points\": [\"A\", \"B\", \"C\", \"D\"]},\n    {\"id\": \"face_VAB\", \"points\": [\"V\", \"A\", \"B\"]},\n    {\"id\": \"face_VBC\", \"points\": [\"V\", \"B\", \"C\"]},\n    {\"id\": \"face_VCD\", \"points\": [\"V\", \"C\", \"D\"]},\n    {\"id\": \"face_VDA\", \"points\": [\"V\", \"D\", \"A\"]}\n  ],\n  \"angles\": [\n    {\"id\": \"angle_VOA\", \"vertex\": \"O\", \"p1\": \"V\", \"p2\": \"A\", \"value\": 90.0},\n    {\"id\": \"angle_MM_proj_A\", \"vertex\": \"M_proj\", \"p1\": \"M\", \"p2\": \"A\", \"value\": 90.0}\n  ],\n  \"given\": {\n    \"line_AB\": \"10 cm\",\n    \"height_VO\": \"12 cm\",\n    \"M\": \"midpoint of VA\"\n  },\n  \"asked\": [\"line_MM_proj\"]\n}",
+  "validation_issues": [],
+  "error": null,
+  "duration": 48.130693197250366,
+  "tokens_input": 503,
+  "tokens_output": 779,
+  "cost_hkd": 0.020190299999999998,
+  "finish_reason": "FinishReason.STOP"
+}

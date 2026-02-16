@@ -1,0 +1,1029 @@
+{
+  "total_questions": 8,
+  "successful": 8,
+  "failed": 0,
+  "total_cost_hkd": 0.1434732,
+  "total_tokens": 47337,
+  "wall_clock_time": 48.17158913612366,
+  "total_api_time": 232.61548256874084,
+  "results": [
+    {
+      "question_id": "hkdse_2d_04",
+      "question_text": "In triangle ABC, D is on AB and E is on AC such that DE is parallel to BC. If AD = 6cm, DB = 4cm, and the area of triangle ADE is 27 square cm, find the area of trapezium BCED.",
+      "dimension_type": "2d",
+      "blueprint": {
+        "dimension": "2d",
+        "axes": false,
+        "scale": {
+          "reference": "AB",
+          "real": "10 cm",
+          "units": 5.0
+        },
+        "points": {
+          "A": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "B": [
+            5.0,
+            0.0,
+            0.0
+          ],
+          "C": [
+            1.0,
+            7.5,
+            0.0
+          ],
+          "D": [
+            3.0,
+            0.0,
+            0.0
+          ],
+          "E": [
+            0.6,
+            4.5,
+            0.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "line_AD",
+            "from": "A",
+            "to": "D"
+          },
+          {
+            "id": "line_DB",
+            "from": "D",
+            "to": "B"
+          },
+          {
+            "id": "line_AE",
+            "from": "A",
+            "to": "E"
+          },
+          {
+            "id": "line_EC",
+            "from": "E",
+            "to": "C"
+          },
+          {
+            "id": "line_BC",
+            "from": "B",
+            "to": "C"
+          },
+          {
+            "id": "line_DE",
+            "from": "D",
+            "to": "E"
+          }
+        ],
+        "circles": [],
+        "arcs": [],
+        "faces": [
+          {
+            "id": "face_ADE",
+            "points": [
+              "A",
+              "D",
+              "E"
+            ]
+          },
+          {
+            "id": "face_BCED",
+            "points": [
+              "B",
+              "C",
+              "E",
+              "D"
+            ]
+          }
+        ],
+        "angles": [],
+        "given": {
+          "line_AD": "6 cm",
+          "line_DB": "4 cm",
+          "area_ADE": "27 cm\u00b2"
+        },
+        "asked": [
+          "area_BCED"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"2d\",\n  \"axes\": false,\n  \"scale\": {\n    \"reference\": \"AB\",\n    \"real\": \"10 cm\",\n    \"units\": 5.0\n  },\n  \"points\": {\n    \"A\": [0.0, 0.0, 0.0],\n    \"B\": [5.0, 0.0, 0.0],\n    \"C\": [1.0, 7.5, 0.0],\n    \"D\": [3.0, 0.0, 0.0],\n    \"E\": [0.6, 4.5, 0.0]\n  },\n  \"lines\": [\n    {\"id\": \"line_AD\", \"from\": \"A\", \"to\": \"D\"},\n    {\"id\": \"line_DB\", \"from\": \"D\", \"to\": \"B\"},\n    {\"id\": \"line_AE\", \"from\": \"A\", \"to\": \"E\"},\n    {\"id\": \"line_EC\", \"from\": \"E\", \"to\": \"C\"},\n    {\"id\": \"line_BC\", \"from\": \"B\", \"to\": \"C\"},\n    {\"id\": \"line_DE\", \"from\": \"D\", \"to\": \"E\"}\n  ],\n  \"circles\": [],\n  \"arcs\": [],\n  \"faces\": [\n    {\"id\": \"face_ADE\", \"points\": [\"A\", \"D\", \"E\"]},\n    {\"id\": \"face_BCED\", \"points\": [\"B\", \"C\", \"E\", \"D\"]}\n  ],\n  \"angles\": [],\n  \"given\": {\n    \"line_AD\": \"6 cm\",\n    \"line_DB\": \"4 cm\",\n    \"area_ADE\": \"27 cm\u00b2\"\n  },\n  \"asked\": [\"area_BCED\"]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 34.81030011177063,
+      "tokens_input": 465,
+      "tokens_output": 440,
+      "cost_hkd": 0.0121095,
+      "finish_reason": "FinishReason.STOP"
+    },
+    {
+      "question_id": "hkdse_2d_01",
+      "question_text": "ABCD is a cyclic quadrilateral inscribed in a circle with center O. Given that angle DAB = 75 degrees and angle ABC = 110 degrees, find angle BCD.",
+      "dimension_type": "2d",
+      "blueprint": {
+        "dimension": "2d",
+        "axes": false,
+        "scale": {
+          "reference": "AB",
+          "real": "10 cm",
+          "units": 5.0
+        },
+        "points": {
+          "A": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "B": [
+            5.0,
+            0.0,
+            0.0
+          ],
+          "C": [
+            7.198,
+            6.04,
+            0.0
+          ],
+          "D": [
+            2.5,
+            9.33,
+            0.0
+          ],
+          "O": [
+            2.5,
+            4.33,
+            0.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "line_AB",
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "id": "line_BC",
+            "from": "B",
+            "to": "C"
+          },
+          {
+            "id": "line_CD",
+            "from": "C",
+            "to": "D"
+          },
+          {
+            "id": "line_DA",
+            "from": "D",
+            "to": "A"
+          }
+        ],
+        "circles": [
+          {
+            "id": "circle_O",
+            "center": "O",
+            "radius": 5.0
+          }
+        ],
+        "arcs": [],
+        "faces": [
+          {
+            "id": "face_ABCD",
+            "points": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          }
+        ],
+        "angles": [
+          {
+            "id": "angle_DAB",
+            "vertex": "A",
+            "p1": "D",
+            "p2": "B",
+            "value": 75.0
+          },
+          {
+            "id": "angle_ABC",
+            "vertex": "B",
+            "p1": "A",
+            "p2": "C",
+            "value": 110.0
+          },
+          {
+            "id": "angle_BCD",
+            "vertex": "C",
+            "p1": "B",
+            "p2": "D",
+            "value": 105.0
+          }
+        ],
+        "given": {
+          "angle_DAB": "75\u00b0",
+          "angle_ABC": "110\u00b0"
+        },
+        "asked": [
+          "angle_BCD"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"2d\",\n  \"axes\": false,\n  \"scale\": {\n    \"reference\": \"AB\",\n    \"real\": \"10 cm\",\n    \"units\": 5.0\n  },\n  \"points\": {\n    \"A\": [0.0, 0.0, 0.0],\n    \"B\": [5.0, 0.0, 0.0],\n    \"C\": [7.198, 6.04, 0.0],\n    \"D\": [2.5, 9.33, 0.0],\n    \"O\": [2.5, 4.33, 0.0]\n  },\n  \"lines\": [\n    {\"id\": \"line_AB\", \"from\": \"A\", \"to\": \"B\"},\n    {\"id\": \"line_BC\", \"from\": \"B\", \"to\": \"C\"},\n    {\"id\": \"line_CD\", \"from\": \"C\", \"to\": \"D\"},\n    {\"id\": \"line_DA\", \"from\": \"D\", \"to\": \"A\"}\n  ],\n  \"circles\": [\n    {\"id\": \"circle_O\", \"center\": \"O\", \"radius\": 5.0}\n  ],\n  \"arcs\": [],\n  \"faces\": [\n    {\n      \"id\": \"face_ABCD\",\n      \"points\": [\"A\", \"B\", \"C\", \"D\"]\n    }\n  ],\n  \"angles\": [\n    {\"id\": \"angle_DAB\", \"vertex\": \"A\", \"p1\": \"D\", \"p2\": \"B\", \"value\": 75.0},\n    {\"id\": \"angle_ABC\", \"vertex\": \"B\", \"p1\": \"A\", \"p2\": \"C\", \"value\": 110.0},\n    {\"id\": \"angle_BCD\", \"vertex\": \"C\", \"p1\": \"B\", \"p2\": \"D\", \"value\": 105.0}\n  ],\n  \"given\": {\n    \"angle_DAB\": \"75\u00b0\",\n    \"angle_ABC\": \"110\u00b0\"\n  },\n  \"asked\": [\"angle_BCD\"]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 39.79396200180054,
+      "tokens_input": 447,
+      "tokens_output": 526,
+      "cost_hkd": 0.014051699999999999,
+      "finish_reason": "FinishReason.STOP"
+    },
+    {
+      "question_id": "hkdse_3d_09",
+      "question_text": "A cylinder has radius 3cm and height 8cm. Point A is on the top circle and point B is on the bottom circle, directly below A. An ant crawls from A to B along the curved surface. Find the shortest distance the ant travels.",
+      "dimension_type": "3d",
+      "blueprint": {
+        "dimension": "3d",
+        "axes": false,
+        "scale": {
+          "reference": "line_radius",
+          "real": "3 cm",
+          "units": 4.5
+        },
+        "points": {
+          "O_bot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "O_top": [
+            0.0,
+            0.0,
+            12.0
+          ],
+          "A": [
+            4.5,
+            0.0,
+            12.0
+          ],
+          "B": [
+            4.5,
+            0.0,
+            0.0
+          ],
+          "L_bot": [
+            -4.5,
+            0.0,
+            0.0
+          ],
+          "L_top": [
+            -4.5,
+            0.0,
+            12.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "line_AB",
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "id": "line_L",
+            "from": "L_bot",
+            "to": "L_top"
+          },
+          {
+            "id": "line_radius",
+            "from": "O_bot",
+            "to": "B",
+            "style": "dashed"
+          }
+        ],
+        "circles": [
+          {
+            "id": "circle_base",
+            "center": "O_bot",
+            "radius": 4.5
+          },
+          {
+            "id": "circle_top",
+            "center": "O_top",
+            "radius": 4.5
+          }
+        ],
+        "faces": [],
+        "angles": [],
+        "given": {
+          "radius": "3 cm",
+          "height": "8 cm"
+        },
+        "asked": [
+          "shortest distance"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"3d\",\n  \"axes\": false,\n  \"scale\": {\n    \"reference\": \"line_radius\",\n    \"real\": \"3 cm\",\n    \"units\": 4.5\n  },\n  \"points\": {\n    \"O_bot\": [0.0, 0.0, 0.0],\n    \"O_top\": [0.0, 0.0, 12.0],\n    \"A\": [4.5, 0.0, 12.0],\n    \"B\": [4.5, 0.0, 0.0],\n    \"L_bot\": [-4.5, 0.0, 0.0],\n    \"L_top\": [-4.5, 0.0, 12.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"line_AB\",\n      \"from\": \"A\",\n      \"to\": \"B\"\n    },\n    {\n      \"id\": \"line_L\",\n      \"from\": \"L_bot\",\n      \"to\": \"L_top\"\n    },\n    {\n      \"id\": \"line_radius\",\n      \"from\": \"O_bot\",\n      \"to\": \"B\",\n      \"style\": \"dashed\"\n    }\n  ],\n  \"circles\": [\n    {\n      \"id\": \"circle_base\",\n      \"center\": \"O_bot\",\n      \"radius\": 4.5\n    },\n    {\n      \"id\": \"circle_top\",\n      \"center\": \"O_top\",\n      \"radius\": 4.5\n    }\n  ],\n  \"faces\": [],\n  \"angles\": [],\n  \"given\": {\n    \"radius\": \"3 cm\",\n    \"height\": \"8 cm\"\n  },\n  \"asked\": [\n    \"shortest distance\"\n  ]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 42.660699129104614,
+      "tokens_input": 508,
+      "tokens_output": 453,
+      "cost_hkd": 0.012581399999999998,
+      "finish_reason": "FinishReason.STOP"
+    },
+    {
+      "question_id": "hkdse_3d_08",
+      "question_text": "In a right pyramid VABCD with square base ABCD of side 10cm and apex V at height 12cm above the center, M is the midpoint of edge VA. Find the perpendicular distance from M to the base plane.",
+      "dimension_type": "3d",
+      "blueprint": {
+        "dimension": "3d",
+        "axes": false,
+        "scale": {
+          "reference": "AB",
+          "real": "10 cm",
+          "units": 5.0
+        },
+        "points": {
+          "A": [
+            2.5,
+            -2.5,
+            0.0
+          ],
+          "B": [
+            2.5,
+            2.5,
+            0.0
+          ],
+          "C": [
+            -2.5,
+            2.5,
+            0.0
+          ],
+          "D": [
+            -2.5,
+            -2.5,
+            0.0
+          ],
+          "V": [
+            0.0,
+            0.0,
+            6.0
+          ],
+          "O": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "M": [
+            1.25,
+            -1.25,
+            3.0
+          ],
+          "M_proj": [
+            1.25,
+            -1.25,
+            0.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "line_AB",
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "id": "line_BC",
+            "from": "B",
+            "to": "C"
+          },
+          {
+            "id": "line_CD",
+            "from": "C",
+            "to": "D",
+            "style": "dashed"
+          },
+          {
+            "id": "line_DA",
+            "from": "D",
+            "to": "A",
+            "style": "dashed"
+          },
+          {
+            "id": "line_VA",
+            "from": "V",
+            "to": "A"
+          },
+          {
+            "id": "line_VB",
+            "from": "V",
+            "to": "B"
+          },
+          {
+            "id": "line_VC",
+            "from": "V",
+            "to": "C"
+          },
+          {
+            "id": "line_VD",
+            "from": "V",
+            "to": "D",
+            "style": "dashed"
+          },
+          {
+            "id": "line_VO",
+            "from": "V",
+            "to": "O",
+            "style": "dashed"
+          },
+          {
+            "id": "line_MM_proj",
+            "from": "M",
+            "to": "M_proj",
+            "style": "dashed"
+          }
+        ],
+        "circles": [],
+        "faces": [
+          {
+            "id": "face_ABCD",
+            "points": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ]
+          },
+          {
+            "id": "face_VAB",
+            "points": [
+              "V",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "face_VBC",
+            "points": [
+              "V",
+              "B",
+              "C"
+            ]
+          },
+          {
+            "id": "face_VCD",
+            "points": [
+              "V",
+              "C",
+              "D"
+            ]
+          },
+          {
+            "id": "face_VDA",
+            "points": [
+              "V",
+              "D",
+              "A"
+            ]
+          }
+        ],
+        "angles": [
+          {
+            "id": "angle_VOA",
+            "vertex": "O",
+            "p1": "V",
+            "p2": "A",
+            "value": 90.0
+          },
+          {
+            "id": "angle_MM_proj_A",
+            "vertex": "M_proj",
+            "p1": "M",
+            "p2": "A",
+            "value": 90.0
+          }
+        ],
+        "given": {
+          "line_AB": "10 cm",
+          "height_VO": "12 cm",
+          "M": "midpoint of VA"
+        },
+        "asked": [
+          "line_MM_proj"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"3d\",\n  \"axes\": false,\n  \"scale\": {\n    \"reference\": \"AB\",\n    \"real\": \"10 cm\",\n    \"units\": 5.0\n  },\n  \"points\": {\n    \"A\": [2.5, -2.5, 0.0],\n    \"B\": [2.5, 2.5, 0.0],\n    \"C\": [-2.5, 2.5, 0.0],\n    \"D\": [-2.5, -2.5, 0.0],\n    \"V\": [0.0, 0.0, 6.0],\n    \"O\": [0.0, 0.0, 0.0],\n    \"M\": [1.25, -1.25, 3.0],\n    \"M_proj\": [1.25, -1.25, 0.0]\n  },\n  \"lines\": [\n    {\"id\": \"line_AB\", \"from\": \"A\", \"to\": \"B\"},\n    {\"id\": \"line_BC\", \"from\": \"B\", \"to\": \"C\"},\n    {\"id\": \"line_CD\", \"from\": \"C\", \"to\": \"D\", \"style\": \"dashed\"},\n    {\"id\": \"line_DA\", \"from\": \"D\", \"to\": \"A\", \"style\": \"dashed\"},\n    {\"id\": \"line_VA\", \"from\": \"V\", \"to\": \"A\"},\n    {\"id\": \"line_VB\", \"from\": \"V\", \"to\": \"B\"},\n    {\"id\": \"line_VC\", \"from\": \"V\", \"to\": \"C\"},\n    {\"id\": \"line_VD\", \"from\": \"V\", \"to\": \"D\", \"style\": \"dashed\"},\n    {\"id\": \"line_VO\", \"from\": \"V\", \"to\": \"O\", \"style\": \"dashed\"},\n    {\"id\": \"line_MM_proj\", \"from\": \"M\", \"to\": \"M_proj\", \"style\": \"dashed\"}\n  ],\n  \"circles\": [],\n  \"faces\": [\n    {\"id\": \"face_ABCD\", \"points\": [\"A\", \"B\", \"C\", \"D\"]},\n    {\"id\": \"face_VAB\", \"points\": [\"V\", \"A\", \"B\"]},\n    {\"id\": \"face_VBC\", \"points\": [\"V\", \"B\", \"C\"]},\n    {\"id\": \"face_VCD\", \"points\": [\"V\", \"C\", \"D\"]},\n    {\"id\": \"face_VDA\", \"points\": [\"V\", \"D\", \"A\"]}\n  ],\n  \"angles\": [\n    {\"id\": \"angle_VOA\", \"vertex\": \"O\", \"p1\": \"V\", \"p2\": \"A\", \"value\": 90.0},\n    {\"id\": \"angle_MM_proj_A\", \"vertex\": \"M_proj\", \"p1\": \"M\", \"p2\": \"A\", \"value\": 90.0}\n  ],\n  \"given\": {\n    \"line_AB\": \"10 cm\",\n    \"height_VO\": \"12 cm\",\n    \"M\": \"midpoint of VA\"\n  },\n  \"asked\": [\"line_MM_proj\"]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 48.130693197250366,
+      "tokens_input": 503,
+      "tokens_output": 779,
+      "cost_hkd": 0.020190299999999998,
+      "finish_reason": "FinishReason.STOP"
+    },
+    {
+      "question_id": "coord_08",
+      "question_text": "Maximize P = 5x + 4y subject to: x + y <= 6, 2x + y <= 10, x >= 0, y >= 0. Sketch the feasible region and find the optimal point.",
+      "dimension_type": "coordinate_2d",
+      "blueprint": {
+        "dimension": "2d",
+        "axes": true,
+        "grid": true,
+        "coordinate_range": {
+          "x_min": -1.0,
+          "x_max": 8.0,
+          "y_min": -1.0,
+          "y_max": 11.0
+        },
+        "scale": {
+          "reference": "auto",
+          "real": "1 unit",
+          "units": 1.0
+        },
+        "points": {
+          "O": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "A": [
+            5.0,
+            0.0,
+            0.0
+          ],
+          "B": [
+            4.0,
+            2.0,
+            0.0
+          ],
+          "C": [
+            0.0,
+            6.0,
+            0.0
+          ],
+          "D": [
+            6.0,
+            0.0,
+            0.0
+          ],
+          "E": [
+            0.0,
+            10.0,
+            0.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "line_x_plus_y_6",
+            "from": "C",
+            "to": "D",
+            "equation": "x + y = 6"
+          },
+          {
+            "id": "line_2x_plus_y_10",
+            "from": "A",
+            "to": "E",
+            "equation": "2x + y = 10"
+          },
+          {
+            "id": "x_axis",
+            "from": "O",
+            "to": "D",
+            "style": "axis"
+          },
+          {
+            "id": "y_axis",
+            "from": "O",
+            "to": "E",
+            "style": "axis"
+          }
+        ],
+        "faces": [
+          {
+            "id": "region_feasible",
+            "points": [
+              "O",
+              "A",
+              "B",
+              "C"
+            ],
+            "style": "shaded"
+          }
+        ],
+        "given": {
+          "objective_function": "P = 5x + 4y",
+          "constraint_1": "x + y <= 6",
+          "constraint_2": "2x + y <= 10",
+          "constraint_3": "x >= 0",
+          "constraint_4": "y >= 0"
+        },
+        "asked": [
+          "feasible_region",
+          "optimal_point",
+          "maximum_value"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"2d\",\n  \"axes\": true,\n  \"grid\": true,\n  \"coordinate_range\": {\n    \"x_min\": -1.0,\n    \"x_max\": 8.0,\n    \"y_min\": -1.0,\n    \"y_max\": 11.0\n  },\n  \"scale\": {\n    \"reference\": \"auto\",\n    \"real\": \"1 unit\",\n    \"units\": 1.0\n  },\n  \"points\": {\n    \"O\": [0.0, 0.0, 0.0],\n    \"A\": [5.0, 0.0, 0.0],\n    \"B\": [4.0, 2.0, 0.0],\n    \"C\": [0.0, 6.0, 0.0],\n    \"D\": [6.0, 0.0, 0.0],\n    \"E\": [0.0, 10.0, 0.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"line_x_plus_y_6\",\n      \"from\": \"C\",\n      \"to\": \"D\",\n      \"equation\": \"x + y = 6\"\n    },\n    {\n      \"id\": \"line_2x_plus_y_10\",\n      \"from\": \"A\",\n      \"to\": \"E\",\n      \"equation\": \"2x + y = 10\"\n    },\n    {\n      \"id\": \"x_axis\",\n      \"from\": \"O\",\n      \"to\": \"D\",\n      \"style\": \"axis\"\n    },\n    {\n      \"id\": \"y_axis\",\n      \"from\": \"O\",\n      \"to\": \"E\",\n      \"style\": \"axis\"\n    }\n  ],\n  \"faces\": [\n    {\n      \"id\": \"region_feasible\",\n      \"points\": [\n        \"O\",\n        \"A\",\n        \"B\",\n        \"C\"\n      ],\n      \"style\": \"shaded\"\n    }\n  ],\n  \"given\": {\n    \"objective_function\": \"P = 5x + 4y\",\n    \"constraint_1\": \"x + y <= 6\",\n    \"constraint_2\": \"2x + y <= 10\",\n    \"constraint_3\": \"x >= 0\",\n    \"constraint_4\": \"y >= 0\"\n  },\n  \"asked\": [\n    \"feasible_region\",\n    \"optimal_point\",\n    \"maximum_value\"\n  ]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 17.148022890090942,
+      "tokens_input": 1172,
+      "tokens_output": 627,
+      "cost_hkd": 0.0192426,
+      "finish_reason": "FinishReason.STOP"
+    },
+    {
+      "question_id": "coord_05",
+      "question_text": "The equation of a circle is x^2 + y^2 - 6x + 4y - 12 = 0. Find the centre and radius, then sketch the circle.",
+      "dimension_type": "coordinate_2d",
+      "blueprint": {
+        "dimension": "2d",
+        "axes": true,
+        "grid": true,
+        "coordinate_range": {
+          "x_min": -4.0,
+          "x_max": 10.0,
+          "y_min": -9.0,
+          "y_max": 5.0
+        },
+        "scale": {
+          "reference": "auto",
+          "real": "1 unit",
+          "units": 1.0
+        },
+        "points": {
+          "C": [
+            3.0,
+            -2.0,
+            0.0
+          ],
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "x_axis",
+            "from": [
+              -4.0,
+              0.0,
+              0.0
+            ],
+            "to": [
+              10.0,
+              0.0,
+              0.0
+            ],
+            "style": "axis"
+          },
+          {
+            "id": "y_axis",
+            "from": [
+              0.0,
+              -9.0,
+              0.0
+            ],
+            "to": [
+              0.0,
+              5.0,
+              0.0
+            ],
+            "style": "axis"
+          }
+        ],
+        "circles": [
+          {
+            "id": "circle_1",
+            "center": "C",
+            "radius": 5.0
+          }
+        ],
+        "given": {
+          "equation": "x^2 + y^2 - 6x + 4y - 12 = 0"
+        },
+        "asked": [
+          "centre",
+          "radius",
+          "sketch"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"2d\",\n  \"axes\": true,\n  \"grid\": true,\n  \"coordinate_range\": {\n    \"x_min\": -4.0,\n    \"x_max\": 10.0,\n    \"y_min\": -9.0,\n    \"y_max\": 5.0\n  },\n  \"scale\": {\n    \"reference\": \"auto\",\n    \"real\": \"1 unit\",\n    \"units\": 1.0\n  },\n  \"points\": {\n    \"C\": [3.0, -2.0, 0.0],\n    \"origin\": [0.0, 0.0, 0.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"x_axis\",\n      \"from\": [-4.0, 0.0, 0.0],\n      \"to\": [10.0, 0.0, 0.0],\n      \"style\": \"axis\"\n    },\n    {\n      \"id\": \"y_axis\",\n      \"from\": [0.0, -9.0, 0.0],\n      \"to\": [0.0, 5.0, 0.0],\n      \"style\": \"axis\"\n    }\n  ],\n  \"circles\": [\n    {\n      \"id\": \"circle_1\",\n      \"center\": \"C\",\n      \"radius\": 5.0\n    }\n  ],\n  \"given\": {\n    \"equation\": \"x^2 + y^2 - 6x + 4y - 12 = 0\"\n  },\n  \"asked\": [\n    \"centre\",\n    \"radius\",\n    \"sketch\"\n  ]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 10.061236143112183,
+      "tokens_input": 1162,
+      "tokens_output": 415,
+      "cost_hkd": 0.0142428,
+      "finish_reason": "FinishReason.STOP"
+    },
+    {
+      "question_id": "coord_34",
+      "question_text": "A sphere has equation (x-2)^2 + (y-1)^2 + (z-3)^2 = 25. The plane z = 6 intersects the sphere in a circle. Find the center and radius of this circle of intersection. Sketch the sphere, the cutting plane, and the resulting circle.",
+      "dimension_type": "coordinate_3d",
+      "blueprint": {
+        "dimension": "3d",
+        "axes": true,
+        "grid": false,
+        "coordinate_range": {
+          "x_min": -5.0,
+          "x_max": 9.0,
+          "y_min": -6.0,
+          "y_max": 8.0,
+          "z_min": -4.0,
+          "z_max": 10.0
+        },
+        "scale": {
+          "reference": "auto",
+          "real": "1 unit",
+          "units": 1.0
+        },
+        "points": {
+          "C": [
+            2.0,
+            1.0,
+            3.0
+          ],
+          "C_prime": [
+            2.0,
+            1.0,
+            6.0
+          ],
+          "P_edge": [
+            6.0,
+            1.0,
+            6.0
+          ],
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "dist_to_plane",
+            "from": "C",
+            "to": "C_prime"
+          },
+          {
+            "id": "circle_radius_segment",
+            "from": "C_prime",
+            "to": "P_edge"
+          }
+        ],
+        "planes": [
+          {
+            "id": "plane_z6",
+            "equation": "z = 6",
+            "normal": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "points": [
+              [
+                2.0,
+                1.0,
+                6.0
+              ]
+            ]
+          }
+        ],
+        "spheres": [
+          {
+            "id": "sphere_S1",
+            "center": "C",
+            "radius": 5.0,
+            "equation": "(x-2)^2 + (y-1)^2 + (z-3)^2 = 25"
+          }
+        ],
+        "vectors": [
+          {
+            "id": "normal_vector",
+            "from": "C_prime",
+            "to": [
+              2.0,
+              1.0,
+              7.0
+            ],
+            "components": [
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        ],
+        "given": {
+          "sphere_equation": "(x-2)^2 + (y-1)^2 + (z-3)^2 = 25",
+          "plane_equation": "z = 6"
+        },
+        "asked": [
+          "center_of_circle",
+          "radius_of_circle",
+          "sketch_sphere",
+          "sketch_plane",
+          "sketch_circle"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"3d\",\n  \"axes\": true,\n  \"grid\": false,\n  \"coordinate_range\": {\n    \"x_min\": -5.0,\n    \"x_max\": 9.0,\n    \"y_min\": -6.0,\n    \"y_max\": 8.0,\n    \"z_min\": -4.0,\n    \"z_max\": 10.0\n  },\n  \"scale\": {\n    \"reference\": \"auto\",\n    \"real\": \"1 unit\",\n    \"units\": 1.0\n  },\n  \"points\": {\n    \"C\": [2.0, 1.0, 3.0],\n    \"C_prime\": [2.0, 1.0, 6.0],\n    \"P_edge\": [6.0, 1.0, 6.0],\n    \"origin\": [0.0, 0.0, 0.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"dist_to_plane\",\n      \"from\": \"C\",\n      \"to\": \"C_prime\"\n    },\n    {\n      \"id\": \"circle_radius_segment\",\n      \"from\": \"C_prime\",\n      \"to\": \"P_edge\"\n    }\n  ],\n  \"planes\": [\n    {\n      \"id\": \"plane_z6\",\n      \"equation\": \"z = 6\",\n      \"normal\": [0.0, 0.0, 1.0],\n      \"points\": [\n        [2.0, 1.0, 6.0]\n      ]\n    }\n  ],\n  \"spheres\": [\n    {\n      \"id\": \"sphere_S1\",\n      \"center\": \"C\",\n      \"radius\": 5.0,\n      \"equation\": \"(x-2)^2 + (y-1)^2 + (z-3)^2 = 25\"\n    }\n  ],\n  \"vectors\": [\n    {\n      \"id\": \"normal_vector\",\n      \"from\": \"C_prime\",\n      \"to\": [2.0, 1.0, 7.0],\n      \"components\": [0.0, 0.0, 1.0]\n    }\n  ],\n  \"given\": {\n    \"sphere_equation\": \"(x-2)^2 + (y-1)^2 + (z-3)^2 = 25\",\n    \"plane_equation\": \"z = 6\"\n  },\n  \"asked\": [\n    \"center_of_circle\",\n    \"radius_of_circle\",\n    \"sketch_sphere\",\n    \"sketch_plane\",\n    \"sketch_circle\"\n  ]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 22.11927819252014,
+      "tokens_input": 1417,
+      "tokens_output": 660,
+      "cost_hkd": 0.020970299999999997,
+      "finish_reason": "FinishReason.STOP"
+    },
+    {
+      "question_id": "coord_33",
+      "question_text": "Two planes are given: P1: x + 2y - 2z = 6 and P2: 2x - y + 2z = 9. Find the dihedral angle between the two planes and the equation of their line of intersection. Sketch both planes, their line of intersection, and indicate the dihedral angle.",
+      "dimension_type": "coordinate_3d",
+      "blueprint": {
+        "dimension": "3d",
+        "axes": true,
+        "grid": false,
+        "coordinate_range": {
+          "x_min": -2.0,
+          "x_max": 10.0,
+          "y_min": -10.0,
+          "y_max": 12.0,
+          "z_min": -6.0,
+          "z_max": 10.0
+        },
+        "scale": {
+          "reference": "auto",
+          "real": "1 unit",
+          "units": 1.0
+        },
+        "points": {
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "P1_x": [
+            6.0,
+            0.0,
+            0.0
+          ],
+          "P1_y": [
+            0.0,
+            3.0,
+            0.0
+          ],
+          "P1_z": [
+            0.0,
+            0.0,
+            -3.0
+          ],
+          "P2_x": [
+            4.5,
+            0.0,
+            0.0
+          ],
+          "P2_y": [
+            0.0,
+            -9.0,
+            0.0
+          ],
+          "P2_z": [
+            0.0,
+            0.0,
+            4.5
+          ],
+          "L1": [
+            4.0,
+            3.0,
+            2.0
+          ],
+          "L2": [
+            2.0,
+            9.0,
+            7.0
+          ],
+          "L3": [
+            6.0,
+            -3.0,
+            -3.0
+          ]
+        },
+        "lines": [
+          {
+            "id": "line_intersection",
+            "from": "L3",
+            "to": "L2",
+            "equation": "r = (4, 3, 2) + t(2, -6, -5)"
+          },
+          {
+            "id": "x_axis",
+            "from": "origin",
+            "to": [
+              8.0,
+              0.0,
+              0.0
+            ],
+            "style": "axis"
+          },
+          {
+            "id": "y_axis",
+            "from": "origin",
+            "to": [
+              0.0,
+              10.0,
+              0.0
+            ],
+            "style": "axis"
+          },
+          {
+            "id": "z_axis",
+            "from": "origin",
+            "to": [
+              0.0,
+              0.0,
+              8.0
+            ],
+            "style": "axis"
+          }
+        ],
+        "planes": [
+          {
+            "id": "plane_P1",
+            "equation": "x + 2y - 2z = 6",
+            "normal": [
+              1.0,
+              2.0,
+              -2.0
+            ],
+            "points": [
+              "P1_x",
+              "P1_y",
+              "L2",
+              "L3"
+            ]
+          },
+          {
+            "id": "plane_P2",
+            "equation": "2x - y + 2z = 9",
+            "normal": [
+              2.0,
+              -1.0,
+              2.0
+            ],
+            "points": [
+              "P2_x",
+              "P2_y",
+              "L2",
+              "L3"
+            ]
+          }
+        ],
+        "vectors": [
+          {
+            "id": "normal_n1",
+            "from": "L1",
+            "components": [
+              1.0,
+              2.0,
+              -2.0
+            ]
+          },
+          {
+            "id": "normal_n2",
+            "from": "L1",
+            "components": [
+              2.0,
+              -1.0,
+              2.0
+            ]
+          }
+        ],
+        "angles": [
+          {
+            "id": "dihedral_angle",
+            "vertex": "line_intersection",
+            "p1": "plane_P1",
+            "p2": "plane_P2",
+            "value": 63.61
+          }
+        ],
+        "given": {
+          "plane_P1": "x + 2y - 2z = 6",
+          "plane_P2": "2x - y + 2z = 9"
+        },
+        "asked": [
+          "dihedral_angle",
+          "line_of_intersection"
+        ]
+      },
+      "raw_output": "{\n  \"dimension\": \"3d\",\n  \"axes\": true,\n  \"grid\": false,\n  \"coordinate_range\": {\n    \"x_min\": -2.0,\n    \"x_max\": 10.0,\n    \"y_min\": -10.0,\n    \"y_max\": 12.0,\n    \"z_min\": -6.0,\n    \"z_max\": 10.0\n  },\n  \"scale\": {\n    \"reference\": \"auto\",\n    \"real\": \"1 unit\",\n    \"units\": 1.0\n  },\n  \"points\": {\n    \"origin\": [0.0, 0.0, 0.0],\n    \"P1_x\": [6.0, 0.0, 0.0],\n    \"P1_y\": [0.0, 3.0, 0.0],\n    \"P1_z\": [0.0, 0.0, -3.0],\n    \"P2_x\": [4.5, 0.0, 0.0],\n    \"P2_y\": [0.0, -9.0, 0.0],\n    \"P2_z\": [0.0, 0.0, 4.5],\n    \"L1\": [4.0, 3.0, 2.0],\n    \"L2\": [2.0, 9.0, 7.0],\n    \"L3\": [6.0, -3.0, -3.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"line_intersection\",\n      \"from\": \"L3\",\n      \"to\": \"L2\",\n      \"equation\": \"r = (4, 3, 2) + t(2, -6, -5)\"\n    },\n    {\n      \"id\": \"x_axis\",\n      \"from\": \"origin\",\n      \"to\": [8.0, 0.0, 0.0],\n      \"style\": \"axis\"\n    },\n    {\n      \"id\": \"y_axis\",\n      \"from\": \"origin\",\n      \"to\": [0.0, 10.0, 0.0],\n      \"style\": \"axis\"\n    },\n    {\n      \"id\": \"z_axis\",\n      \"from\": \"origin\",\n      \"to\": [0.0, 0.0, 8.0],\n      \"style\": \"axis\"\n    }\n  ],\n  \"planes\": [\n    {\n      \"id\": \"plane_P1\",\n      \"equation\": \"x + 2y - 2z = 6\",\n      \"normal\": [1.0, 2.0, -2.0],\n      \"points\": [\n        \"P1_x\",\n        \"P1_y\",\n        \"L2\",\n        \"L3\"\n      ]\n    },\n    {\n      \"id\": \"plane_P2\",\n      \"equation\": \"2x - y + 2z = 9\",\n      \"normal\": [2.0, -1.0, 2.0],\n      \"points\": [\n        \"P2_x\",\n        \"P2_y\",\n        \"L2\",\n        \"L3\"\n      ]\n    }\n  ],\n  \"vectors\": [\n    {\n      \"id\": \"normal_n1\",\n      \"from\": \"L1\",\n      \"components\": [1.0, 2.0, -2.0]\n    },\n    {\n      \"id\": \"normal_n2\",\n      \"from\": \"L1\",\n      \"components\": [2.0, -1.0, 2.0]\n    }\n  ],\n  \"angles\": [\n    {\n      \"id\": \"dihedral_angle\",\n      \"vertex\": \"line_intersection\",\n      \"p1\": \"plane_P1\",\n      \"p2\": \"plane_P2\",\n      \"value\": 63.61\n    }\n  ],\n  \"given\": {\n    \"plane_P1\": \"x + 2y - 2z = 6\",\n    \"plane_P2\": \"2x - y + 2z = 9\"\n  },\n  \"asked\": [\n    \"dihedral_angle\",\n    \"line_of_intersection\"\n  ]\n}",
+      "validation_issues": [],
+      "error": null,
+      "duration": 17.89129090309143,
+      "tokens_input": 1420,
+      "tokens_output": 1049,
+      "cost_hkd": 0.0300846,
+      "finish_reason": "FinishReason.STOP"
+    }
+  ]
+}

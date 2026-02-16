@@ -1,0 +1,93 @@
+{
+  "question_id": "hkdse_3d_09",
+  "question_text": "A cylinder has radius 3cm and height 8cm. Point A is on the top circle and point B is on the bottom circle, directly below A. An ant crawls from A to B along the curved surface. Find the shortest distance the ant travels.",
+  "dimension_type": "3d",
+  "blueprint": {
+    "dimension": "3d",
+    "axes": false,
+    "scale": {
+      "reference": "line_radius",
+      "real": "3 cm",
+      "units": 4.5
+    },
+    "points": {
+      "O_bot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "O_top": [
+        0.0,
+        0.0,
+        12.0
+      ],
+      "A": [
+        4.5,
+        0.0,
+        12.0
+      ],
+      "B": [
+        4.5,
+        0.0,
+        0.0
+      ],
+      "L_bot": [
+        -4.5,
+        0.0,
+        0.0
+      ],
+      "L_top": [
+        -4.5,
+        0.0,
+        12.0
+      ]
+    },
+    "lines": [
+      {
+        "id": "line_AB",
+        "from": "A",
+        "to": "B"
+      },
+      {
+        "id": "line_L",
+        "from": "L_bot",
+        "to": "L_top"
+      },
+      {
+        "id": "line_radius",
+        "from": "O_bot",
+        "to": "B",
+        "style": "dashed"
+      }
+    ],
+    "circles": [
+      {
+        "id": "circle_base",
+        "center": "O_bot",
+        "radius": 4.5
+      },
+      {
+        "id": "circle_top",
+        "center": "O_top",
+        "radius": 4.5
+      }
+    ],
+    "faces": [],
+    "angles": [],
+    "given": {
+      "radius": "3 cm",
+      "height": "8 cm"
+    },
+    "asked": [
+      "shortest distance"
+    ]
+  },
+  "raw_output": "{\n  \"dimension\": \"3d\",\n  \"axes\": false,\n  \"scale\": {\n    \"reference\": \"line_radius\",\n    \"real\": \"3 cm\",\n    \"units\": 4.5\n  },\n  \"points\": {\n    \"O_bot\": [0.0, 0.0, 0.0],\n    \"O_top\": [0.0, 0.0, 12.0],\n    \"A\": [4.5, 0.0, 12.0],\n    \"B\": [4.5, 0.0, 0.0],\n    \"L_bot\": [-4.5, 0.0, 0.0],\n    \"L_top\": [-4.5, 0.0, 12.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"line_AB\",\n      \"from\": \"A\",\n      \"to\": \"B\"\n    },\n    {\n      \"id\": \"line_L\",\n      \"from\": \"L_bot\",\n      \"to\": \"L_top\"\n    },\n    {\n      \"id\": \"line_radius\",\n      \"from\": \"O_bot\",\n      \"to\": \"B\",\n      \"style\": \"dashed\"\n    }\n  ],\n  \"circles\": [\n    {\n      \"id\": \"circle_base\",\n      \"center\": \"O_bot\",\n      \"radius\": 4.5\n    },\n    {\n      \"id\": \"circle_top\",\n      \"center\": \"O_top\",\n      \"radius\": 4.5\n    }\n  ],\n  \"faces\": [],\n  \"angles\": [],\n  \"given\": {\n    \"radius\": \"3 cm\",\n    \"height\": \"8 cm\"\n  },\n  \"asked\": [\n    \"shortest distance\"\n  ]\n}",
+  "validation_issues": [],
+  "error": null,
+  "duration": 42.660699129104614,
+  "tokens_input": 508,
+  "tokens_output": 453,
+  "cost_hkd": 0.012581399999999998,
+  "finish_reason": "FinishReason.STOP"
+}

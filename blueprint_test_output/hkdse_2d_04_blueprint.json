@@ -1,0 +1,111 @@
+{
+  "question_id": "hkdse_2d_04",
+  "question_text": "In triangle ABC, D is on AB and E is on AC such that DE is parallel to BC. If AD = 6cm, DB = 4cm, and the area of triangle ADE is 27 square cm, find the area of trapezium BCED.",
+  "dimension_type": "2d",
+  "blueprint": {
+    "dimension": "2d",
+    "axes": false,
+    "scale": {
+      "reference": "AB",
+      "real": "10 cm",
+      "units": 5.0
+    },
+    "points": {
+      "A": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "B": [
+        5.0,
+        0.0,
+        0.0
+      ],
+      "C": [
+        1.0,
+        7.5,
+        0.0
+      ],
+      "D": [
+        3.0,
+        0.0,
+        0.0
+      ],
+      "E": [
+        0.6,
+        4.5,
+        0.0
+      ]
+    },
+    "lines": [
+      {
+        "id": "line_AD",
+        "from": "A",
+        "to": "D"
+      },
+      {
+        "id": "line_DB",
+        "from": "D",
+        "to": "B"
+      },
+      {
+        "id": "line_AE",
+        "from": "A",
+        "to": "E"
+      },
+      {
+        "id": "line_EC",
+        "from": "E",
+        "to": "C"
+      },
+      {
+        "id": "line_BC",
+        "from": "B",
+        "to": "C"
+      },
+      {
+        "id": "line_DE",
+        "from": "D",
+        "to": "E"
+      }
+    ],
+    "circles": [],
+    "arcs": [],
+    "faces": [
+      {
+        "id": "face_ADE",
+        "points": [
+          "A",
+          "D",
+          "E"
+        ]
+      },
+      {
+        "id": "face_BCED",
+        "points": [
+          "B",
+          "C",
+          "E",
+          "D"
+        ]
+      }
+    ],
+    "angles": [],
+    "given": {
+      "line_AD": "6 cm",
+      "line_DB": "4 cm",
+      "area_ADE": "27 cm\u00b2"
+    },
+    "asked": [
+      "area_BCED"
+    ]
+  },
+  "raw_output": "{\n  \"dimension\": \"2d\",\n  \"axes\": false,\n  \"scale\": {\n    \"reference\": \"AB\",\n    \"real\": \"10 cm\",\n    \"units\": 5.0\n  },\n  \"points\": {\n    \"A\": [0.0, 0.0, 0.0],\n    \"B\": [5.0, 0.0, 0.0],\n    \"C\": [1.0, 7.5, 0.0],\n    \"D\": [3.0, 0.0, 0.0],\n    \"E\": [0.6, 4.5, 0.0]\n  },\n  \"lines\": [\n    {\"id\": \"line_AD\", \"from\": \"A\", \"to\": \"D\"},\n    {\"id\": \"line_DB\", \"from\": \"D\", \"to\": \"B\"},\n    {\"id\": \"line_AE\", \"from\": \"A\", \"to\": \"E\"},\n    {\"id\": \"line_EC\", \"from\": \"E\", \"to\": \"C\"},\n    {\"id\": \"line_BC\", \"from\": \"B\", \"to\": \"C\"},\n    {\"id\": \"line_DE\", \"from\": \"D\", \"to\": \"E\"}\n  ],\n  \"circles\": [],\n  \"arcs\": [],\n  \"faces\": [\n    {\"id\": \"face_ADE\", \"points\": [\"A\", \"D\", \"E\"]},\n    {\"id\": \"face_BCED\", \"points\": [\"B\", \"C\", \"E\", \"D\"]}\n  ],\n  \"angles\": [],\n  \"given\": {\n    \"line_AD\": \"6 cm\",\n    \"line_DB\": \"4 cm\",\n    \"area_ADE\": \"27 cm\u00b2\"\n  },\n  \"asked\": [\"area_BCED\"]\n}",
+  "validation_issues": [],
+  "error": null,
+  "duration": 34.81030011177063,
+  "tokens_input": 465,
+  "tokens_output": 440,
+  "cost_hkd": 0.0121095,
+  "finish_reason": "FinishReason.STOP"
+}

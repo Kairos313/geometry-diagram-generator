@@ -1,0 +1,766 @@
+=== GEOMETRIC BLUEPRINT - COORDINATES ===
+
+ 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   $M$ is midpoint of $BC$.
+
+    *   $AM$ is the target. Highlight it.
+    *   Edges $AB, BC, CD, DA, AC, BD$ are given as $6\text{ cm}$.
+
+    *   $A = (2.500, 1.443, 4.082)$
+    *   $B = (0.000, 0.000, 0.000)$
+    *   $C = (5.000, 0.000, 0.000)$
+    *   $D = (2.500, 4.330, 0.000)$
+    *   $M = (2.500, 0.000, 0.000)$
+
+    *   $AB = 5.000$
+    *   $BC = 5.000$
+    *   $CD = 5.000$
+    *   $DA = 5.000$
+    *   $AC = 5.000$
+    *   $BD = 5.000$
+    *   $AM = 4.330$
+
+    *   $ABC, ABD, ACD, BCD$ are equilateral.
+    *   

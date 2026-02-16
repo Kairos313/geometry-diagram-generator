@@ -1,0 +1,86 @@
+{
+  "question_id": "coord_05",
+  "question_text": "The equation of a circle is x^2 + y^2 - 6x + 4y - 12 = 0. Find the centre and radius, then sketch the circle.",
+  "dimension_type": "coordinate_2d",
+  "blueprint": {
+    "dimension": "2d",
+    "axes": true,
+    "grid": true,
+    "coordinate_range": {
+      "x_min": -4.0,
+      "x_max": 10.0,
+      "y_min": -9.0,
+      "y_max": 5.0
+    },
+    "scale": {
+      "reference": "auto",
+      "real": "1 unit",
+      "units": 1.0
+    },
+    "points": {
+      "C": [
+        3.0,
+        -2.0,
+        0.0
+      ],
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lines": [
+      {
+        "id": "x_axis",
+        "from": [
+          -4.0,
+          0.0,
+          0.0
+        ],
+        "to": [
+          10.0,
+          0.0,
+          0.0
+        ],
+        "style": "axis"
+      },
+      {
+        "id": "y_axis",
+        "from": [
+          0.0,
+          -9.0,
+          0.0
+        ],
+        "to": [
+          0.0,
+          5.0,
+          0.0
+        ],
+        "style": "axis"
+      }
+    ],
+    "circles": [
+      {
+        "id": "circle_1",
+        "center": "C",
+        "radius": 5.0
+      }
+    ],
+    "given": {
+      "equation": "x^2 + y^2 - 6x + 4y - 12 = 0"
+    },
+    "asked": [
+      "centre",
+      "radius",
+      "sketch"
+    ]
+  },
+  "raw_output": "{\n  \"dimension\": \"2d\",\n  \"axes\": true,\n  \"grid\": true,\n  \"coordinate_range\": {\n    \"x_min\": -4.0,\n    \"x_max\": 10.0,\n    \"y_min\": -9.0,\n    \"y_max\": 5.0\n  },\n  \"scale\": {\n    \"reference\": \"auto\",\n    \"real\": \"1 unit\",\n    \"units\": 1.0\n  },\n  \"points\": {\n    \"C\": [3.0, -2.0, 0.0],\n    \"origin\": [0.0, 0.0, 0.0]\n  },\n  \"lines\": [\n    {\n      \"id\": \"x_axis\",\n      \"from\": [-4.0, 0.0, 0.0],\n      \"to\": [10.0, 0.0, 0.0],\n      \"style\": \"axis\"\n    },\n    {\n      \"id\": \"y_axis\",\n      \"from\": [0.0, -9.0, 0.0],\n      \"to\": [0.0, 5.0, 0.0],\n      \"style\": \"axis\"\n    }\n  ],\n  \"circles\": [\n    {\n      \"id\": \"circle_1\",\n      \"center\": \"C\",\n      \"radius\": 5.0\n    }\n  ],\n  \"given\": {\n    \"equation\": \"x^2 + y^2 - 6x + 4y - 12 = 0\"\n  },\n  \"asked\": [\n    \"centre\",\n    \"radius\",\n    \"sketch\"\n  ]\n}",
+  "validation_issues": [],
+  "error": null,
+  "duration": 10.061236143112183,
+  "tokens_input": 1162,
+  "tokens_output": 415,
+  "cost_hkd": 0.0142428,
+  "finish_reason": "FinishReason.STOP"
+}

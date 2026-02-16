@@ -1,0 +1,128 @@
+{
+  "dimension": "3d",
+  "scale": {
+    "reference": "AB",
+    "real": "6 cm",
+    "units": 5.0
+  },
+  "points": {
+    "A": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "B": [
+      5.0,
+      0.0,
+      0.0
+    ],
+    "C": [
+      2.5,
+      4.33,
+      0.0
+    ],
+    "V": [
+      2.5,
+      1.443,
+      4.082
+    ],
+    "M": [
+      3.75,
+      2.165,
+      0.0
+    ]
+  },
+  "lines": [
+    {
+      "id": "line_AB",
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "id": "line_BC",
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "id": "line_CA",
+      "from": "C",
+      "to": "A"
+    },
+    {
+      "id": "line_VA",
+      "from": "V",
+      "to": "A"
+    },
+    {
+      "id": "line_VB",
+      "from": "V",
+      "to": "B"
+    },
+    {
+      "id": "line_VC",
+      "from": "V",
+      "to": "C"
+    },
+    {
+      "id": "line_VM",
+      "from": "V",
+      "to": "M",
+      "style": "dashed"
+    },
+    {
+      "id": "line_AM",
+      "from": "A",
+      "to": "M",
+      "style": "dashed"
+    }
+  ],
+  "faces": [
+    {
+      "id": "face_ABC",
+      "points": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "face_VAB",
+      "points": [
+        "V",
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": "face_VBC",
+      "points": [
+        "V",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "face_VCA",
+      "points": [
+        "V",
+        "C",
+        "A"
+      ]
+    }
+  ],
+  "angles": [
+    {
+      "id": "angle_VMA",
+      "vertex": "M",
+      "p1": "V",
+      "p2": "A",
+      "value": 70.529
+    }
+  ],
+  "given": {
+    "line_AB": "6 cm"
+  },
+  "asked": [
+    "angle_VMA"
+  ]
+}

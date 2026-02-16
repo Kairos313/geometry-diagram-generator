@@ -1,0 +1,9 @@
+Starting Batch Test UI at http://127.0.0.1:5056
+Test set: HKDSE Grade 12 (2D + 3D)
+Questions: 35
+Prompt path: Original prompts
+Blueprint: deepseek-direct
+Code generation: deepseek-direct
+Concurrent workers: 10
+ * Serving Flask app 'batch_test'
+ * Debug mode: off

@@ -1,0 +1,44 @@
+Starting Batch Test UI at http://127.0.0.1:5056
+Test set: HKDSE Grade 12 (2D + 3D)
+Questions: 35
+Prompt path: Original prompts
+Blueprint: deepseek-direct
+Code generation: deepseek-direct
+Concurrent workers: 10
+ * Serving Flask app 'batch_test'
+ * Debug mode: off
+2026-02-12 16:20:26,450 - ERROR - Execution failed with code 1
+2026-02-12 16:20:26,450 - ERROR - STDOUT: 
+2026-02-12 16:20:26,450 - ERROR - STDERR: Traceback (most recent call last):
+  File "/Users/kairos/Desktop/geometry-video-generator/Geometry_v2/Geometry Test Questions/Full_Pipeline/output/batch/hkdse_2d_06_2a7e5bee/render_code.py", line 8, in <module>
+    from matplotlib_helpers import draw_angle_arc, draw_right_angle_marker
+ModuleNotFoundError: No module named 'matplotlib_helpers'
+
+2026-02-12 16:20:39,335 - ERROR - Execution failed with code 1
+2026-02-12 16:20:39,335 - ERROR - STDOUT: 
+2026-02-12 16:20:39,335 - ERROR - STDERR: Traceback (most recent call last):
+  File "/Users/kairos/Desktop/geometry-video-generator/Geometry_v2/Geometry Test Questions/Full_Pipeline/output/batch/hkdse_2d_08_20a1fa66/render_code.py", line 8, in <module>
+    from matplotlib_helpers import draw_angle_arc, draw_right_angle_marker
+ModuleNotFoundError: No module named 'matplotlib_helpers'
+
+2026-02-12 16:20:50,495 - ERROR - Execution failed with code 1
+2026-02-12 16:20:50,495 - ERROR - STDOUT: 
+2026-02-12 16:20:50,495 - ERROR - STDERR: Traceback (most recent call last):
+  File "/Users/kairos/Desktop/geometry-video-generator/Geometry_v2/Geometry Test Questions/Full_Pipeline/output/batch/hkdse_2d_09_c800b32b/render_code.py", line 8, in <module>
+    from matplotlib_helpers import draw_angle_arc, draw_right_angle_marker
+ModuleNotFoundError: No module named 'matplotlib_helpers'
+
+2026-02-12 16:21:29,705 - ERROR - Execution failed with code 1
+2026-02-12 16:21:29,705 - ERROR - STDOUT: 
+2026-02-12 16:21:29,705 - ERROR - STDERR: Traceback (most recent call last):
+  File "/Users/kairos/Desktop/geometry-video-generator/Geometry_v2/Geometry Test Questions/Full_Pipeline/output/batch/hkdse_2d_03_f92cca05/render_code.py", line 8, in <module>
+    from matplotlib_helpers import draw_angle_arc, draw_right_angle_marker
+ModuleNotFoundError: No module named 'matplotlib_helpers'
+
+2026-02-12 16:21:50,037 - ERROR - Execution failed with code 1
+2026-02-12 16:21:50,037 - ERROR - STDOUT: 
+2026-02-12 16:21:50,037 - ERROR - STDERR: Traceback (most recent call last):
+  File "/Users/kairos/Desktop/geometry-video-generator/Geometry_v2/Geometry Test Questions/Full_Pipeline/output/batch/hkdse_2d_10_2123de07/render_code.py", line 8, in <module>
+    from matplotlib_helpers import draw_angle_arc, draw_right_angle_marker
+ModuleNotFoundError: No module named 'matplotlib_helpers'
+

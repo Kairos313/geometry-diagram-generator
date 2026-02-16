@@ -1,0 +1,106 @@
+=== GEOMETRIC BLUEPRINT - COORDINATES ===
+
+# Geometric Blueprint
+
+### Part 1: Geometric Context from Question
+
+#### 1. QUESTION OBJECTIVE
+A right triangular prism with base triangle $ABC$ ($\angle ABC = 90^\circ$, $AB = 3$ cm, $BC = 4$ cm) and height $10$ cm. The objective is to find the length of the space diagonal $AF$, where $F$ is the top vertex above $C$.
+
+#### 2. GIVEN ELEMENTS
+*   **Given Lengths:** $AB = 3$ cm, $BC = 4$ cm, Prism Height ($AD = BE = CF$) = $10$ cm.
+*   **Given Angles:** $\angle ABC = 90^\circ$.
+*   **Given Properties:** Right triangular prism (vertical edges are perpendicular to the base).
+
+#### 3. ALL GEOMETRIC ELEMENTS
+*   **Points:** $A, B, C$ (base vertices); $D, E, F$ (top vertices).
+*   **Lines/Segments:** $AB, BC, CA$ (base edges); $DE, EF, FD$ (top edges); $AD, BE, CF$ (vertical edges); $AF$ (space diagonal).
+*   **Angles:** $\angle ABC, \angle DEF, \angle ABE, \angle CBE, \angle DAB, \angle FCB$.
+*   **Polygons/Shapes:** Triangle $ABC$ (base), Triangle $DEF$ (top), Rectangles $ABED, BCFE, ACFD$ (lateral faces).
+*   **3D Objects:** Right triangular prism.
+
+### Part 2: Coordinate System and Scale Definition (Calculated)
+
+#### 1. ORIGIN PLACEMENT (CRITICAL)
+*   Point **B** is chosen as the origin: **(0.000, 0.000, 0.000)**.
+
+#### 2. AXES ALIGNMENT
+*   **Primary Axis (X-axis):** The vector from $B$ to $C$ defines the positive X-axis.
+*   **Primary Plane (XY-plane):** The base triangle $ABC$ lies on the XY-plane ($Z=0$).
+*   **Vertical Axis (Z-axis):** The height of the prism extends along the positive Z-axis.
+
+#### 3. SCALE DEFINITION
+*   **Method:** $AB = 3$ cm is set to **5.0 units**.
+*   **Scale Reference:** $AB = 3$ cm = $5.0$ units, scale factor = $5/3 \approx 1.667$.
+*   $BC = 4$ cm $\times 1.667 = 6.667$ units.
+*   Height = $10$ cm $\times 1.667 = 16.667$ units.
+
+### Part 3: Geometric Elements Breakdown
+
+**A. Intrinsic Point Coordinates Table (X, Y, Z):**
+
+| Point | X | Y | Z | Calculation Logic |
+| :--- | :--- | :--- | :--- | :--- |
+| **B** | 0.000 | 0.000 | 0.000 | Origin. |
+| **C** | 6.667 | 0.000 | 0.000 | Along X-axis: $BC = 4 \times (5/3)$. |
+| **A** | 0.000 | 5.000 | 0.000 | Along Y-axis: $AB = 3 \times (5/3)$. |
+| **E** | 0.000 | 0.000 | 16.667 | Above $B$: $Height = 10 \times (5/3)$. |
+| **F** | 6.667 | 0.000 | 16.667 | Above $C$: $Height = 10 \times (5/3)$. |
+| **D** | 0.000 | 5.000 | 16.667 | Above $A$: $Height = 10 \times (5/3)$. |
+
+**B. Lines, Edges, and Curves:**
+
+| Element ID | Start Point | End Point | Calculated Length (Units) | Logic |
+| :--- | :--- | :--- | :--- | :--- |
+| **line_AB** | A | B | 5.000 | Given $3$ cm. |
+| **line_BC** | B | C | 6.667 | Given $4$ cm. |
+| **line_AC** | A | C | 8.334 | $\sqrt{5^2 + 6.667^2}$ |
+| **line_AD** | A | D | 16.667 | Given height $10$ cm. |
+| **line_BE** | B | E | 16.667 | Given height $10$ cm. |
+| **line_CF** | C | F | 16.667 | Given height $10$ cm. |
+| **line_DE** | D | E | 5.000 | Top edge (parallel to $AB$). |
+| **line_EF** | E | F | 6.667 | Top edge (parallel to $BC$). |
+| **line_DF** | D | F | 8.334 | Top edge (parallel to $AC$). |
+| **line_AF** | A | F | 18.634 | Space diagonal: $\sqrt{6.667^2 + (-5)^2 + 16.667^2}$ |
+
+**C. Angles:**
+
+| Element ID | Vertex | Point 1 | Point 2 | Calculated Value | Logic |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **angle_ABC** | B | A | C | 90.000° | Given right angle. |
+| **angle_DEF** | E | D | F | 90.000° | Prism property (top base). |
+| **angle_ABE** | B | A | E | 90.000° | Prism property (vertical edge). |
+| **angle_CBE** | B | C | E | 90.000° | Prism property (vertical edge). |
+
+**D. Faces, Surfaces, and Solids:**
+
+| Element ID | Type | Component Points |
+| :--- | :--- | :--- |
+| **face_ABC** | Polygon | A, B, C |
+| **face_DEF** | Polygon | D, E, F |
+| **face_ABED** | Polygon | A, B, E, D |
+| **face_BCFE** | Polygon | B, C, F, E |
+| **face_ACFD** | Polygon | A, C, F, D |
+
+### Part 4: Display Rules (What to Annotate on the Diagram)
+
+**E. Annotation Table:**
+
+| Element | Category | Display Action |
+| :--- | :--- | :--- |
+| **line_AB** | given | Show length label "3 cm" |
+| **line_BC** | given | Show length label "4 cm" |
+| **line_BE** | given | Show length label "10 cm" |
+| **angle_ABC** | given | Show right-angle marker |
+| **line_AF** | asked | Draw in accent color (`#FFD700`), label "?" |
+| **line_AC** | derived | Draw line, NO label |
+| **line_AD** | derived | Draw line, NO label |
+| **line_CF** | derived | Draw line, NO label |
+| **line_DE** | derived | Draw line, NO label |
+| **line_EF** | derived | Draw line, NO label |
+| **line_DF** | derived | Draw line, NO label |
+| **face_ABC** | derived | Draw face, NO label |
+| **face_DEF** | derived | Draw face, NO label |
+| **face_ABED** | derived | Draw face, NO label |
+| **face_BCFE** | derived | Draw face, NO label |
+| **face_ACFD** | derived | Draw face, NO label |
