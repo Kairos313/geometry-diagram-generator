@@ -12,6 +12,27 @@ build/
 # Generated output
 output/
 media/
+frontend/output/
+frontend/test/output/
+
+# Playwright
+.playwright-mcp/
+
+# Debug screenshots
+*.png
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Test/temp HTML galleries
+batch_gallery*.html
+batch_report*
+
+# Old experiment scripts (not part of pipeline)
+batch_render_js.py
+batch_test_js.py
+generate_report.py
 
 # OS
 .DS_Store

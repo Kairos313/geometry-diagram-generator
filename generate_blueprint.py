@@ -151,7 +151,7 @@ def generate_blueprint(
             config={
                 "max_output_tokens": 20000,
                 "temperature": 0.1,
-                "thinking_config": types.ThinkingConfig(thinking_budget=8000),
+                "thinking_config": types.ThinkingConfig(thinking_level="high"),
             },
         )
         elapsed = time.time() - start

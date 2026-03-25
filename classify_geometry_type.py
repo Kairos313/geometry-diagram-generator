@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Lightweight LLM-based classifier to determine geometry question type.
+Lightweight LLM-based classifier to determine geometry question dimension.
 
-Uses a minimal prompt (~150 tokens) with Gemini Flash to classify questions as:
-- 2d: Traditional 2D geometry
-- 3d: Traditional 3D geometry
-- coordinate_2d: 2D with coordinate system/graphing
-- coordinate_3d: 3D with coordinate system/graphing
+Uses a minimal prompt (~80 tokens) with Gemini Flash to classify questions as:
+- 2d: Flat/planar geometry — triangles, circles, coordinate geometry with x/y only,
+      equations with x and y (e.g. y=2x+1, x²+y²=25), graph sketching, loci
+- 3d: Any 3D geometry — pyramids, prisms, spheres, points with (x,y,z),
+      plane equations with z (e.g. 2x+y-z=4), vectors with 3 components
 
-Cost: ~$0.0001 per classification (negligible)
-Latency: ~0.5-1.5s
+Cost: ~$0.00005 per classification (negligible)
+Latency: ~0.3-0.8s
 """
 
 import json
@@ -24,65 +24,27 @@ from google.genai import types
 logger = logging.getLogger(__name__)
 
 
-CLASSIFICATION_PROMPT = """Classify geometry question as: 2d, 3d, coordinate_2d, or coordinate_3d
+CLASSIFICATION_PROMPT = """Classify this geometry question as 2d or 3d.
 
-STEP 1: Check for z-variable or 3D coordinates (HIGHEST PRIORITY):
-- Points with 3 numbers like A(1,2,3) or (x,y,z) → coordinate_3d
-- Equations with z like "x+y+z=6" or "z=4" → coordinate_3d
-- Sphere/plane equations with z term → coordinate_3d
-- Direction vectors with 3 components like (2,-1,2) → coordinate_3d
-- Parametric equations with 3 components → coordinate_3d
+3d if ANY of these: points with 3 coords like A(1,2,3), z-variable in equations (x+y+z=6, plane 2x+y-z=4, 2x+y-2z=6), 3-component vectors (2,-1,2), spheres/prisms/pyramids/cones/tetrahedra/cubes/cylinders/cuboids with lengths, sphere equations with z like (x-2)²+(y-1)²+(z-3)²=25.
+2d for everything else: triangles, circles, polygons with lengths/angles, AND coordinate geometry with only x/y (equations y=2x+1 or x²+y²=25, graphing, loci).
 
-STEP 2: If no z-variable, check for 2D coordinates:
-- Points with 2 numbers like (3,4) or A(x,y) → coordinate_2d
-- Equations like "x²+y²=25" → coordinate_2d
-- Words: "plot", "graph", "cartesian" → coordinate_2d
-
-STEP 3: If no coordinates, check for 3D shapes:
-- Pyramid, cone, sphere, prism with lengths/angles (NOT equations) → 3d
-
-STEP 4: Otherwise:
-- Triangle, circle, polygon with lengths/angles → 2d
-
-EXAMPLES (learn from these):
-
-Q: "Plane 2x+y-z=4. Find intersection."
-Think: Has "z" in equation → coordinate_3d
-Answer: coordinate_3d
-
-Q: "Sphere (x-2)²+(y-1)²+(z-3)²=25"
-Think: Sphere equation with z term → coordinate_3d
-Answer: coordinate_3d
-
-Q: "Point A(1,2,3) to B(4,0,1). Find distance."
-Think: Points have 3 coordinates → coordinate_3d
-Answer: coordinate_3d
-
-Q: "Direction vector d=(2,-1,2)"
-Think: Vector has 3 components → coordinate_3d
-Answer: coordinate_3d
-
-Q: "Circle x²+y²=9. Find center."
-Think: Equation with only x,y (no z) → coordinate_2d
-Answer: coordinate_2d
-
-Q: "Line through A(2,3) and B(6,-1)"
-Think: Points have 2 coordinates → coordinate_2d
-Answer: coordinate_2d
-
-Q: "Pyramid with base 8cm and height 10cm"
-Think: 3D shape with measurements (no coordinates) → 3d
-Answer: 3d
-
-Q: "Triangle ABC with sides 3,4,5cm"
-Think: 2D shape with measurements (no coordinates) → 2d
-Answer: 2d
-
-Now classify this question:
+Q: "Pyramid base 8cm height 10cm" → 3d
+Q: "Triangle ABC sides 3,4,5cm" → 2d
+Q: "Plane 2x+y-z=4, find intersection" → 3d
+Q: "Circle x²+y²=25, find tangent" → 2d
+Q: "Point A(1,2,3) distance to B(4,0,1)" → 3d
+Q: "Line through A(2,3) and B(6,-1)" → 2d
+Q: "Sphere (x-2)²+(y-1)²+(z-3)²=25, plane z=6" → 3d
+Q: "Planes x+2y-2z=6 and 2x-y+2z=9, dihedral angle" → 3d
+Q: "Triangle PQR vertices P(1,0,2) Q(3,4,1) R(0,2,5)" → 3d
+Q: "Cube ABCDEFGH side 4cm, find angle between diagonals" → 3d
+Q: "Cylinder radius 3cm height 8cm, find shortest path" → 3d
+Q: "Rectangular box 3cm by 4cm by 12cm, angle between diagonals" → 3d
 
 Question: {question}
 
-Think step-by-step, then output ONLY the type (2d, 3d, coordinate_2d, or coordinate_3d):"""
+Answer (2d or 3d):"""
 
 
 def classify_geometry_type(
@@ -100,7 +62,7 @@ def classify_geometry_type(
 
     Returns:
         dict with keys:
-            - dimension_type: str ("2d", "3d", "coordinate_2d", "coordinate_3d")
+            - dimension_type: str ("2d" or "3d")
             - confidence: str ("high", "medium", "low") - based on response clarity
             - duration: float - API call duration in seconds
             - cost: float - Estimated cost in USD
@@ -119,8 +81,10 @@ def classify_geometry_type(
             model="gemini-3-flash-preview",
             contents=prompt,
             config={
-                "max_output_tokens": 400,  # Allow for chain-of-thought reasoning + output
-                "temperature": 0.0,  # Deterministic
+                "max_output_tokens": 50,   # Allow "Answer: 3d" with some padding
+                "temperature": 0.0,        # Deterministic
+                # No thinking_config: thinking hurts this simple binary classifier
+                # (reasoning output introduces spurious 2d/3d mentions that break parsing)
             },
         )
 
@@ -130,7 +94,8 @@ def classify_geometry_type(
         raw_output = ""
         if response and hasattr(response, 'candidates') and response.candidates:
             candidate = response.candidates[0]
-            if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+            if (hasattr(candidate, 'content') and hasattr(candidate.content, 'parts')
+                    and candidate.content.parts):
                 # Extract text from all text parts (skip thought_signature)
                 for part in candidate.content.parts:
                     if hasattr(part, 'text') and part.text:
@@ -143,8 +108,11 @@ def classify_geometry_type(
         raw_output = raw_output.strip().lower()
         usage = response.usage_metadata
 
-        # Parse output
+        # Parse output; fall back to regex if LLM output is ambiguous
         dimension_type = parse_classification_output(raw_output)
+        if dimension_type is None:
+            dimension_type = fallback_classify(question_text)
+            logger.warning(f"LLM output ambiguous ('{raw_output}'), using fallback: {dimension_type}")
 
         # Estimate cost (Gemini Flash pricing)
         input_cost = (usage.prompt_token_count / 1e6) * 0.50  # $0.50 per 1M input tokens
@@ -152,7 +120,7 @@ def classify_geometry_type(
         total_cost = input_cost + output_cost
 
         # Determine confidence based on response clarity
-        confidence = "high" if dimension_type in raw_output else "medium"
+        confidence = "high" if (dimension_type and dimension_type in raw_output) else "medium"
 
         logger.info(f"Classification result: {dimension_type} (confidence: {confidence}, {elapsed:.2f}s, ${total_cost:.6f})")
 
@@ -187,74 +155,85 @@ def classify_geometry_type(
 
 
 def parse_classification_output(output):
-    # type: (str) -> str
+    # type: (str) -> Optional[str]
     """Parse the LLM output to extract dimension type.
 
+    Returns "2d", "3d", or None if the output is ambiguous.
+
     Handles various output formats:
-    - "coordinate_2d"
-    - "Type: coordinate_2d"
-    - "Think: ... Answer: coordinate_2d"
-    - "The question is coordinate_2d"
-    - "coordinate" (ambiguous, defaults to coordinate_2d)
+    - "2d" / "3d" (direct)
+    - "Answer: 3d" (with prefix)
+    - "The question is 2d" (inline)
     """
     output = output.lower().strip()
 
     # Direct match
-    if output in ("2d", "3d", "coordinate_2d", "coordinate_3d"):
+    if output in ("2d", "3d"):
         return output
+
+    # Single digit "3" or "2" — model truncated "3d"/"2d"
+    if output.strip() == "3":
+        return "3d"
+    if output.strip() == "2":
+        return "2d"
 
     # Look for "Answer:" or "Type:" prefix (chain-of-thought)
     for prefix in ["answer:", "type:", "classification:"]:
         if prefix in output:
-            # Extract text after the prefix
             after_prefix = output.split(prefix)[-1].strip()
-            # Get the first word/token after prefix
             answer_token = after_prefix.split()[0].strip() if after_prefix else ""
-            if answer_token in ("2d", "3d", "coordinate_2d", "coordinate_3d"):
+            if answer_token in ("2d", "3d"):
                 return answer_token
+            # Handle truncated digit after prefix
+            if answer_token == "3":
+                return "3d"
+            if answer_token == "2":
+                return "2d"
 
-    # Try to find dimension types anywhere in the output (prioritize coordinate_3d)
-    # Search in order of specificity to avoid false matches
-    if "coordinate_3d" in output or "coordinate 3d" in output:
-        return "coordinate_3d"
-    elif "coordinate_2d" in output or "coordinate 2d" in output:
-        return "coordinate_2d"
-    elif output.startswith("coordinate"):
-        # If just "coordinate" or "coordinate_", assume coordinate_2d (most common)
-        logger.info(f"Got ambiguous 'coordinate' output, defaulting to coordinate_2d")
-        return "coordinate_2d"
-
-    # Look for standalone 3d/2d (but be careful not to match "coordinate_2d" partially)
-    # Check for word boundaries
-    import re
+    # Search for standalone 3d/2d anywhere in output
     if re.search(r'\b3d\b', output):
         return "3d"
     elif re.search(r'\b2d\b', output):
         return "2d"
 
-    # Default fallback
-    logger.warning(f"Could not parse classification output: {output}, defaulting to 2d")
-    return "2d"
+    # Could not parse — return None so caller can use regex fallback
+    logger.warning(f"Could not parse classification output: '{output}', returning None")
+    return None
 
 
 def fallback_classify(question_text):
     # type: (str) -> str
-    """Fallback regex-based classification if LLM call fails."""
+    """Fallback regex-based classification if LLM call fails.
+
+    Returns "2d" or "3d" only.
+    """
     text_lower = question_text.lower()
 
-    # Check for coordinate mentions
-    has_2d_coords = bool(re.search(r'\([0-9-]+\s*,\s*[0-9-]+\)', question_text))
     has_3d_coords = bool(re.search(r'\([0-9-]+\s*,\s*[0-9-]+\s*,\s*[0-9-]+\)', question_text))
-    has_graphing = any(kw in text_lower for kw in ['plot', 'graph', 'coordinate', 'axis', 'cartesian'])
-
-    if has_3d_coords or ('plot' in text_lower and 'z' in text_lower):
-        return "coordinate_3d"
-    elif has_2d_coords or has_graphing:
-        return "coordinate_2d"
-    elif any(kw in text_lower for kw in ['pyramid', 'cone', 'sphere', 'prism', 'height', 'slant', 'apex', 'vertex']):
+    if has_3d_coords:
         return "3d"
-    else:
-        return "2d"
+
+    # z as math variable: handles z=, z-, z+, z^, standalone z, AND coefficients: 2z, 3z, (z-1)
+    has_z_variable = bool(re.search(
+        r'\bz\s*[-+*/=^(]'        # z followed by operator: z=, z-, z^
+        r'|\bz\b'                  # standalone z word
+        r'|[-+*/=(,\s]\d*z\b'     # operator/space then optional digit then z: +z, -2z, (3z
+        r'|\d+z\b',                # digit immediately before z with no space: 2z, 12z
+        text_lower
+    ))
+    if has_z_variable:
+        return "3d"
+
+    # Sphere with z in its equation
+    if 'sphere' in text_lower and 'z' in text_lower:
+        return "3d"
+
+    if any(kw in text_lower for kw in ['pyramid', 'cone', 'prism', 'cuboid', 'tetrahedron',
+                                        'cube', 'cylinder', 'rectangular box',
+                                        'height', 'slant', 'apex']):
+        return "3d"
+
+    return "2d"
 
 
 def main():
@@ -284,7 +263,7 @@ def main():
     print(f"Confidence: {result['confidence']}")
     print(f"Duration: {result['duration']:.2f}s")
     print(f"Cost: ${result['cost']:.6f}")
-    print(f"Tokens: {result['tokens']}")
+    print(f"Tokens: {result.get('tokens_total', result.get('tokens', 0))}")
     print(f"Raw output: {result.get('raw_output', 'N/A')}")
     print("="*60 + "\n")
 

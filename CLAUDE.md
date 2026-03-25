@@ -4,9 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Quick Context
 
-AI pipeline: Geometry questions (text/image) → Static diagrams (PNG/SVG) or animated diagrams (GIF)
+AI pipeline: Geometry questions (text/image) → Interactive HTML diagrams (D3.js/Three.js) or static diagrams (PNG/SVG/GIF)
 
-**Current: 4-Stage Focused Pipeline** (Feb 2025, production)
+**Preferred: JS Frontend Pipeline** (Mar 2026, production)
+- Main entry: `frontend/generate_js_pipeline.py` (single) or `frontend/batch_test_js_ui.py` (batch)
+- Generates interactive HTML diagrams — D3.js for 2D, Three.js for 3D
+- 100% pass rate on 30 HKDSE questions, ~$0.007/diagram
+
+**Legacy: 4-Stage Python Pipeline** (Feb 2025, still works)
 - Main entry: `batch_test_focused.py`
 - Old 2-stage pipeline moved to `legacy/` (uses comprehensive prompts, more expensive)
 
@@ -61,7 +66,34 @@ python3 batch_test.py --blueprint-model focused
 
 ## Architecture
 
-### 4-Stage Flow (Classify → Blueprint → CodeGen → Execute)
+### JS Frontend Pipeline (Preferred)
+
+The `frontend/` directory contains the preferred rendering pipeline that generates interactive HTML diagrams using LLM-generated JavaScript (D3.js for 2D, Three.js for 3D).
+
+**Pipeline: Classify → Hybrid Blueprint (Gemini) → JS Code (DeepSeek) → HTML**
+
+See `frontend/CLAUDE.md` for full documentation.
+
+Key advantages over the old Python pipeline:
+- Interactive output (orbit/zoom for 3D, static SVG for 2D)
+- No manim/matplotlib dependency — runs in any browser
+- Faster rendering (~85s avg vs ~30-60s for Python, but no execution step needed)
+- Same cost (~$0.007/diagram)
+- 100% pass rate on 30 HKDSE questions
+
+Running:
+```bash
+# Single question
+python3 frontend/generate_js_pipeline.py -q "Triangle ABC..." --dim 2d
+
+# Batch test (CLI)
+python3 frontend/batch_test_js_pipeline.py --test-set hkdse_new
+
+# Web UI with real-time progress
+python3 frontend/batch_test_js_ui.py --port 5052
+```
+
+### 4-Stage Python Flow (Legacy — Classify → Blueprint → CodeGen → Execute)
 
 ```
 Question Text/Image
@@ -172,25 +204,31 @@ response = client.chat.completions.create(
 7. **Non-existent classes** - `Polyline`, `DashedLine3D`, `Arc3D`, `Prism` do NOT exist
 8. **3D angle arcs** - Import and use `create_3d_angle_arc_with_connections(center, point1, point2)` from `manim_helpers.py`
 
-## Blueprint Format (Stage 1 Output)
+## Blueprint Format (Stage 2 Output)
 
-Markdown tables (NOT JSON):
+Compact JSON (not markdown). Schema varies by dimension type:
 
-```markdown
-DIMENSION: 3D
-
-| Point | X | Y | Z | Calculation Logic |
-| A | 0.000 | 0.000 | 0.000 | Origin |
-| B | 5.000 | 0.000 | 0.000 | AB on X-axis |
-
-| Element ID | Start | End | Length | Logic |
-| line_AB | A | B | 5.000 | Given 3 cm |
-
-| Angle ID | Vertex | Point 1 | Point 2 | Value (°) | Logic |
-| angle_ABC | B | A | C | 90.000 | Given right angle |
+**2D / 3D (traditional geometry):**
+```json
+{
+  "dimension": "2d",
+  "axes": false,
+  "scale": {"reference": "AB", "real": "10 cm", "units": 5.0},
+  "points": {"A": [0.0, 0.0, 0.0], "B": [5.0, 0.0, 0.0], "C": [2.5, 4.33, 0.0]},
+  "lines": [{"id": "line_AB", "from": "A", "to": "B"}, {"id": "line_AC", "from": "A", "to": "C", "style": "dashed"}],
+  "circles": [{"id": "circle_O", "center": "O", "radius": 3.0}],
+  "faces": [{"id": "face_ABC", "points": ["A", "B", "C"]}],
+  "angles": [{"id": "angle_ABC", "vertex": "B", "p1": "A", "p2": "C", "value": 90.0}],
+  "given": {"line_AB": "10 cm", "angle_ABC": "90°"},
+  "asked": ["line_AC"]
+}
 ```
 
-Why markdown: Human-readable, flexible, LLM can parse context naturally.
+**coordinate_2d** adds: `"axes": true`, `"grid": true`, `"coordinate_range": {"x_min": -1.0, "x_max": 8.0, "y_min": -1.0, "y_max": 11.0}`, `"curves": [{"id": "parabola_1", "equation": "y = x^2 - 4*x + 3", "points": [[0, 3], [2, -1], [4, 3]]}]`
+
+**coordinate_3d** adds: `"planes": [{"id": "plane_ABC", "equation": "2x+y-z=4", "normal": [2.0, 1.0, -1.0]}]`, `"spheres": [{"id": "sphere_S1", "center": "C", "radius": 5.0}]`, `"vectors": [{"id": "vector_AB", "from": "A", "to": "B"}]`
+
+Prompts are in `individual_prompts.py` — `get_prompt_for_dimension(dim)` and `get_code_prompt_for_dimension(dim)` return the right prompt for each stage.
 
 ## Cost Optimization
 
@@ -241,7 +279,7 @@ python3 generate_code_deepseek.py --blueprint coordinates.json --output-path out
 
 **Manim "command not found"** → Use full path `/Users/kairos/.local/bin/manim`
 
-**"Response ended prematurely"** → Use Google GenAI client for Gemini (NOT raw requests, LibreSSL issue)
+**"Response ended prematurely"p** → Use Google GenAI client for Gemini (NOT raw requests, LibreSSL issue)
 
 **Generated code fails** → Check float arrays, opacity params, non-existent classes (see Manim gotchas)
 

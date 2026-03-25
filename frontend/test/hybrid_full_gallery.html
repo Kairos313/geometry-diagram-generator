@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Hybrid Pipeline D Results</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0C0C0C;color:#e0e0e0;font-family:monospace}
+.container{max-width:1400px;margin:0 auto;padding:1.5rem}
+h1{color:#4ECDC4;text-align:center;margin-bottom:.5rem}
+.subtitle{text-align:center;color:#888;margin-bottom:1.5rem;font-size:.85rem}
+.summary{display:flex;gap:1rem;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap}
+.stat{background:#1a1a1a;padding:.5rem 1rem;border-radius:4px;text-align:center}
+.stat .val{color:#4ECDC4;font-weight:700;font-size:1.2rem}
+.stat .label{color:#888;font-size:.75rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:1rem}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;overflow:hidden}
+.card.pass{border-color:#96CEB4}
+.card.fail{border-color:#FF6B6B}
+.card-header{padding:.75rem 1rem;border-bottom:1px solid #2a2a2a;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.qid{color:#666;font-size:.75rem;font-family:monospace}
+.badge{background:#457B9D;color:#fff;padding:.1rem .4rem;border-radius:3px;font-size:.7rem}
+.pass{color:#96CEB4;font-weight:700}
+.fail{color:#FF6B6B;font-weight:700}
+.card-q{padding:.5rem 1rem;font-size:.8rem;color:#888}
+.card-render{height:380px;background:#0C0C0C}
+.card-render iframe{width:100%;height:100%;border:none}
+.card-stats{padding:.5rem 1rem;font-size:.75rem;color:#666;border-top:1px solid #2a2a2a}
+.error{color:#FF6B6B;padding:.5rem;font-size:.75rem}
+</style></head><body>
+<div class="container">
+<h1>Pipeline D: Hybrid Blueprint</h1>
+<p class="subtitle">Old JSON format + New quality rules → DeepSeek JS</p>
+<div class="summary">
+    <div class="stat"><div class="val">30/30</div><div class="label">Pass</div></div>
+    <div class="stat"><div class="val">90.5s</div><div class="label">Avg Time</div></div>
+    <div class="stat"><div class="val">$0.1982</div><div class="label">Total Cost</div></div>
+    <div class="stat"><div class="val">$0.0066</div><div class="label">Per Diagram</div></div>
+    <div class="stat"><div class="val">200,697</div><div class="label">Gemini Tokens</div></div>
+    <div class="stat"><div class="val">244,524</div><div class="label">DeepSeek Tokens</div></div>
+</div>
+<div class="grid">
+        <div class="card pass">
+            <div class="card-header"><strong>Cyclic Quadrilateral Angles</strong> <span class="qid">hkdse_2d_01</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">ABCD is a cyclic quadrilateral inscribed in a circle with center O. Given that angle DAB = 75 degrees and angle ABC = 110 degrees, find angle BCD.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_01/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">138.8s | G:9091 D:7817</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Tangent-Chord Angle</strong> <span class="qid">hkdse_2d_02</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In a circle with center O, TA is a tangent to the circle at point A. Chord AB makes an angle of 35 degrees with the tangent TA. Point C is on the majo</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_02/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">88.0s | G:7233 D:7719</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Two Tangents from External Point</strong> <span class="qid">hkdse_2d_03</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">Two tangents PA and PB are drawn from an external point P to a circle with center O and radius 6cm. If angle APB = 60 degrees, find the length of PA.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_03/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">83.4s | G:5097 D:8228</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Similar Triangles Ratio</strong> <span class="qid">hkdse_2d_04</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In triangle ABC, D is on AB and E is on AC such that DE is parallel to BC. If AD = 6cm, DB = 4cm, and the area of triangle ADE is 27 square cm, find t</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_04/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">122.7s | G:4581 D:8789</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Altitude and Similar Triangles</strong> <span class="qid">hkdse_2d_05</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In right-angled triangle ABC with the right angle at C, CD is the altitude from C to the hypotenuse AB. If AD = 4cm and DB = 9cm, find the length of C</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_05/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">75.7s | G:4577 D:8470</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Cosine Rule Application</strong> <span class="qid">hkdse_2d_06</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In triangle PQR, PQ = 7cm, QR = 8cm, and angle PQR = 120 degrees. Find the length of PR.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_06/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">84.8s | G:7475 D:7642</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Sine Rule for Circumradius</strong> <span class="qid">hkdse_2d_07</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In triangle ABC, angle BAC = 45 degrees, and BC = 10cm. Find the radius of the circumscribed circle.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_07/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">73.3s | G:8456 D:7703</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Rhombus Diagonals</strong> <span class="qid">hkdse_2d_08</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In rhombus ABCD, the diagonals AC and BD intersect at point E. If AC = 16cm and BD = 12cm, find the length of side AB.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_08/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">80.8s | G:5532 D:8092</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Trapezium Midsegment</strong> <span class="qid">hkdse_2d_09</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In trapezium ABCD, AB is parallel to DC. AB = 14cm and DC = 8cm. E and F are midpoints of AD and BC respectively. Find the length of EF.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_09/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">60.7s | G:5080 D:6232</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Angle Bisector Theorem</strong> <span class="qid">hkdse_2d_10</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In triangle ABC, AB = 12cm, AC = 8cm, and BC = 10cm. The angle bisector from A meets BC at point D. Find the length of BD.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_2d_10/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">94.5s | G:4461 D:8221</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Square Pyramid Slant Height</strong> <span class="qid">hkdse_3d_01</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A right square pyramid VABCD has a square base ABCD with side length 8cm. The apex V is directly above the center of the base at height 6cm. Find the </div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_01/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">81.7s | G:8179 D:8368</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Triangular Pyramid Volume</strong> <span class="qid">hkdse_3d_02</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In tetrahedron VABC, the base ABC is an equilateral triangle with side 6cm. VA = VB = VC = 8cm. V is directly above the centroid of triangle ABC. Find</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_02/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">79.1s | G:6155 D:8391</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Pyramid Angle with Base</strong> <span class="qid">hkdse_3d_03</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A right pyramid has a rectangular base ABCD where AB = 6cm and BC = 8cm. The apex V is 12cm directly above the center of the base. Find the angle that</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_03/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">61.9s | G:5439 D:8267</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Triangular Prism Diagonal</strong> <span class="qid">hkdse_3d_04</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A right triangular prism has a base triangle ABC where angle BAC = 90 degrees, AB = 3cm, and AC = 4cm. The height of the prism is 12cm. D, E, F are di</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_04/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">84.9s | G:7420 D:8451</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Cuboid Space Diagonal</strong> <span class="qid">hkdse_3d_05</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A cuboid ABCDEFGH has dimensions AB = 8cm, BC = 6cm, and CG = 10cm. Find the length of the space diagonal AG.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_05/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">82.4s | G:4834 D:8521</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Angle Between Line and Plane</strong> <span class="qid">hkdse_3d_06</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In a cube ABCDEFGH with side 4cm, where ABCD is the bottom face and EFGH is the top face with E above A. Find the angle that diagonal AG makes with th</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_06/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">60.2s | G:8076 D:8375</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Dihedral Angle in Pyramid</strong> <span class="qid">hkdse_3d_07</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A regular tetrahedron ABCD has all edges equal to 6cm. Find the dihedral angle between faces ABC and ABD.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_07/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">87.7s | G:7845 D:8247</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Distance from Point to Plane</strong> <span class="qid">hkdse_3d_08</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In a right pyramid VABCD with square base ABCD of side 10cm and apex V at height 12cm above the center, M is the midpoint of edge VA. Find the perpend</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_08/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">60.3s | G:6573 D:8432</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Shortest Path on Surface</strong> <span class="qid">hkdse_3d_09</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A cylinder has radius 3cm and height 8cm. Point A is on the top circle and point B is on the bottom circle, directly below A. An ant crawls from A to </div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_09/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">84.4s | G:6448 D:8006</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Cone Slant Height</strong> <span class="qid">hkdse_3d_10</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A right circular cone has base radius 5cm and height 12cm. The apex is V and A is a point on the circumference of the base. Find the slant height VA.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_3d_10/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">74.9s | G:4028 D:7781</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Inscribed Angle and Central Angle</strong> <span class="qid">hkdse_new_01</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In a circle with center O and radius 8 cm, chord AB subtends an angle of 50 degrees at a point C on the major arc. Find the angle AOB at the center.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_01/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">81.2s | G:5687 D:8252</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Two Chords Intersecting Inside Circle</strong> <span class="qid">hkdse_new_02</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">Two chords AC and BD of a circle intersect at point P inside the circle. If AP = 4 cm, PC = 9 cm, and BP = 6 cm, find the length of PD.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_02/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">149.3s | G:8523 D:8114</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Sector Area and Arc Length</strong> <span class="qid">hkdse_new_03</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A sector of a circle has radius 10 cm and central angle 72 degrees. Find the arc length and the area of the sector.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_03/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">77.1s | G:3370 D:8147</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Exterior Angle of Triangle</strong> <span class="qid">hkdse_new_04</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In triangle ABC, side BC is extended to point D. If angle BAC = 55 degrees and angle ABC = 70 degrees, find angle ACD.</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_04/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">78.8s | G:7575 D:7894</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Parallelogram with Diagonal</strong> <span class="qid">hkdse_new_05</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In parallelogram ABCD, diagonal AC is drawn. If AB = 10 cm, BC = 7 cm, and angle ABC = 65 degrees, find the length of diagonal AC using the cosine rul</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_05/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">90.7s | G:6898 D:8171</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Hexagonal Prism</strong> <span class="qid">hkdse_new_06</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A regular hexagonal prism has a base edge of 4 cm and height 10 cm. The apex of each base hexagon has vertices A, B, C, D, E, F on the bottom and G, H</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_06/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">104.3s | G:12495 D:8937</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Sphere Inscribed in Cylinder</strong> <span class="qid">hkdse_new_07</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A sphere of radius 5 cm is inscribed in a cylinder such that the sphere touches the top, bottom, and curved surface of the cylinder. Find the height a</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_07/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">96.7s | G:5791 D:8463</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Angle Between Two Faces of Cube</strong> <span class="qid">hkdse_new_08</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In a cube ABCDEFGH with side length 6 cm, where ABCD is the bottom face and EFGH is the top face with E above A, find the angle between the diagonal p</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_08/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">94.6s | G:9715 D:8598</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Triangular Pyramid with Right Angle</strong> <span class="qid">hkdse_new_09</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A triangular pyramid VABC has a right-angled triangle base ABC with the right angle at B. AB = 5 cm, BC = 12 cm. The apex V is directly above B at a h</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_09/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">179.3s | G:8625 D:8158</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Cone Unfolded Sector Angle</strong> <span class="qid">hkdse_new_10</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A right circular cone has base radius 6 cm and slant height 15 cm. When the lateral surface is unfolded, it forms a sector. Find the angle of this sec</div>
+            <div class="card-render"><iframe src="output/pipeline_d_full/hkdse_new_10/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">101.4s | G:5438 D:8038</div>
+        </div></div>
+</div></body></html>
