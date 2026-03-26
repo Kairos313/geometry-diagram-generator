@@ -6,6 +6,7 @@ Handles diagram generation requests from the GitHub Pages frontend.
 Deployed on Render.com as a Web Service.
 """
 
+import base64
 import json
 import logging
 import os
@@ -13,6 +14,7 @@ import sys
 import time
 import threading
 from pathlib import Path
+from typing import Optional, Tuple
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -45,6 +47,12 @@ request_times = []
 RATE_LIMIT = 10
 RATE_WINDOW = 60  # seconds
 
+# Recent generations store (in-memory, resets on restart)
+recent_lock = threading.Lock()
+recent_generations = []  # type: list
+MAX_RECENT = 20
+MAX_HTML_SIZE = 50000  # 50KB cap per entry
+
 
 def check_rate_limit():
     """Returns True if request is allowed, False if rate limited."""
@@ -59,9 +67,50 @@ def check_rate_limit():
         return True
 
 
+def _store_recent_generation(question, dimension, html):
+    """Store a successful generation in the recent list (thread-safe)."""
+    entry = {
+        "question": question[:150],
+        "dimension": dimension,
+        "timestamp": time.strftime("%H:%M"),
+        "html": html[:MAX_HTML_SIZE],
+    }
+    with recent_lock:
+        recent_generations.append(entry)
+        # Keep only the most recent MAX_RECENT entries
+        while len(recent_generations) > MAX_RECENT:
+            recent_generations.pop(0)
+
+
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
+
+
+@app.route("/api/recent", methods=["GET"])
+def get_recent():
+    """Return metadata for recent generations (no full HTML)."""
+    with recent_lock:
+        items = []
+        for i, entry in enumerate(recent_generations):
+            items.append({
+                "index": i,
+                "question": entry["question"],
+                "dimension": entry["dimension"],
+                "timestamp": entry["timestamp"],
+            })
+    # Return newest first
+    items.reverse()
+    return jsonify(items)
+
+
+@app.route("/api/recent/<int:index>", methods=["GET"])
+def get_recent_html(index):
+    """Return the full HTML for a specific recent generation."""
+    with recent_lock:
+        if index < 0 or index >= len(recent_generations):
+            return jsonify({"error": "Not found"}), 404
+        return jsonify({"html": recent_generations[index]["html"]})
 
 
 def _is_geometry_question(text):
@@ -144,10 +193,12 @@ def generate():
 
         if result["success"]:
             logger.info("Success in %.1fs", duration)
+            dim = result.get("dimension", "2d")
+            _store_recent_generation(question, dim, result["html"])
             return jsonify({
                 "success": True,
                 "html": result["html"],
-                "dimension": result.get("dimension", "2d"),
+                "dimension": dim,
                 "duration": round(duration, 1),
             })
         else:
@@ -159,6 +210,138 @@ def generate():
 
     except Exception as e:
         logger.error("Exception: %s", str(e))
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+ALLOWED_IMAGE_TYPES = {"png", "jpg", "jpeg", "webp"}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+def _extract_text_from_image(image_bytes, image_format):
+    # type: (bytes, str) -> Tuple[bool, str]
+    """Use OpenRouter Gemini Flash vision to OCR a geometry question image.
+    Returns (success, extracted_text_or_error).
+    """
+    from openai import OpenAI
+
+    api_key = os.getenv("OPENROUTER_WEBSITE_API_KEY")
+    if not api_key:
+        return False, "Server misconfigured: missing API key"
+
+    b64 = base64.b64encode(image_bytes).decode("utf-8")
+    mime = "image/jpeg" if image_format in ("jpg", "jpeg") else "image/{}".format(image_format)
+    data_url = "data:{};base64,{}".format(mime, b64)
+
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="google/gemini-3-flash-preview",
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Extract the geometry question from this image. Return ONLY the question text, nothing else."},
+                    {"type": "image_url", "image_url": {"url": data_url}},
+                ],
+            }],
+            max_tokens=1024,
+            temperature=0.0,
+        )
+        text = response.choices[0].message.content.strip()
+        if not text:
+            return False, "Could not extract any text from the image"
+        return True, text
+    except Exception as e:
+        logger.error("Vision OCR failed: %s", str(e))
+        return False, "Failed to extract text from image: {}".format(str(e))
+
+
+@app.route("/api/generate-from-image", methods=["POST"])
+def generate_from_image():
+    if not check_rate_limit():
+        return jsonify({
+            "success": False,
+            "error": "Rate limit exceeded. Max {} requests per minute.".format(RATE_LIMIT),
+        }), 429
+
+    # Validate file upload
+    if "image" not in request.files:
+        return jsonify({"success": False, "error": "No image file provided"}), 400
+
+    file = request.files["image"]
+    if not file.filename:
+        return jsonify({"success": False, "error": "No image file selected"}), 400
+
+    # Check file extension
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in ALLOWED_IMAGE_TYPES:
+        return jsonify({
+            "success": False,
+            "error": "Unsupported image format. Use PNG, JPG, JPEG, or WEBP.",
+        }), 400
+
+    # Read and check size
+    image_bytes = file.read()
+    if len(image_bytes) > MAX_IMAGE_SIZE:
+        return jsonify({
+            "success": False,
+            "error": "Image too large. Maximum size is 5 MB.",
+        }), 400
+
+    if len(image_bytes) == 0:
+        return jsonify({"success": False, "error": "Image file is empty"}), 400
+
+    preset = request.form.get("preset", "balanced")
+    if preset not in ("fast", "balanced", "best"):
+        preset = "balanced"
+    dimension = request.form.get("dimension", "auto")
+
+    logger.info("Generating diagram from image [%s], size=%d bytes", preset, len(image_bytes))
+
+    try:
+        # Step 1: Extract text from image via vision
+        ocr_success, extracted_text = _extract_text_from_image(image_bytes, ext)
+        if not ocr_success:
+            return jsonify({"success": False, "error": extracted_text}), 500
+
+        logger.info("Extracted text: %s", extracted_text[:100])
+
+        # Step 2: Generate diagram from extracted text (skip keyword validation)
+        from generate_js_pipeline import generate_diagram_openrouter
+
+        start = time.time()
+        result = generate_diagram_openrouter(
+            question_text=extracted_text,
+            dimension_type=dimension,
+            openrouter_key=os.getenv("OPENROUTER_WEBSITE_API_KEY"),
+            preset=preset,
+        )
+        duration = time.time() - start
+
+        if result["success"]:
+            logger.info("Success in %.1fs (from image)", duration)
+            dim = result.get("dimension", "2d")
+            _store_recent_generation(extracted_text, dim, result["html"])
+            return jsonify({
+                "success": True,
+                "html": result["html"],
+                "dimension": dim,
+                "duration": round(duration, 1),
+                "extracted_text": extracted_text,
+            })
+        else:
+            logger.error("Failed (from image): %s", result.get("error", "unknown"))
+            return jsonify({
+                "success": False,
+                "error": result.get("error", "Generation failed"),
+                "extracted_text": extracted_text,
+            }), 500
+
+    except Exception as e:
+        logger.error("Exception (image): %s", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
 
 

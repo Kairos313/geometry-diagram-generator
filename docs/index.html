@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Geometry Diagram Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root { --bg: #fafaf8; --surface: #fff; --text: #1a1a1a; --text2: #666; --border: #e0dfdb; --accent: #5b4dc7; --green: #0f6e56; --orange: #d85a30; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -65,6 +66,57 @@
   .try-status.error { color: var(--orange); }
   .try-output { width: 100%; border: 1px solid var(--border); border-radius: 6px; min-height: 300px; display: none; overflow: hidden; }
   .try-output iframe { width: 100%; height: 450px; border: none; border-radius: 6px; }
+  .download-btn { margin-top: 8px; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text); display: none; transition: all 0.15s; }
+  .download-btn:hover { background: #f0f0ee; }
+
+  /* Input tabs */
+  .input-tabs { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 2px solid var(--border); }
+  .input-tab { padding: 8px 20px; font-size: 14px; font-weight: 600; color: var(--text2); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+  .input-tab:hover { color: var(--text); }
+  .input-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Upload zone */
+  .upload-zone { border: 2px dashed var(--border); border-radius: 6px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 12px; position: relative; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: #f5f3ff; }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-zone .upload-icon { font-size: 32px; color: var(--text2); margin-bottom: 8px; }
+  .upload-zone .upload-text { font-size: 14px; color: var(--text2); }
+  .upload-zone .upload-text span { color: var(--accent); font-weight: 600; }
+  .upload-zone .upload-hint { font-size: 12px; color: var(--text2); margin-top: 4px; opacity: 0.7; }
+
+  /* Image preview */
+  .image-preview { margin-bottom: 12px; display: none; position: relative; }
+  .image-preview img { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid var(--border); }
+  .image-preview .remove-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .image-preview .remove-btn:hover { background: rgba(0,0,0,0.8); }
+
+  /* Extracted text */
+  .extracted-text { background: #f5f3ff; border: 1px solid var(--accent); border-radius: 6px; padding: 12px; margin-bottom: 12px; display: none; font-size: 13px; line-height: 1.5; }
+  .extracted-text .label { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+  /* Recent Generations */
+  .recent-section { padding: 48px 0; }
+  .recent-section h2 { font-size: 24px; margin-bottom: 8px; text-align: center; }
+  .recent-section .subtitle { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 24px; }
+  .recent-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 4px 0 12px; -webkit-overflow-scrolling: touch; }
+  .recent-scroll::-webkit-scrollbar { height: 4px; }
+  .recent-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .recent-card { min-width: 240px; max-width: 280px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; cursor: pointer; transition: box-shadow 0.15s; }
+  .recent-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .recent-question { font-size: 12px; color: var(--text2); line-height: 1.4; max-height: 48px; overflow: hidden; }
+  .recent-meta { font-size: 11px; color: var(--text2); margin-top: 8px; display: flex; justify-content: space-between; }
+  .recent-empty { text-align: center; color: var(--text2); font-size: 14px; padding: 24px 0; }
+
+  /* Recent modal overlay */
+  .recent-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+  .recent-modal.active { display: flex; }
+  .recent-modal-content { background: var(--surface); border-radius: 12px; width: 90%; max-width: 900px; max-height: 90vh; overflow: hidden; position: relative; }
+  .recent-modal-close { position: absolute; top: 8px; right: 12px; font-size: 24px; cursor: pointer; color: var(--text2); z-index: 1; background: var(--surface); border: none; border-radius: 4px; padding: 2px 8px; line-height: 1; }
+  .recent-modal-close:hover { color: var(--text); }
+  .recent-modal-iframe { width: 100%; height: 70vh; border: none; }
+  .recent-modal-question { padding: 12px 16px; font-size: 13px; color: var(--text2); border-top: 1px solid var(--border); }
 
   /* Footer */
   .footer { padding: 32px 0; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text2); }
@@ -89,6 +141,9 @@
     .try-controls .btn { width: 100%; text-align: center; }
     .try-output iframe { height: 350px; }
     .btn-secondary { margin-left: 0; }
+    .download-btn { width: 100%; }
+    .upload-zone { padding: 24px 12px; }
+    .upload-zone .upload-icon { font-size: 28px; }
   }
 </style>
 </head>
@@ -188,12 +243,43 @@
     </div>
   </section>
 
+  <!-- Recent Generations -->
+  <section class="recent-section" id="recent">
+    <h2>Recent Generations</h2>
+    <p class="subtitle">Diagrams generated by visitors. Click to view.</p>
+    <div id="recentContainer">
+      <div class="recent-empty">No recent generations yet. Try it above!</div>
+    </div>
+  </section>
+
   <!-- Try it -->
   <section class="try-section" id="try">
     <h2>Try it Live</h2>
     <p class="subtitle">Enter a geometry question and get an interactive diagram. Rate limited to 10/min.</p>
     <div class="try-box">
-      <textarea id="question" placeholder="Example: In triangle PQR, PQ = 7cm, QR = 8cm, and angle PQR = 120 degrees. Find the length of PR."></textarea>
+      <div class="input-tabs">
+        <button class="input-tab active" onclick="switchTab('text')">Text</button>
+        <button class="input-tab" onclick="switchTab('image')">Image</button>
+      </div>
+      <div id="tab-text" class="tab-content active">
+        <textarea id="question" placeholder="Example: In triangle PQR, PQ = 7cm, QR = 8cm, and angle PQR = 120 degrees. Find the length of PR."></textarea>
+      </div>
+      <div id="tab-image" class="tab-content">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="imageInput" accept=".png,.jpg,.jpeg,.webp" onchange="handleImageSelect(event)">
+          <div class="upload-icon">&#128247;</div>
+          <div class="upload-text">Drop image here or <span>click to upload</span></div>
+          <div class="upload-hint">PNG, JPG, JPEG, or WEBP (max 5 MB)</div>
+        </div>
+        <div class="image-preview" id="imagePreview">
+          <img id="previewImg" src="" alt="Preview">
+          <button class="remove-btn" onclick="removeImage()" title="Remove image">&times;</button>
+        </div>
+      </div>
+      <div class="extracted-text" id="extractedText">
+        <div class="label">Extracted question</div>
+        <div id="extractedContent"></div>
+      </div>
       <div class="try-controls">
         <select id="dim">
           <option value="auto">Auto-detect dimension</option>
@@ -209,8 +295,18 @@
       </div>
       <div class="try-status" id="status"></div>
       <div class="try-output" id="output"></div>
+      <button class="download-btn" id="downloadBtn" onclick="downloadJPEG()">Download JPEG</button>
     </div>
   </section>
+</div>
+
+<!-- Recent generation modal -->
+<div class="recent-modal" id="recentModal">
+  <div class="recent-modal-content">
+    <button class="recent-modal-close" onclick="closeRecentModal()">&times;</button>
+    <iframe class="recent-modal-iframe" id="recentModalIframe"></iframe>
+    <div class="recent-modal-question" id="recentModalQuestion"></div>
+  </div>
 </div>
 
 <footer class="footer">
@@ -222,36 +318,108 @@
 <script>
 const API_URL = "https://geometry-diagram-generator.onrender.com";
 
+let selectedImage = null;
+
+function switchTab(tab) {
+  document.querySelectorAll('.input-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+  if (tab === 'text') {
+    document.querySelector('.input-tab:first-child').classList.add('active');
+    document.getElementById('textTab').style.display = 'block';
+  } else {
+    document.querySelector('.input-tab:last-child').classList.add('active');
+    document.getElementById('imageTab').style.display = 'block';
+  }
+}
+
+function handleImageSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { setStatus("Image too large. Max 5MB.", true); return; }
+  selectedImage = file;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const preview = document.getElementById('imagePreview');
+    preview.innerHTML = '<img src="' + ev.target.result + '" style="max-width:100%;max-height:200px;border-radius:6px;">' +
+      '<button onclick="removeImage()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;">x</button>';
+    preview.style.display = 'block';
+    preview.style.position = 'relative';
+    document.getElementById('uploadZone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  selectedImage = null;
+  document.getElementById('imagePreview').style.display = 'none';
+  document.getElementById('imagePreview').innerHTML = '';
+  document.getElementById('uploadZone').style.display = 'block';
+  document.getElementById('imageInput').value = '';
+}
+
+// Drag and drop
+const uploadZone = document.getElementById('uploadZone');
+if (uploadZone) {
+  uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', function() { uploadZone.classList.remove('drag-over'); });
+  uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) { document.getElementById('imageInput').files = e.dataTransfer.files; handleImageSelect({target: {files: e.dataTransfer.files}}); }
+  });
+}
+
 async function generate() {
-  const question = document.getElementById("question").value.trim();
-  if (!question) { setStatus("Please enter a question.", true); return; }
+  const activeTab = document.querySelector('.input-tab.active').textContent.trim();
+  const isImageMode = activeTab === 'Image';
+
+  if (isImageMode) {
+    if (!selectedImage) { setStatus("Please upload an image first.", true); return; }
+  } else {
+    const question = document.getElementById("question").value.trim();
+    if (!question) { setStatus("Please enter a question.", true); return; }
+  }
 
   const dim = document.getElementById("dim").value;
   const preset = document.getElementById("preset").value;
   const btn = document.getElementById("generateBtn");
   const output = document.getElementById("output");
+  const extractedDiv = document.getElementById("extractedText");
+  if (extractedDiv) extractedDiv.style.display = "none";
 
   btn.disabled = true;
   btn.textContent = "Generating...";
   output.style.display = "none";
-  setStatus("Classifying question...");
+  document.getElementById("downloadBtn").style.display = "none";
+  setStatus(isImageMode ? "Extracting text from image..." : "Classifying question...");
 
   try {
     const startTime = Date.now();
+    let resp;
 
-    // Update status as time passes
     const statusTimer = setInterval(() => {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
-      if (elapsed < 5) setStatus("Classifying question...");
+      if (isImageMode && elapsed < 10) setStatus("Extracting text from image... (" + elapsed + "s)");
       else if (elapsed < 20) setStatus("Computing coordinates and geometry... (" + elapsed + "s)");
       else setStatus("Generating interactive diagram... (" + elapsed + "s)");
     }, 1000);
 
-    const resp = await fetch(API_URL + "/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: question, dimension: dim, preset: preset }),
-    });
+    if (isImageMode) {
+      const formData = new FormData();
+      formData.append("image", selectedImage);
+      formData.append("preset", preset);
+      formData.append("dimension", dim);
+      resp = await fetch(API_URL + "/api/generate-from-image", {
+        method: "POST",
+        body: formData,
+      });
+    } else {
+      const question = document.getElementById("question").value.trim();
+      resp = await fetch(API_URL + "/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question, dimension: dim, preset: preset }),
+      });
+    }
 
     clearInterval(statusTimer);
     const data = await resp.json();
@@ -260,6 +428,13 @@ async function generate() {
       setStatus("Done in " + data.duration + "s (" + data.dimension.toUpperCase() + ")");
       output.style.display = "block";
       output.innerHTML = '<iframe srcdoc="' + escapeHtml(data.html) + '" style="width:100%;height:450px;border:none;border-radius:6px;"></iframe>';
+      document.getElementById("downloadBtn").style.display = "inline-block";
+      // Show extracted text for image uploads
+      if (data.extracted_text && extractedDiv) {
+        extractedDiv.textContent = "Extracted: " + data.extracted_text;
+        extractedDiv.style.display = "block";
+      }
+      loadRecentGenerations();
     } else {
       setStatus("Error: " + data.error, true);
     }
@@ -280,6 +455,132 @@ function setStatus(msg, isError) {
 function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+async function downloadJPEG() {
+  const btn = document.getElementById("downloadBtn");
+  btn.textContent = "Exporting...";
+  btn.disabled = true;
+
+  try {
+    const iframe = document.querySelector("#output iframe");
+    if (!iframe) throw new Error("No diagram found.");
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    if (!iframeDoc) throw new Error("Cannot access diagram content.");
+
+    let dataUrl = null;
+
+    // Try WebGL canvas first (3D diagrams with Three.js)
+    const webglCanvas = iframeDoc.querySelector("canvas");
+    if (webglCanvas && webglCanvas.getContext("webgl2") || (webglCanvas && webglCanvas.getContext("webgl"))) {
+      try {
+        // For Three.js, we need to re-render with preserveDrawingBuffer
+        // Try getting dataURL directly (works if preserveDrawingBuffer was set)
+        dataUrl = webglCanvas.toDataURL("image/jpeg", 0.95);
+        // Check if we got a blank canvas (all zeros)
+        if (dataUrl.length < 1000) dataUrl = null;
+      } catch (e) {
+        dataUrl = null;
+      }
+    }
+
+    // Fallback: use html2canvas on the iframe body
+    if (!dataUrl) {
+      const canvas = await html2canvas(iframeDoc.body, {
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        scale: 2,
+        logging: false,
+        allowTaint: true,
+      });
+      dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+    }
+
+    // Trigger download
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "geometry-diagram.jpg";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (e) {
+    setStatus("JPEG export failed: " + e.message + ". Try right-clicking the diagram to save instead.", true);
+  } finally {
+    btn.textContent = "Download JPEG";
+    btn.disabled = false;
+  }
+}
+
+// --- Recent Generations ---
+
+async function loadRecentGenerations() {
+  try {
+    var resp = await fetch(API_URL + "/api/recent");
+    if (!resp.ok) return;
+    var items = await resp.json();
+    var container = document.getElementById("recentContainer");
+
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div class="recent-empty">No recent generations yet. Try it above!</div>';
+      return;
+    }
+
+    var html = '<div class="recent-scroll">';
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var dimClass = (item.dimension && item.dimension.indexOf("3d") !== -1) ? "badge-3d" : "badge-2d";
+      var dimLabel = (item.dimension && item.dimension.indexOf("3d") !== -1) ? "3D" : "2D";
+      html += '<div class="recent-card" onclick="openRecentDiagram(' + item.index + ', this)" data-question="' + escapeHtml(item.question) + '">';
+      html += '<div class="recent-question">' + escapeHtml(item.question) + '</div>';
+      html += '<div class="recent-meta">';
+      html += '<span class="badge ' + dimClass + '">' + dimLabel + '</span>';
+      html += '<span>' + escapeHtml(item.timestamp) + '</span>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  } catch (e) {
+    // Silently fail - recent generations are not critical
+  }
+}
+
+async function openRecentDiagram(index, cardEl) {
+  try {
+    var resp = await fetch(API_URL + "/api/recent/" + index);
+    if (!resp.ok) return;
+    var data = await resp.json();
+
+    var modal = document.getElementById("recentModal");
+    var iframe = document.getElementById("recentModalIframe");
+    var questionEl = document.getElementById("recentModalQuestion");
+
+    iframe.srcdoc = data.html;
+    questionEl.textContent = cardEl.getAttribute("data-question") || "";
+    modal.classList.add("active");
+  } catch (e) {
+    // Silently fail
+  }
+}
+
+function closeRecentModal() {
+  var modal = document.getElementById("recentModal");
+  var iframe = document.getElementById("recentModalIframe");
+  modal.classList.remove("active");
+  iframe.srcdoc = "";
+}
+
+// Close modal on backdrop click
+document.getElementById("recentModal").addEventListener("click", function(e) {
+  if (e.target === this) closeRecentModal();
+});
+
+// Close modal on Escape key
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") closeRecentModal();
+});
+
+// Load recent generations on page load and auto-refresh every 30 seconds
+loadRecentGenerations();
+setInterval(loadRecentGenerations, 30000);
 </script>
 </body>
 </html>
