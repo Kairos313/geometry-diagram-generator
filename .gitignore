@@ -41,3 +41,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Claude Code instructions (local only)
+CLAUDE.md
+frontend/CLAUDE.md
