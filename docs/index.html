@@ -321,14 +321,17 @@ const API_URL = "https://geometry-diagram-generator.onrender.com";
 let selectedImage = null;
 
 function switchTab(tab) {
+  // Toggle tab buttons
   document.querySelectorAll('.input-tab').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+  // Toggle tab content
+  document.getElementById('tab-text').classList.remove('active');
+  document.getElementById('tab-image').classList.remove('active');
   if (tab === 'text') {
-    document.querySelector('.input-tab:first-child').classList.add('active');
-    document.getElementById('textTab').style.display = 'block';
+    document.querySelectorAll('.input-tab')[0].classList.add('active');
+    document.getElementById('tab-text').classList.add('active');
   } else {
-    document.querySelector('.input-tab:last-child').classList.add('active');
-    document.getElementById('imageTab').style.display = 'block';
+    document.querySelectorAll('.input-tab')[1].classList.add('active');
+    document.getElementById('tab-image').classList.add('active');
   }
 }
 
