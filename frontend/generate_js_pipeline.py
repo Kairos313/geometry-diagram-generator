@@ -442,19 +442,35 @@ def generate_diagram(
 
 
 OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1"
-OPENROUTER_GEMINI_MODEL = "google/gemini-2.5-flash-preview"
-OPENROUTER_DEEPSEEK_MODEL = "deepseek/deepseek-chat"
+
+# Model presets for OpenRouter
+MODEL_PRESETS = {
+    "fast": {
+        "blueprint": "google/gemini-3-flash-preview",
+        "codegen": "deepseek/deepseek-v3.2",
+    },
+    "balanced": {
+        "blueprint": "google/gemini-3-flash-preview",
+        "codegen": "anthropic/claude-sonnet-4.6",
+    },
+    "best": {
+        "blueprint": "anthropic/claude-sonnet-4.6",
+        "codegen": "anthropic/claude-sonnet-4.6",
+    },
+}
 
 
 def generate_diagram_openrouter(
     question_text,          # type: str
     dimension_type="auto",  # type: str
     openrouter_key=None,    # type: Optional[str]
+    preset="balanced",      # type: str
 ):
     # type: (...) -> dict
-    """Full pipeline using OpenRouter for both Gemini and DeepSeek.
+    """Full pipeline using OpenRouter for both models.
 
     Used by the website API server. Does not save to disk.
+    Preset options: "fast" (Gemini+DeepSeek), "balanced" (Gemini+Claude), "best" (Claude+Claude)
     Returns dict with: success, html, dimension, duration, error
     """
     from openai import OpenAI
@@ -467,14 +483,19 @@ def generate_diagram_openrouter(
         return {"success": False, "html": "", "dimension": "2d",
                 "duration": 0, "error": "OPENROUTER_WEBSITE_API_KEY not set"}
 
+    models = MODEL_PRESETS.get(preset, MODEL_PRESETS["balanced"])
+    blueprint_model = models["blueprint"]
+    codegen_model = models["codegen"]
+    logger.info("Using preset '{}': blueprint={}, codegen={}".format(preset, blueprint_model, codegen_model))
+
     client = OpenAI(base_url=OPENROUTER_ENDPOINT, api_key=openrouter_key)
     total_start = time.time()
 
-    # Stage 1: Classify via OpenRouter Gemini
+    # Stage 1: Classify via OpenRouter
     if dimension_type == "auto":
         try:
             classify_resp = client.chat.completions.create(
-                model=OPENROUTER_GEMINI_MODEL,
+                model=blueprint_model,
                 messages=[{
                     "role": "user",
                     "content": "Classify this geometry question as exactly one of: 2d, 3d, coordinate_2d, coordinate_3d.\n\nQuestion: {}\n\nReply with ONLY the classification.".format(question_text),
@@ -494,13 +515,13 @@ def generate_diagram_openrouter(
 
     render_dim = dimension_type.replace("coordinate_", "")
 
-    # Stage 2: Hybrid blueprint via OpenRouter Gemini
+    # Stage 2: Hybrid blueprint via OpenRouter
     try:
         from js_pipeline_prompts_hybrid import get_hybrid_blueprint_prompt
         blueprint_prompt = get_hybrid_blueprint_prompt(render_dim)
 
         blueprint_resp = client.chat.completions.create(
-            model=OPENROUTER_GEMINI_MODEL,
+            model=blueprint_model,
             messages=[
                 {"role": "system", "content": blueprint_prompt},
                 {"role": "user", "content": "Question: {}".format(question_text)},
@@ -524,7 +545,7 @@ def generate_diagram_openrouter(
                 "duration": time.time() - total_start,
                 "error": "Blueprint failed: {}".format(e)}
 
-    # Stage 3: JS code via OpenRouter DeepSeek
+    # Stage 3: JS code via OpenRouter
     try:
         system_prompt = get_js_prompt(render_dim)
         user_message = (
@@ -533,7 +554,7 @@ def generate_diagram_openrouter(
         ).format(q=question_text, notes=math_notes)
 
         js_resp = client.chat.completions.create(
-            model=OPENROUTER_DEEPSEEK_MODEL,
+            model=codegen_model,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},

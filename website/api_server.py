@@ -84,11 +84,13 @@ def generate():
         return jsonify({"success": False, "error": "Question too long (max 1000 chars)"}), 400
 
     dimension = data.get("dimension", "auto")
+    preset = data.get("preset", "balanced")
+    if preset not in ("fast", "balanced", "best"):
+        preset = "balanced"
 
-    logger.info("Generating diagram for: %s", question[:80])
+    logger.info("Generating diagram [%s] for: %s", preset, question[:80])
 
     try:
-        # Use OpenRouter for both Gemini and DeepSeek
         from generate_js_pipeline import generate_diagram_openrouter
 
         start = time.time()
@@ -96,6 +98,7 @@ def generate():
             question_text=question,
             dimension_type=dimension,
             openrouter_key=os.getenv("OPENROUTER_WEBSITE_API_KEY"),
+            preset=preset,
         )
         duration = time.time() - start
 

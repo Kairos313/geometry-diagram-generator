@@ -176,6 +176,11 @@
           <option value="2d">2D</option>
           <option value="3d">3D</option>
         </select>
+        <select id="preset">
+          <option value="fast">Fast (Gemini + DeepSeek)</option>
+          <option value="balanced" selected>Balanced (Gemini + Claude)</option>
+          <option value="best">Best (Claude + Claude)</option>
+        </select>
         <button class="btn btn-primary" id="generateBtn" onclick="generate()">Generate Diagram</button>
       </div>
       <div class="try-status" id="status"></div>
@@ -198,6 +203,7 @@ async function generate() {
   if (!question) { setStatus("Please enter a question.", true); return; }
 
   const dim = document.getElementById("dim").value;
+  const preset = document.getElementById("preset").value;
   const btn = document.getElementById("generateBtn");
   const output = document.getElementById("output");
 
@@ -220,7 +226,7 @@ async function generate() {
     const resp = await fetch(API_URL + "/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: question, dimension: dim }),
+      body: JSON.stringify({ question: question, dimension: dim, preset: preset }),
     });
 
     clearInterval(statusTimer);
