@@ -296,10 +296,7 @@
       </div>
       <div class="try-status" id="status"></div>
       <div class="try-output" id="output"></div>
-      <div id="downloadBtns" style="display:none;margin-top:8px;display:none;gap:8px;">
-        <button class="download-btn" onclick="downloadHTML()" style="display:inline-block;">Download HTML</button>
-        <button class="download-btn" onclick="downloadJPEG()" style="display:inline-block;">Download JPEG</button>
-      </div>
+      <button class="download-btn" id="downloadBtns" onclick="downloadJPEG()" style="display:none;">Download JPEG</button>
     </div>
   </section>
 </div>
@@ -458,7 +455,7 @@ async function generate() {
       lastGeneratedHTML = data.html;
       output.style.display = "block";
       output.innerHTML = '<iframe srcdoc="' + escapeHtml(data.html) + '" style="width:100%;height:450px;border:none;border-radius:6px;"></iframe>';
-      document.getElementById("downloadBtns").style.display = "flex";
+      document.getElementById("downloadBtns").style.display = "inline-block";
       if (data.extracted_text && extractedDiv) {
         extractedDiv.textContent = "Extracted: " + data.extracted_text;
         extractedDiv.style.display = "block";
