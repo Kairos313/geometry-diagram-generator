@@ -1,216 +1,83 @@
-# Geometry Video Generation Pipeline
+# Geometry Diagram Generator
 
-An automated AI-powered pipeline that transforms geometry question images into professional educational videos with step-by-step solutions, audio narration, and animated visualizations.
+AI pipeline that converts geometry questions into interactive HTML diagrams using D3.js and Three.js.
 
-## 🚀 Overview
+## How It Works
 
-The pipeline processes geometry questions through 5 integrated steps, leveraging multiple AI models for optimal performance:
+3-stage LLM pipeline: **Classify** -> **Blueprint** -> **JS Code** -> **HTML**
 
-1. **Solution Analysis** (Gemini 2.5 Pro) - Extracts mathematical concepts and solution strategies
-2. **Audio Generation** (ElevenLabs) - Creates natural speech narration for each step
-3. **Geometric Analysis** (Gemini + Claude) - Maps solutions to precise coordinates and generates basic visualizations
-4. **Video Code Generation** (Claude Sonnet 4) - Creates comprehensive Manim scenes with audio integration
-5. **Video Rendering** (Local) - Renders final educational video with synchronized audio
+1. **Classify** (Gemini 2.5 Flash) -- determines dimension type: 2D, 3D, coordinate 2D, or coordinate 3D
+2. **Blueprint** (Gemini 2.5 Flash) -- extracts geometry, calculates coordinates, outputs structured JSON
+3. **JS Code** (DeepSeek V3.2) -- generates a self-contained HTML file with embedded JavaScript
 
-## 🚀 Quick Start
+Output formats:
+- 2D diagrams: static SVG via D3.js v7
+- 3D diagrams: interactive WebGL via Three.js r128 (drag to orbit, scroll to zoom)
+
+## Quick Start
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+pip install google-genai openai python-dotenv flask
 
-# Set up API keys in .env file
-OPENROUTER_API_KEY=your_key_here
-ELEVENLABS_API_KEY=your_key_here
+# Add API keys to .env at project root:
+#   GEMINI_API_KEY=...
+#   DEEPSEEK_API_KEY=...
 
-# Run complete pipeline
-python terminal_pipeline.py --question-image "path/to/question.png"
+# Single question
+python3 frontend/generate_js_pipeline.py -q "Triangle ABC with AB=12cm, BC=8cm, angle ABC=60 degrees. Find AC." --dim 2d
+
+# Batch test (all 60 questions, parallel)
+python3 frontend/batch_test_js_pipeline.py --workers 60
+
+# Web UI with real-time progress
+python3 frontend/batch_test_js_ui.py --port 5052
 ```
 
-## 🤖 AI Model Performance
+## Examples
 
-### **Step 1: Solution Analysis** 
-- **Model**: Google Gemini 2.5 Pro
-- **Performance**: 80-90 seconds, ~15K tokens, ~$0.11 per question
-- **Capability**: Analyzes geometry questions and generates structured step-by-step solutions with LaTeX formatting
+Six example diagrams are included in `frontend/examples/`:
 
-### **Step 2: Audio Generation**
-- **Model**: ElevenLabs Multilingual v2
-- **Performance**: 10-15 seconds, 250-300 audio segments, ~$0.05-0.10 per question
-- **Capability**: Converts solution text to natural speech with mathematical pronunciation support
+| File | Type | Description |
+|------|------|-------------|
+| `2d_cyclic_quadrilateral.html` | 2D | Cyclic quadrilateral |
+| `2d_exterior_angle.html` | 2D | Exterior angle |
+| `2d_line_circle_intersection.html` | 2D | Line-circle intersection |
+| `2d_parallelogram_diagonal.html` | 2D | Parallelogram diagonal |
+| `3d_cuboid_space_diagonal.html` | 3D | Cuboid space diagonal |
+| `3d_pyramid_slant_height.html` | 3D | Square pyramid slant height |
 
-### **Step 3: Geometric Analysis**
-- **Models**: Gemini 2.5 Pro (Blueprint) + Claude Sonnet 4 (Manim Code)
-- **Performance**: 150-180 seconds, ~23K tokens, ~$0.26 per question
-- **Capability**: Converts solutions to precise geometric coordinates and generates basic Manim visualizations
+Open any `.html` file in a browser -- no server needed. 3D diagrams support drag-to-orbit and scroll-to-zoom.
 
-### **Step 4: Video Code Generation**
-- **Model**: Anthropic Claude Sonnet 4
-- **Performance**: 100-120 seconds, ~43K tokens, ~$0.15 per question
-- **Capability**: Generates comprehensive Manim scenes with audio integration and professional animations
+## Performance
 
-### **Step 5: Video Rendering**
-- **Processing**: Local (CPU/GPU)
-- **Performance**: 140-160 seconds, $0.00 cost
-- **Capability**: Renders Manim animations and creates final synchronized video
+- **60/60** pass rate on HKDSE + coordinate geometry questions
+- **$0.007** average cost per diagram
+- **~85s** average generation time per diagram
+- **~2 min** wall time for 60 questions running in parallel
 
-**Total Pipeline**: 8-10 minutes, ~123K tokens, ~$0.67 per question
-
-## 📁 Pipeline Architecture
+## Project Structure
 
 ```
-Input: Geometry Question Image
-    ↓
-Step 1: generate_solution_steps.py
-    ↓ [Solution JSON with geometric elements]
-Step 2: geo_scriptwriter_parallel.py
-    ↓ [Audio files + timing data]
-Step 3: integrated_geometry_pipeline.py
-    ↓ [Geometric coordinates + basic Manim code]
-Step 4: video_claude.py
-    ↓ [Complete Manim scenes with audio integration]
-Step 5: render_and_concatenate_scenes.py
-    ↓
-Output: Professional Educational Video
+frontend/                        # JS rendering pipeline (preferred)
+  generate_js_pipeline.py        # Main orchestrator
+  batch_test_js_pipeline.py      # CLI batch runner
+  batch_test_js_ui.py            # Flask web UI
+  examples/                      # 6 example output diagrams
+legacy/                          # Old Python pipeline (matplotlib/manim)
+classify_geometry_type.py        # Shared dimension classifier
+hkdse_test_questions.py          # HKDSE test questions
+coordinate_test_questions.py     # Coordinate geometry test questions
 ```
 
-## 🎬 Output Quality
+## API Costs
 
-The pipeline generates professional educational videos featuring:
+| Provider | Role | Cost per diagram |
+|----------|------|-----------------|
+| Gemini 2.5 Flash | Classification + blueprint | ~$0.003 |
+| DeepSeek V3.2 | JS code generation | ~$0.004 |
+| **Total** | | **~$0.007** |
 
-- **Step-by-step mathematical explanations** with LaTeX-formatted expressions
-- **Animated geometric constructions** using Manim's precise rendering engine
-- **Natural speech narration** with mathematical pronunciation support
-- **Synchronized audio-video timing** for seamless educational experience
-- **Multi-scene support** for complex multi-part problems
-- **Professional transitions** and visual annotations
+## Tech Stack
 
-## 🛠️ Technical Capabilities
-
-### **Supported Geometry Types**
-- ✅ **2D Geometry**: Triangles, polygons, circles, angles, and geometric constructions
-- ✅ **3D Geometry**: Pyramids, polyhedra, 3D shapes, and spatial relationships
-- ❌ **Coordinate Geometry**: Not currently supported (experimental versions in development)
-
-### **AI Model Selection Rationale**
-
-**Google Gemini 2.5 Pro** (Steps 1 & 3):
-- Excellent image analysis for geometry questions
-- Strong mathematical reasoning capabilities
-- Cost-effective for large input processing
-- Fast response times for coordinate calculations
-
-**Anthropic Claude Sonnet 4** (Steps 3 & 4):
-- Superior code generation for Manim animations
-- Better understanding of complex geometric concepts
-- More reliable for structured output generation
-- Excellent for multi-step reasoning tasks
-
-**ElevenLabs Multilingual v2** (Step 2):
-- Natural-sounding speech synthesis
-- Mathematical pronunciation support
-- Fast parallel processing for multiple audio files
-- Cost-effective for audio generation
-
-## 📊 Performance Metrics
-
-### **Token Usage Breakdown**
-- **Gemini**: ~15K tokens (solution analysis)
-- **Claude**: ~100K tokens (geometry and video generation)
-- **Total**: ~120K tokens per complete run
-
-### **Cost Analysis**
-- **Step 1 (Gemini)**: $0.11
-- **Step 2 (ElevenLabs)**: $0.05-0.10
-- **Step 3 (Gemini + Claude)**: $0.26
-- **Step 4 (Claude)**: $0.15
-- **Step 5 (Local)**: $0.00
-- **Total**: ~$0.67 per question
-
-## 🛠️ Installation
-
-### **System Requirements**
-- Python 3.8+
-- FFmpeg (for video processing)
-- LaTeX (for mathematical expressions)
-- 8GB+ RAM recommended
-
-### **Dependencies**
-```bash
-# Core AI and API libraries
-pip install openai python-dotenv requests
-
-# Audio processing
-pip install pydub aiohttp
-
-# Video processing and animation
-pip install manim moviepy
-
-# Image and PDF processing
-pip install pdf2image pillow
-
-# Scientific computing
-pip install numpy
-```
-
-### **System Dependencies**
-```bash
-# macOS
-brew install ffmpeg poppler
-
-# Ubuntu/Debian
-sudo apt install ffmpeg poppler-utils
-```
-
-## 🎯 Individual Step Execution
-
-```bash
-# Step 1: Generate solution analysis
-python generate_solution_steps.py --question-image "question.png"
-
-# Step 2: Generate audio files
-python geo_scriptwriter_parallel.py
-
-# Step 3: Generate geometric pipeline
-python integrated_geometry_pipeline.py --question-image "question.png"
-
-# Step 4: Generate comprehensive video code
-python video_claude.py --question-image "question.png"
-
-# Step 5: Render final video
-python render_and_concatenate_scenes.py
-```
-
-## 📂 Key Output Files
-
-- **`math_solution_standard.json`**: Structured solution data with step-by-step breakdown
-- **`geometric_elements_with_timing.json`**: Audio timing data and geometric element mappings
-- **`coordinates.txt`**: Geometric coordinate analysis and spatial relationships
-- **`all_scenes.py`**: Complete Manim code with multiple scenes and audio integration
-- **`final_geometry_video.mp4`**: Professional educational video output
-
-## 🔧 Troubleshooting
-
-### **Common Issues**
-- **API Key Errors**: Ensure `.env` file contains valid `OPENROUTER_API_KEY` and `ELEVENLABS_API_KEY`
-- **Manim Installation**: Install with `pip install manim`
-- **FFmpeg Not Found**: Install using system package manager
-- **LaTeX Errors**: Install LaTeX distribution (TeX Live, MiKTeX, etc.)
-
-### **Performance Tips**
-- Use SSD storage for faster video rendering
-- Monitor API usage to avoid rate limits
-- Use lower quality settings for testing (`-ql` instead of `-qh`)
-
-## 🎓 Educational Value
-
-The pipeline creates videos that enhance learning through:
-
-- **Visual Learning**: Animated geometric constructions help students understand spatial relationships
-- **Audio Reinforcement**: Natural speech narration reinforces mathematical concepts
-- **Step-by-Step Progression**: Clear solution breakdown prevents cognitive overload
-- **Professional Quality**: High-quality output suitable for educational institutions
-- **Scalable Production**: Automated pipeline enables rapid creation of educational content
-
----
-
-**Transform geometry questions into engaging educational videos with AI-powered precision and professional quality.**
+Python 3.9, Gemini 2.5 Flash, DeepSeek V3.2, D3.js v7, Three.js r128

@@ -5,7 +5,7 @@ Batch Test Script for Geometry Diagram Pipeline.
 Runs test questions in parallel using asyncio,
 tracks costs, and displays results in a web interface.
 
-Three test sets test different prompt paths:
+Four test sets test different prompt paths:
 
 1. GEOMETRY (--test-set geometry) - 10 questions, uses ORIGINAL prompts:
    - Stage 1: Question_to_Blueprint_Coordinate_included (outputs DIMENSION: 2D or 3D)
@@ -24,20 +24,29 @@ Three test sets test different prompt paths:
    - Based on HKDSE Grade 12 Mathematics Extended Part Module 2
    - Includes basic (10+10) and advanced M2 Section B style (5+10) questions
 
+4. FOCUSED (--test-set focused) - 40 questions, uses REGULAR 2D/3D prompts for ALL types:
+   - 10 HKDSE 2D + 10 HKDSE 3D + 10 Coordinate 2D + 10 Coordinate 3D
+   - All routed through regular blueprint prompt (no coordinate-specific prompt)
+   - Useful for evaluating quality of regular prompts on coordinate questions
+
 Usage:
     python3 batch_test.py                              # Run geometry tests (default)
     python3 batch_test.py --test-set coordinate        # Run coordinate geometry tests
     python3 batch_test.py --test-set hkdse             # Run HKDSE Grade 12 tests
     python3 batch_test.py --test-set hkdse --dim 3d    # Run only HKDSE 3D tests
     python3 batch_test.py --test-set all               # Run all tests
+    python3 batch_test.py --test-set focused           # Run 40-question evaluation set
+    python3 batch_test.py --test-set focused --dim coordinate_2d  # Only coordinate 2D questions
     python3 batch_test.py --dim 3d                     # Run only 3D geometry tests
     python3 batch_test.py --test-set coordinate --topic circles
     python3 batch_test.py --blueprint-model focused    # Use LLM classifier + focused prompts (38% cost savings)
     python3 batch_test.py --blueprint-model comprehensive  # Use comprehensive coordinate geometry prompt
 
 Dimension filter (for geometry/hkdse):
-    --dim 2d   Only 2D questions
-    --dim 3d   Only 3D questions
+    --dim 2d              Only 2D questions
+    --dim 3d              Only 3D questions
+    --dim coordinate_2d   Only coordinate 2D questions (focused test set only)
+    --dim coordinate_3d   Only coordinate 3D questions (focused test set only)
 
 Topic filter:
     geometry:   triangles, circles, quadrilaterals, prisms, pyramids, cylinders
@@ -105,6 +114,8 @@ from coordinate_test_questions import (
     COORDINATE_TEST_QUESTIONS,
     COORDINATE_ALL_2D,
     COORDINATE_ALL_3D,
+    COORDINATE_QUESTIONS_2D_ORIGINAL,
+    COORDINATE_QUESTIONS_3D,
     get_questions_by_dimension as get_coordinate_by_dimension,
     get_questions_by_topic as get_coordinate_by_topic,
 )
@@ -117,6 +128,34 @@ from hkdse_test_questions import (
     get_questions_by_dimension as get_hkdse_by_dimension,
     get_questions_by_topic as get_hkdse_by_topic,
 )
+
+def build_focused_question_list(dim_filter="all", test_set_filter="all"):
+    # type: (str, str) -> List[dict]
+    """Build the 40-question evaluation set (same as batch_test_focused.py).
+
+    10 HKDSE 2D + 10 HKDSE 3D + 10 Coordinate 2D + 10 Coordinate 3D.
+    All questions will be run through the regular (non-coordinate) blueprint prompt.
+    """
+    questions = []
+
+    if test_set_filter in ("hkdse", "all"):
+        hkdse_2d = [dict(q, test_set="hkdse") for q in HKDSE_QUESTIONS_2D[0:10]]
+        hkdse_3d = [dict(q, test_set="hkdse") for q in HKDSE_QUESTIONS_3D[0:10]]
+        if dim_filter in ("2d", "all"):
+            questions.extend(hkdse_2d)
+        if dim_filter in ("3d", "all"):
+            questions.extend(hkdse_3d)
+
+    if test_set_filter in ("coordinate", "all"):
+        coord_2d = [dict(q, test_set="coordinate") for q in COORDINATE_QUESTIONS_2D_ORIGINAL[0:10]]
+        coord_3d = [dict(q, test_set="coordinate") for q in COORDINATE_QUESTIONS_3D[0:10]]
+        if dim_filter in ("coordinate_2d", "all"):
+            questions.extend(coord_2d)
+        if dim_filter in ("coordinate_3d", "all"):
+            questions.extend(coord_3d)
+
+    return questions
+
 
 # Default to geometry questions; will be updated by CLI args
 ALL_QUESTIONS = GEOMETRY_TEST_QUESTIONS
@@ -630,6 +669,8 @@ body{background:#0C0C0C;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFo
 .card-badge{padding:.15rem .5rem;border-radius:3px;font-size:.75rem;font-weight:700}
 .badge-2d{background:#457B9D;color:#fff}
 .badge-3d{background:#6A4C93;color:#fff}
+.badge-coordinate_2d{background:#2A7F62;color:#fff}
+.badge-coordinate_3d{background:#7B4E2D;color:#fff}
 .badge-pending{background:#333;color:#888}
 .badge-success{background:#96CEB4;color:#0C0C0C}
 .badge-failed{background:#FF6B6B;color:#fff}
@@ -885,8 +926,10 @@ function renderResults(results) {
     var card = document.createElement('div');
     card.className = 'result-card ' + (r.pending ? 'pending' : (r.success ? 'success' : 'failed'));
 
-    var dimBadge = r.dimension ?
-      '<span class="card-badge badge-' + r.dimension + '">' + r.dimension.toUpperCase() + '</span>' :
+    var dimLabels = {'2d': '2D', '3d': '3D', 'coordinate_2d': 'COORD 2D', 'coordinate_3d': 'COORD 3D'};
+    var dimLabel = dimLabels[r.dimension] || (r.dimension ? r.dimension.toUpperCase() : null);
+    var dimBadge = dimLabel ?
+      '<span class="card-badge badge-' + r.dimension + '">' + dimLabel + '</span>' :
       '<span class="card-badge badge-pending">PENDING</span>';
 
     var statusBadge = r.pending ? '' :
@@ -997,15 +1040,16 @@ Examples:
     )
     parser.add_argument(
         "--test-set",
-        choices=["geometry", "coordinate", "hkdse", "all"],
+        choices=["geometry", "coordinate", "hkdse", "all", "focused"],
         default="geometry",
-        help="Which test set to run (default: geometry)"
+        help="Which test set to run (default: geometry). 'focused' = 40-question evaluation set "
+             "(10 HKDSE 2D + 10 HKDSE 3D + 10 Coord 2D + 10 Coord 3D) with regular prompts"
     )
     parser.add_argument(
         "--dim",
-        choices=["2d", "3d", "all"],
+        choices=["2d", "3d", "coordinate_2d", "coordinate_3d", "all"],
         default=None,
-        help="Filter geometry questions by dimension (2d or 3d)"
+        help="Filter questions by dimension. coordinate_2d/coordinate_3d only apply to --test-set focused"
     )
     parser.add_argument(
         "--topic",
@@ -1021,8 +1065,8 @@ Examples:
     parser.add_argument(
         "--codegen-model",
         choices=["gemini", "kimi", "deepseek", "deepseek-direct"],
-        default="gemini",
-        help="Model for code generation: gemini (default), kimi (Kimi K2.5), deepseek (DeepSeek-V3.2 Azure), or deepseek-direct (DeepSeek-Chat direct API)"
+        default="deepseek",
+        help="Model for code generation: gemini, kimi (Kimi K2.5), deepseek (default, DeepSeek-V3.2 Azure), or deepseek-direct (DeepSeek-Chat direct API)"
     )
     parser.add_argument(
         "--blueprint-model",
@@ -1120,9 +1164,20 @@ if __name__ == "__main__":
             ALL_QUESTIONS = HKDSE_TEST_QUESTIONS
             test_set_name = "HKDSE Grade 12 (2D + 3D)"
 
+    elif args.test_set == "focused":
+        # 40-question evaluation set: HKDSE 2D + HKDSE 3D + Coord 2D + Coord 3D
+        # All routed through the regular (non-coordinate) blueprint prompt
+        dim_filter = args.dim or "all"
+        test_set_filter = "all"
+        ALL_QUESTIONS = build_focused_question_list(dim_filter=dim_filter, test_set_filter=test_set_filter)
+        if dim_filter == "all":
+            test_set_name = "Focused Eval (HKDSE 2D + 3D + Coord 2D + Coord 3D)"
+        else:
+            test_set_name = f"Focused Eval ({dim_filter.upper()})"
+
     else:  # all
         # Combine all test sets
-        if args.dim and args.dim != "all":
+        if args.dim and args.dim != "all" and args.dim in ("2d", "3d"):
             geom_questions = get_geometry_by_dimension(args.dim)
             hkdse_questions = get_hkdse_by_dimension(args.dim)
             coord_questions = get_coordinate_by_dimension(args.dim)
@@ -1152,7 +1207,12 @@ if __name__ == "__main__":
     print(f"Starting Batch Test UI at {url}")
     print(f"Test set: {test_set_name}")
     print(f"Questions: {len(ALL_QUESTIONS)}")
-    prompt_path = "Coordinate prompts" if args.test_set == "coordinate" else "Original prompts" if args.test_set in ("geometry", "hkdse") else "Mixed"
+    prompt_path = (
+        "Coordinate prompts" if args.test_set == "coordinate"
+        else "Regular 2D/3D prompts only (no coordinate prompts)" if args.test_set == "focused"
+        else "Original prompts" if args.test_set in ("geometry", "hkdse")
+        else "Mixed"
+    )
     model_names = {"kimi": "Kimi K2.5", "deepseek": "DeepSeek-V3.2", "gemini": "Gemini 3 Flash", "focused": "Gemini 3 Flash (Focused)", "comprehensive": "Gemini 3 Flash (Comprehensive)"}
     bp_model_name = model_names.get(BLUEPRINT_MODEL, BLUEPRINT_MODEL)
     cg_model_name = model_names.get(CODEGEN_MODEL, CODEGEN_MODEL)

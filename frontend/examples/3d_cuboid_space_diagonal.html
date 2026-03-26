@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometry Diagram</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#ffffff;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+canvas{display:block}
+#info{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(0,0,0,.5);font-size:13px;text-align:center;pointer-events:none;letter-spacing:.3px}
+#legend{position:absolute;top:20px;left:20px;color:rgba(0,0,0,.75);font-size:13px;line-height:2}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.line-sw{display:inline-block;width:16px;height:3px;margin-right:6px;vertical-align:middle;border-radius:1px}
+#controls{position:absolute;top:20px;right:20px;display:flex;gap:8px}
+#controls button{background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.15);color:#333;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .2s}
+#controls button:hover{background:rgba(0,0,0,.1)}
+#controls button.active{background:rgba(100,140,255,.2);border-color:rgba(100,140,255,.5);color:#1a4eaa}
+</style>
+</head>
+<body>
+<div id="legend">
+  <div><span class="dot" style="background:#5b4dc7"></span>Vertex / Solid Edge</div>
+  <div><span class="dot" style="background:#888780"></span>Hidden Edge (dashed)</div>
+  <div><span class="dot" style="background:#d85a30"></span>Space Diagonal AG (asked)</div>
+  <div><span class="dot" style="background:#7b68ee"></span>Face (translucent)</div>
+</div>
+<div id="controls">
+  <button id="btnRotate" class="active" onclick="toggleRotate()">Auto-rotate</button>
+  <button onclick="resetCam()">Reset view</button>
+</div>
+<div id="info">Drag to orbit · Scroll to zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Scene setup
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0xffffff);
+document.body.appendChild(renderer.domElement);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+dl.position.set(10, 20, 15);
+scene.add(dl);
+
+// === HELPER FUNCTIONS ===
+
+function addEdge(a, b, color, dashed) {
+  const mat = dashed
+    ? new THREE.LineDashedMaterial({color, dashSize:0.3, gapSize:0.15})
+    : new THREE.LineBasicMaterial({color});
+  const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
+  const line = new THREE.Line(geo, mat);
+  if (dashed) line.computeLineDistances();
+  scene.add(line);
+  return line;
+}
+
+function addSphere(pos, color, r) {
+  r = r || 0.18;
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(r, 16, 16),
+    new THREE.MeshPhongMaterial({color, emissive: color, emissiveIntensity: 0.35})
+  );
+  m.position.copy(pos);
+  scene.add(m);
+  return m;
+}
+
+function makeLabel(text, pos, color, size) {
+  color = color || '#333333';
+  size = size || 0.6;
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false});
+  const sp = new THREE.Sprite(mat);
+  sp.position.copy(pos).add(new THREE.Vector3(0, 0.5, 0));
+  sp.scale.set(size * 4, size, 1);
+  scene.add(sp);
+  return sp;
+}
+
+function addFace(vertices, color, opacity) {
+  opacity = opacity || 0.12;
+  // Triangulate fan from first vertex
+  const positions = [];
+  for (let i = 1; i < vertices.length - 1; i++) {
+    positions.push(vertices[0].x, vertices[0].y, vertices[0].z);
+    positions.push(vertices[i].x, vertices[i].y, vertices[i].z);
+    positions.push(vertices[i+1].x, vertices[i+1].y, vertices[i+1].z);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshPhongMaterial({
+    color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false
+  });
+  scene.add(new THREE.Mesh(geo, mat));
+}
+
+function addCircle3D(center, normal, radius, color, segments) {
+  segments = segments || 64;
+  color = color || 0x5b4dc7;
+  // Build orthonormal basis in the circle's plane
+  const n = normal.clone().normalize();
+  let up = new THREE.Vector3(0, 1, 0);
+  if (Math.abs(n.dot(up)) > 0.99) up = new THREE.Vector3(1, 0, 0);
+  const u = new THREE.Vector3().crossVectors(n, up).normalize();
+  const v = new THREE.Vector3().crossVectors(n, u).normalize();
+  const pts = [];
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    pts.push(new THREE.Vector3(
+      center.x + radius * (Math.cos(a) * u.x + Math.sin(a) * v.x),
+      center.y + radius * (Math.cos(a) * u.y + Math.sin(a) * v.y),
+      center.z + radius * (Math.cos(a) * u.z + Math.sin(a) * v.z)
+    ));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({color})));
+}
+
+// === ORBIT CONTROLS (hand-rolled) ===
+let autoRotate = true, isDragging = false, prevMouse = {x:0, y:0};
+let theta = Math.PI/4, phi = Math.PI/5, camRadius = 25;
+
+function updateCam() {
+  camera.position.set(
+    camRadius * Math.cos(phi) * Math.sin(theta),
+    camRadius * Math.sin(phi) + 3,
+    camRadius * Math.cos(phi) * Math.cos(theta)
+  );
+  camera.lookAt(0, 2, 0);
+}
+updateCam();
+
+renderer.domElement.addEventListener('pointerdown', function(e) {
+  isDragging = true; prevMouse = {x: e.clientX, y: e.clientY};
+});
+window.addEventListener('pointerup', function() { isDragging = false; });
+window.addEventListener('pointermove', function(e) {
+  if (!isDragging) return;
+  theta -= (e.clientX - prevMouse.x) * 0.008;
+  phi = Math.max(-0.2, Math.min(Math.PI/2.2, phi + (e.clientY - prevMouse.y) * 0.008));
+  prevMouse = {x: e.clientX, y: e.clientY};
+  updateCam();
+});
+renderer.domElement.addEventListener('wheel', function(e) {
+  camRadius = Math.max(8, Math.min(60, camRadius + e.deltaY * 0.03));
+  updateCam();
+}, {passive: true});
+
+function toggleRotate() {
+  autoRotate = !autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', autoRotate);
+}
+function resetCam() { theta = Math.PI/4; phi = Math.PI/5; camRadius = 25; updateCam(); }
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (autoRotate && !isDragging) { theta += 0.005; updateCam(); }
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', function() {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+
+/**
+ * Draw a 3D angle arc at vertex between rays vertex→p1 and vertex→p2.
+ * Uses quaternion rotation to sweep correctly in 3D space.
+ *
+ * @param {THREE.Vector3} vertex - the angle vertex
+ * @param {THREE.Vector3} p1 - point on first ray
+ * @param {THREE.Vector3} p2 - point on second ray
+ * @param {number} radius - arc radius
+ * @param {number} color - hex color (e.g. 0xba7517)
+ * @param {boolean} isRightAngle - if true, draw a square marker
+ * @returns {object} {line, labelPos} - the THREE.Line and label position
+ */
+function drawAngleArc3D(vertex, p1, p2, radius, color, isRightAngle) {
+  const v1 = new THREE.Vector3().subVectors(p1, vertex);
+  const v2 = new THREE.Vector3().subVectors(p2, vertex);
+  if (v1.length() < 1e-9 || v2.length() < 1e-9) return null;
+  v1.normalize(); v2.normalize();
+
+  if (isRightAngle) {
+    const s = radius * 0.7;
+    const a = vertex.clone().add(v1.clone().multiplyScalar(s));
+    const b = a.clone().add(v2.clone().multiplyScalar(s));
+    const c = vertex.clone().add(v2.clone().multiplyScalar(s));
+    const geo = new THREE.BufferGeometry().setFromPoints([a, b, c]);
+    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color: color}));
+    scene.add(line);
+    return { labelPos: b };
+  }
+
+  const angle = Math.acos(Math.max(-1, Math.min(1, v1.dot(v2))));
+  const axis = new THREE.Vector3().crossVectors(v1, v2).normalize();
+  if (axis.length() < 1e-9) return null;
+
+  const pts = [];
+  const N = 30;
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * angle;
+    const q = new THREE.Quaternion().setFromAxisAngle(axis, t);
+    const p = v1.clone().applyQuaternion(q).multiplyScalar(radius).add(vertex);
+    pts.push(p);
+  }
+
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color: color}));
+  scene.add(line);
+
+  // Label position at arc midpoint, pushed outward
+  const midT = angle / 2;
+  const qMid = new THREE.Quaternion().setFromAxisAngle(axis, midT);
+  const labelPos = v1.clone().applyQuaternion(qMid).multiplyScalar(radius * 1.6).add(vertex);
+  return { labelPos: labelPos };
+}
+
+
+// === YOUR GEOMETRY CODE BELOW ===
+// Use the coordinates from the computation notes.
+// Use addEdge, addSphere, makeLabel, addFace, addCircle3D, drawAngleArc3D helpers.
+
+// Coordinates (converted to 3D with Y up)
+const A = new THREE.Vector3(4.0, 0.0, 0.0);
+const B = new THREE.Vector3(0.0, 0.0, 0.0);
+const C = new THREE.Vector3(0.0, 3.0, 0.0);
+const D = new THREE.Vector3(4.0, 3.0, 0.0);
+const E = new THREE.Vector3(4.0, 0.0, 5.0);
+const F = new THREE.Vector3(0.0, 0.0, 5.0);
+const G = new THREE.Vector3(0.0, 3.0, 5.0);
+const H = new THREE.Vector3(4.0, 3.0, 5.0);
+
+// Points
+addSphere(A, 0x5b4dc7);
+addSphere(B, 0x5b4dc7);
+addSphere(C, 0x5b4dc7);
+addSphere(D, 0x5b4dc7);
+addSphere(E, 0x5b4dc7);
+addSphere(F, 0x5b4dc7);
+addSphere(G, 0x5b4dc7);
+addSphere(H, 0x5b4dc7);
+
+// Labels for vertices
+makeLabel('A', A, '#4a3aad');
+makeLabel('B', B, '#4a3aad');
+makeLabel('C', C, '#4a3aad');
+makeLabel('D', D, '#4a3aad');
+makeLabel('E', E, '#4a3aad');
+makeLabel('F', F, '#4a3aad');
+makeLabel('G', G, '#4a3aad');
+makeLabel('H', H, '#4a3aad');
+
+// Edges (solid)
+addEdge(A, B, 0x5b4dc7, false);
+addEdge(D, A, 0x5b4dc7, false);
+addEdge(E, F, 0x5b4dc7, false);
+addEdge(F, G, 0x5b4dc7, false);
+addEdge(G, H, 0x5b4dc7, false);
+addEdge(H, E, 0x5b4dc7, false);
+addEdge(A, E, 0x5b4dc7, false);
+addEdge(B, F, 0x5b4dc7, false);
+addEdge(D, H, 0x5b4dc7, false);
+
+// Edges (dashed)
+addEdge(B, C, 0x888780, true);
+addEdge(C, D, 0x888780, true);
+addEdge(C, G, 0x888780, true);
+
+// Space diagonal AG (asked, dashed highlight)
+addEdge(A, G, 0xd85a30, true);
+
+// Faces
+addFace([A, D, C, B], 0x7b68ee, 0.12); // bottom face
+addFace([E, F, G, H], 0x4ae0b0, 0.12); // top face
+addFace([A, B, F, E], 0xff6b4a, 0.12); // front face
+addFace([D, H, G, C], 0xba7517, 0.12); // back face
+addFace([B, C, G, F], 0x7b68ee, 0.12); // left face
+addFace([A, E, H, D], 0x4ae0b0, 0.12); // right face
+
+// Edge labels
+const midAB = new THREE.Vector3().addVectors(A, B).multiplyScalar(0.5);
+makeLabel('8 cm', midAB, '#555', 0.45);
+
+const midBC = new THREE.Vector3().addVectors(B, C).multiplyScalar(0.5);
+makeLabel('6 cm', midBC, '#555', 0.45);
+
+const midCG = new THREE.Vector3().addVectors(C, G).multiplyScalar(0.5);
+makeLabel('10 cm', midCG, '#555', 0.45);
+
+const midAG = new THREE.Vector3().addVectors(A, G).multiplyScalar(0.5);
+makeLabel('?', midAG, '#d85a30', 0.5);
+
+</script>
+</body>
+</html>
