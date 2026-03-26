@@ -24,19 +24,20 @@ canvas{display:block}
 <body>
 <div id="legend">
   <div><span class="dot" style="background:#5b4dc7"></span>Vertices & solid edges</div>
-  <div><span class="dot" style="background:#888780"></span>Hidden edges (dashed)</div>
+  <div><span class="dot" style="background:#888780"></span>Hidden edges</div>
   <div><span class="dot" style="background:#7b68ee"></span>Base face</div>
-  <div><span class="dot" style="background:#4ae0b0"></span>Side faces</div>
-  <div><span class="dot" style="background:#d85a30"></span>Asked length (VM)</div>
+  <div><span class="dot" style="background:#4ae0b0"></span>Pyramid faces</div>
+  <div><span class="dot" style="background:#d85a30"></span>Asked segment (VM)</div>
 </div>
 <div id="controls">
-  <button id="btnRotate" class="active" onclick="toggleRotate()">Auto-rotate</button>
+  <button id="btnRotate" onclick="toggleRotate()">Auto-rotate</button>
   <button onclick="resetCam()">Reset view</button>
 </div>
 <!-- No sliders — 3D has orbit/zoom only -->
 <div id="info">Drag to orbit · Scroll to zoom</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 // Scene setup
 const scene = new THREE.Scene();
@@ -134,45 +135,39 @@ function addCircle3D(center, normal, radius, color, segments) {
   scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({color})));
 }
 
-// === ORBIT CONTROLS (hand-rolled) ===
-let autoRotate = true, isDragging = false, prevMouse = {x:0, y:0};
-let theta = Math.PI/4, phi = Math.PI/5, camRadius = 25;
+// === ORBIT CONTROLS (Three.js OrbitControls) ===
+camera.position.set(18, 14, 18);
+camera.lookAt(0, 2, 0);
 
-function updateCam() {
-  camera.position.set(
-    camRadius * Math.cos(phi) * Math.sin(theta),
-    camRadius * Math.sin(phi) + 3,
-    camRadius * Math.cos(phi) * Math.cos(theta)
-  );
-  camera.lookAt(0, 2, 0);
-}
-updateCam();
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 2, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = false;
+controls.autoRotateSpeed = 2.0;
+controls.minDistance = 5;
+controls.maxDistance = 60;
+controls.maxPolarAngle = Math.PI * 0.85;
+controls.update();
 
-renderer.domElement.addEventListener('pointerdown', function(e) {
-  isDragging = true; prevMouse = {x: e.clientX, y: e.clientY};
-});
-window.addEventListener('pointerup', function() { isDragging = false; });
-window.addEventListener('pointermove', function(e) {
-  if (!isDragging) return;
-  theta -= (e.clientX - prevMouse.x) * 0.008;
-  phi = Math.max(-0.2, Math.min(Math.PI/2.2, phi + (e.clientY - prevMouse.y) * 0.008));
-  prevMouse = {x: e.clientX, y: e.clientY};
-  updateCam();
-});
-renderer.domElement.addEventListener('wheel', function(e) {
-  camRadius = Math.max(8, Math.min(60, camRadius + e.deltaY * 0.03));
-  updateCam();
-}, {passive: true});
+const _initPos = camera.position.clone();
+const _initTarget = controls.target.clone();
 
 function toggleRotate() {
-  autoRotate = !autoRotate;
-  document.getElementById('btnRotate').classList.toggle('active', autoRotate);
+  controls.autoRotate = !controls.autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', controls.autoRotate);
 }
-function resetCam() { theta = Math.PI/4; phi = Math.PI/5; camRadius = 25; updateCam(); }
+function resetCam() {
+  camera.position.copy(_initPos);
+  controls.target.copy(_initTarget);
+  controls.autoRotate = false;
+  document.getElementById('btnRotate').classList.remove('active');
+  controls.update();
+}
 
 function animate() {
   requestAnimationFrame(animate);
-  if (autoRotate && !isDragging) { theta += 0.005; updateCam(); }
+  controls.update();
   renderer.render(scene, camera);
 }
 animate();
@@ -242,14 +237,14 @@ function drawAngleArc3D(vertex, p1, p2, radius, color, isRightAngle) {
 // Use the coordinates from the computation notes.
 // Use addEdge, addSphere, makeLabel, addFace, addCircle3D, drawAngleArc3D helpers.
 
-// Coordinates (Y is up, Z is depth)
-const A = new THREE.Vector3(2.0, 0, 2.0);
-const B = new THREE.Vector3(-2.0, 0, 2.0);
-const C = new THREE.Vector3(-2.0, 0, -2.0);
-const D = new THREE.Vector3(2.0, 0, -2.0);
-const V = new THREE.Vector3(0.0, 6.0, 0.0);
-const M = new THREE.Vector3(0.0, 0, 2.0);
-const O = new THREE.Vector3(0.0, 0, 0.0);
+// Coordinates (Y is UP)
+const A = new THREE.Vector3(2.0, 0.0, -2.0);
+const B = new THREE.Vector3(2.0, 0.0, 2.0);
+const C = new THREE.Vector3(-2.0, 0.0, 2.0);
+const D = new THREE.Vector3(-2.0, 0.0, -2.0);
+const V = new THREE.Vector3(0.0, 3.0, 0.0);
+const O = new THREE.Vector3(0.0, 0.0, 0.0);
+const M = new THREE.Vector3(2.0, 0.0, 0.0);
 
 // Points
 addSphere(A, 0x5b4dc7);
@@ -257,8 +252,8 @@ addSphere(B, 0x5b4dc7);
 addSphere(C, 0x5b4dc7);
 addSphere(D, 0x5b4dc7);
 addSphere(V, 0x5b4dc7);
-addSphere(M, 0xd85a30, 0.22);
 addSphere(O, 0x5b4dc7);
+addSphere(M, 0xd85a30, 0.22);
 
 // Labels
 makeLabel('A', A, '#4a3aad');
@@ -266,21 +261,21 @@ makeLabel('B', B, '#4a3aad');
 makeLabel('C', C, '#4a3aad');
 makeLabel('D', D, '#4a3aad');
 makeLabel('V', V, '#4a3aad');
-makeLabel('M', M, '#d85a30');
 makeLabel('O', O, '#4a3aad');
+makeLabel('M', M, '#d85a30');
 
 // Edges
-addEdge(A, B, 0x5b4dc7, false);
-addEdge(B, C, 0x5b4dc7, false);
-addEdge(C, D, 0x888780, true);
-addEdge(D, A, 0x888780, true);
-addEdge(V, A, 0x5b4dc7, false);
-addEdge(V, B, 0x5b4dc7, false);
-addEdge(V, C, 0x5b4dc7, false);
-addEdge(V, D, 0x888780, true);
-addEdge(V, M, 0xd85a30, false);
-addEdge(V, O, 0x888780, true);
-addEdge(O, M, 0x888780, true);
+addEdge(A, B, 0x5b4dc7, false); // AB solid
+addEdge(B, C, 0x5b4dc7, false); // BC solid
+addEdge(C, D, 0x888780, true); // CD dashed
+addEdge(D, A, 0x888780, true); // DA dashed
+addEdge(V, A, 0x5b4dc7, false); // VA solid
+addEdge(V, B, 0x5b4dc7, false); // VB solid
+addEdge(V, C, 0x888780, true); // VC dashed
+addEdge(V, D, 0x888780, true); // VD dashed
+addEdge(V, O, 0x888780, true); // VO dashed
+addEdge(V, M, 0xd85a30, false); // VM solid (asked)
+addEdge(O, M, 0x888780, true); // OM dashed
 
 // Edge labels
 const midAB = new THREE.Vector3().addVectors(A, B).multiplyScalar(0.5);
@@ -290,22 +285,18 @@ const midVO = new THREE.Vector3().addVectors(V, O).multiplyScalar(0.5);
 makeLabel('6 cm', midVO, '#555', 0.45);
 
 const midVM = new THREE.Vector3().addVectors(V, M).multiplyScalar(0.5);
-makeLabel('?', midVM, '#d85a30', 0.45);
+makeLabel('?', midVM, '#d85a30', 0.5);
 
 // Faces
-addFace([A, B, C, D], 0x7b68ee, 0.12);
-addFace([V, A, B], 0x4ae0b0, 0.12);
-addFace([V, B, C], 0x4ae0b0, 0.12);
-addFace([V, C, D], 0x4ae0b0, 0.12);
-addFace([V, D, A], 0x4ae0b0, 0.12);
+addFace([A, B, C, D], 0x7b68ee, 0.14); // Base
+addFace([V, A, B], 0x4ae0b0, 0.12); // VAB
+addFace([V, B, C], 0x4ae0b0, 0.12); // VBC
+addFace([V, C, D], 0x4ae0b0, 0.12); // VCD
+addFace([V, D, A], 0x4ae0b0, 0.12); // VDA
 
-// Adjust camera to better frame the pyramid
-camera.position.set(15, 8, 15);
-camera.lookAt(0, 2, 0);
-camRadius = 20;
-theta = Math.PI/4;
-phi = Math.PI/6;
-updateCam();
+// Right angle at O in triangle VOM
+const arcVO = drawAngleArc3D(O, V, M, 0.9, 0xba7517, true);
+if (arcVO) makeLabel('90°', arcVO.labelPos, '#ba7517', 0.45);
 
 </script>
 </body>
