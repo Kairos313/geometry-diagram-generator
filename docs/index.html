@@ -17,19 +17,20 @@
   .hero p { font-size: 18px; color: var(--text2); max-width: 600px; margin: 0 auto 32px; }
   .hero-stats { display: flex; justify-content: center; gap: 32px; font-size: 14px; color: var(--text2); margin-bottom: 32px; }
   .hero-stats .val { font-weight: 700; color: var(--text); display: block; font-size: 22px; }
+  .hero-buttons { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
   /* Buttons */
   .btn { display: inline-block; padding: 12px 28px; border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.15s; }
   .btn-primary { background: var(--accent); color: #fff; border: none; }
   .btn-primary:hover { background: #4a3db5; }
-  .btn-secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); margin-left: 12px; }
+  .btn-secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
   .btn-secondary:hover { background: var(--accent); color: #fff; }
 
   /* Pipeline */
   .pipeline { padding: 48px 0; }
   .pipeline h2 { font-size: 24px; margin-bottom: 24px; text-align: center; }
   .pipeline-flow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-  .pipeline-step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 160px; }
+  .pipeline-step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 160px; flex: 1; max-width: 220px; }
   .pipeline-step .step-label { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
   .pipeline-step .step-name { font-size: 14px; font-weight: 600; margin: 4px 0; }
   .pipeline-step .step-detail { font-size: 12px; color: var(--text2); }
@@ -40,7 +41,6 @@
   .examples h2 { font-size: 24px; margin-bottom: 8px; text-align: center; }
   .examples .subtitle { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 24px; }
   .example-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-  @media (max-width: 768px) { .example-grid { grid-template-columns: 1fr; } }
   .example-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: box-shadow 0.15s; }
   .example-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
   .example-header { padding: 12px 16px; border-bottom: 1px solid var(--border); }
@@ -58,16 +58,38 @@
   .try-box { max-width: 700px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
   .try-box textarea { width: 100%; height: 80px; border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; margin-bottom: 12px; }
   .try-box textarea:focus { outline: none; border-color: var(--accent); }
-  .try-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .try-controls select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+  .try-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .try-controls select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; flex: 1; min-width: 140px; }
+  .try-controls .btn { white-space: nowrap; }
   .try-status { font-size: 13px; color: var(--text2); margin-bottom: 12px; min-height: 20px; }
   .try-status.error { color: var(--orange); }
-  .try-output { width: 100%; border: 1px solid var(--border); border-radius: 6px; min-height: 400px; display: none; }
+  .try-output { width: 100%; border: 1px solid var(--border); border-radius: 6px; min-height: 300px; display: none; overflow: hidden; }
   .try-output iframe { width: 100%; height: 450px; border: none; border-radius: 6px; }
 
   /* Footer */
   .footer { padding: 32px 0; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text2); }
   .footer a { color: var(--accent); text-decoration: none; }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .container { padding: 0 16px; }
+    .hero { padding: 48px 0 32px; }
+    .hero h1 { font-size: 26px; }
+    .hero p { font-size: 15px; margin-bottom: 24px; }
+    .hero-stats .val { font-size: 18px; }
+    .pipeline-flow { flex-direction: column; gap: 4px; }
+    .pipeline-step { min-width: auto; width: 100%; max-width: none; }
+    .pipeline-arrow { transform: rotate(90deg); }
+    .example-grid { grid-template-columns: 1fr; }
+    .example-frame { height: 300px; }
+    .try-box { padding: 16px; }
+    .try-box textarea { font-size: 16px; }
+    .try-controls { flex-direction: column; align-items: stretch; }
+    .try-controls select { width: 100%; }
+    .try-controls .btn { width: 100%; text-align: center; }
+    .try-output iframe { height: 350px; }
+    .btn-secondary { margin-left: 0; }
+  }
 </style>
 </head>
 <body>
@@ -80,8 +102,10 @@
     <div class="hero-stats">
       <div><span class="val">~85s</span> average generation time</div>
     </div>
-    <a href="#try" class="btn btn-primary">Try it Live</a>
-    <a href="https://github.com/Kairos313/geometry-diagram-generator" class="btn btn-secondary">View Source</a>
+    <div class="hero-buttons">
+      <a href="#try" class="btn btn-primary">Try it Live</a>
+      <a href="https://github.com/Kairos313/geometry-diagram-generator" class="btn btn-secondary">View Source</a>
+    </div>
   </section>
 
   <!-- Pipeline -->
