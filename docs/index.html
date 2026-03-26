@@ -265,6 +265,7 @@
         <textarea id="question" placeholder="Example: In triangle PQR, PQ = 7cm, QR = 8cm, and angle PQR = 120 degrees. Find the length of PR."></textarea>
       </div>
       <div id="tab-image" class="tab-content">
+        <textarea id="imageContext" placeholder="Optional: Add any text from the question that accompanies the image (e.g. 'Find angle BCD' or 'The figure shows a circle with center O...')" style="height:60px;margin-bottom:8px;"></textarea>
         <div class="upload-zone" id="uploadZone">
           <input type="file" id="imageInput" accept=".png,.jpg,.jpeg,.webp" onchange="handleImageSelect(event)">
           <div class="upload-icon">&#128247;</div>
@@ -411,6 +412,8 @@ async function generate() {
       formData.append("image", selectedImage);
       formData.append("preset", preset);
       formData.append("dimension", dim);
+      const context = document.getElementById("imageContext").value.trim();
+      if (context) formData.append("context", context);
       resp = await fetch(API_URL + "/api/generate-from-image", {
         method: "POST",
         body: formData,

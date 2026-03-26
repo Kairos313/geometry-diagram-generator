@@ -217,9 +217,10 @@ ALLOWED_IMAGE_TYPES = {"png", "jpg", "jpeg", "webp"}
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
-def _extract_text_from_image(image_bytes, image_format):
-    # type: (bytes, str) -> Tuple[bool, str]
+def _extract_text_from_image(image_bytes, image_format, context_text=""):
+    # type: (bytes, str, str) -> Tuple[bool, str]
     """Use OpenRouter Gemini Flash vision to OCR a geometry question image.
+    If context_text is provided, it's included as additional question text.
     Returns (success, extracted_text_or_error).
     """
     from openai import OpenAI
@@ -232,6 +233,17 @@ def _extract_text_from_image(image_bytes, image_format):
     mime = "image/jpeg" if image_format in ("jpg", "jpeg") else "image/{}".format(image_format)
     data_url = "data:{};base64,{}".format(mime, b64)
 
+    if context_text:
+        prompt = (
+            "This image shows a geometry diagram. The accompanying question text is:\n\n"
+            "{}\n\n"
+            "Extract the full geometry question by combining the text above with any "
+            "additional information visible in the image (labels, measurements, angles). "
+            "Return ONLY the complete question text."
+        ).format(context_text)
+    else:
+        prompt = "Extract the geometry question from this image. Return ONLY the question text, nothing else."
+
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=api_key,
@@ -243,7 +255,7 @@ def _extract_text_from_image(image_bytes, image_format):
             messages=[{
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Extract the geometry question from this image. Return ONLY the question text, nothing else."},
+                    {"type": "text", "text": prompt},
                     {"type": "image_url", "image_url": {"url": data_url}},
                 ],
             }],
@@ -298,12 +310,14 @@ def generate_from_image():
     if preset not in ("fast", "balanced", "best"):
         preset = "balanced"
     dimension = request.form.get("dimension", "auto")
+    context_text = request.form.get("context", "").strip()
 
-    logger.info("Generating diagram from image [%s], size=%d bytes", preset, len(image_bytes))
+    logger.info("Generating diagram from image [%s], size=%d bytes, context=%d chars",
+                preset, len(image_bytes), len(context_text))
 
     try:
-        # Step 1: Extract text from image via vision
-        ocr_success, extracted_text = _extract_text_from_image(image_bytes, ext)
+        # Step 1: Extract text from image via vision (with optional context)
+        ocr_success, extracted_text = _extract_text_from_image(image_bytes, ext, context_text)
         if not ocr_success:
             return jsonify({"success": False, "error": extracted_text}), 500
 
