@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometry Diagram</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#ffffff;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
+svg{display:block;max-width:100%;max-height:90vh}
+#legend{position:absolute;top:20px;left:20px;color:rgba(0,0,0,.8);font-size:13px;line-height:2.1}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.line-sw{display:inline-block;width:16px;height:2px;margin-right:6px;vertical-align:middle;border-radius:1px}
+#controls{position:absolute;top:20px;right:20px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+#controls label{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(0,0,0,.7)}
+#controls input[type=range]{width:140px}
+#info{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(0,0,0,.45);font-size:13px;text-align:center;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="legend">
+  <div><span class="dot" style="background:#5b4dc7"></span> Given edges & points</div>
+  <div><span class="dot" style="background:#d85a30"></span> Asked angle</div>
+  <div><span class="line-sw" style="background:#ba7517"></span> Angle arcs</div>
+  <div><span class="line-sw" style="background:#888780; border-top:2px dashed #888780"></span> Circle</div>
+</div>
+<div id="info">Cyclic quadrilateral ABCD with given angles at A and B</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+/**
+ * Draw an angle arc at vertex between rays vertex→p1 and vertex→p2.
+ * Works correctly in SVG coordinates (Y-down).
+ *
+ * @param {SVGElement} svg - D3 selection to append to
+ * @param {number} vx, vy - vertex position (SVG coords)
+ * @param {number} p1x, p1y - first ray endpoint (SVG coords)
+ * @param {number} p2x, p2y - second ray endpoint (SVG coords)
+ * @param {number} radius - arc radius in pixels
+ * @param {string} color - stroke color
+ * @param {number|null} expectedDeg - expected angle in degrees (helps pick correct sweep)
+ * @param {boolean} isRightAngle - if true, draw a square marker instead
+ * @returns {object} {path, labelPos} - the SVG path element and label position {x, y}
+ */
+function drawAngleArc(svg, vx, vy, p1x, p1y, p2x, p2y, radius, color, expectedDeg, isRightAngle) {
+  // Vectors from vertex to each point (in math coords: negate Y for SVG)
+  const dx1 = p1x - vx, dy1 = -(p1y - vy);
+  const dx2 = p2x - vx, dy2 = -(p2y - vy);
+  const len1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+  const len2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+  if (len1 < 1e-9 || len2 < 1e-9) return null;
+
+  // Unit vectors
+  const u1x = dx1/len1, u1y = dy1/len1;
+  const u2x = dx2/len2, u2y = dy2/len2;
+
+  // Right angle marker
+  if (isRightAngle) {
+    const s = radius * 0.7;
+    const ax = vx + u1x * s, ay = vy - u1y * s;
+    const cx = vx + u2x * s, cy = vy - u2y * s;
+    const bx = ax + u2x * s, by = ay - u2y * s;
+    svg.append("path")
+      .attr("d", "M"+ax+","+ay+"L"+bx+","+by+"L"+cx+","+cy)
+      .attr("fill", "none").attr("stroke", color).attr("stroke-width", 1.4);
+    return { labelPos: {x: bx, y: by} };
+  }
+
+  // Cross product Z-component determines sweep direction
+  const cross = u1x * u2y - u1y * u2x;
+  // Angle between vectors
+  const dot = Math.max(-1, Math.min(1, u1x*u2x + u1y*u2y));
+  const angleBetween = Math.acos(dot);
+
+  // Determine sweep: from u1 toward u2
+  // If cross >= 0, CCW sweep from u1 to u2 is the interior angle
+  // If cross < 0, CW sweep (= CCW with negative angle) is interior
+  let sweepAngle = angleBetween;
+  let startU = {x: u1x, y: u1y};
+  // perpendicular axis for parametric arc
+  let perpX, perpY;
+  if (cross >= 0) {
+    perpX = -u1y; perpY = u1x;
+  } else {
+    perpX = u1y; perpY = -u1x;
+  }
+
+  // If expectedDeg is given and the computed angle doesn't match,
+  // try the supplementary ray directions (handles tangent-line cases)
+  if (expectedDeg != null) {
+    const computedDeg = sweepAngle * 180 / Math.PI;
+    if (Math.abs(computedDeg - expectedDeg) > 25) {
+      // Try all 4 ray direction combos: (u1, u2), (-u1, u2), (u1, -u2), (-u1, -u2)
+      const candidates = [
+        {u1: {x:u1x,y:u1y}, u2: {x:u2x,y:u2y}},
+        {u1: {x:-u1x,y:-u1y}, u2: {x:u2x,y:u2y}},
+        {u1: {x:u1x,y:u1y}, u2: {x:-u2x,y:-u2y}},
+        {u1: {x:-u1x,y:-u1y}, u2: {x:-u2x,y:-u2y}},
+      ];
+      let bestDiff = 999, bestC = null;
+      for (const c of candidates) {
+        const d = Math.max(-1, Math.min(1, c.u1.x*c.u2.x + c.u1.y*c.u2.y));
+        const a = Math.acos(d) * 180 / Math.PI;
+        const diff = Math.abs(a - expectedDeg);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestC = c;
+          sweepAngle = a * Math.PI / 180;
+        }
+      }
+      if (bestC) {
+        startU = bestC.u1;
+        const cr = bestC.u1.x * bestC.u2.y - bestC.u1.y * bestC.u2.x;
+        if (cr >= 0) {
+          perpX = -bestC.u1.y; perpY = bestC.u1.x;
+        } else {
+          perpX = bestC.u1.y; perpY = -bestC.u1.x;
+        }
+      }
+    }
+  }
+
+  // Sample arc points
+  const pts = [];
+  const N = 40;
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * sweepAngle;
+    const px = vx + radius * (Math.cos(t) * startU.x + Math.sin(t) * perpX);
+    const py = vy - radius * (Math.cos(t) * startU.y + Math.sin(t) * perpY);
+    pts.push([px, py]);
+  }
+
+  // Draw arc path
+  let d = "M" + pts[0][0] + "," + pts[0][1];
+  for (let i = 1; i < pts.length; i++) d += "L" + pts[i][0] + "," + pts[i][1];
+  svg.append("path").attr("d", d)
+    .attr("fill", "none").attr("stroke", color).attr("stroke-width", 1.4);
+
+  // Label position at midpoint of arc, pushed outward
+  const midIdx = Math.floor(N / 2);
+  const labelR = radius * 1.6;
+  const tMid = (midIdx / N) * sweepAngle;
+  const lx = vx + labelR * (Math.cos(tMid) * startU.x + Math.sin(tMid) * perpX);
+  const ly = vy - labelR * (Math.cos(tMid) * startU.y + Math.sin(tMid) * perpY);
+
+  return { labelPos: {x: lx, y: ly} };
+}
+
+// Main drawing code
+(function() {
+  // Math coordinates from notes
+  const points = {
+    A: { x: 0.0, y: 0.0 },
+    B: { x: 5.0, y: 0.0 },
+    C: { x: 6.33, y: -3.65 },
+    D: { x: 1.83, y: -6.81 },
+    O: { x: 2.5, y: -2.98 }
+  };
+  const radius = 3.89;
+
+  // Viewport setup with uniform scaling
+  const W = 680, H = 500, margin = 60;
+  const allX = Object.values(points).map(p => p.x);
+  const allY = Object.values(points).map(p => p.y);
+  const xMin = Math.min(...allX) - 1.5;
+  const xMax = Math.max(...allX) + 1.5;
+  const yMin = Math.min(...allY) - 1.5;
+  const yMax = Math.max(...allY) + 1.5;
+  const xSpan = xMax - xMin;
+  const ySpan = yMax - yMin;
+  const pxPerUnit = Math.min((W - 2*margin) / xSpan, (H - 2*margin) / ySpan);
+  const cx = W/2, cy = H/2;
+  const midX = (xMin + xMax)/2;
+  const midY = (yMin + yMax)/2;
+
+  function sx(x) { return cx + (x - midX) * pxPerUnit; }
+  function sy(y) { return cy - (y - midY) * pxPerUnit; }
+  function sr(r) { return r * pxPerUnit; }
+
+  // Create SVG
+  const svg = d3.select("body").append("svg")
+    .attr("width", W).attr("height", H)
+    .attr("viewBox", `0 0 ${W} ${H}`);
+
+  // Helper to get SVG coordinates
+  const svgPoints = {};
+  for (const key in points) {
+    svgPoints[key] = { x: sx(points[key].x), y: sy(points[key].y) };
+  }
+
+  // Draw circle
+  svg.append("circle")
+    .attr("cx", svgPoints.O.x)
+    .attr("cy", svgPoints.O.y)
+    .attr("r", sr(radius))
+    .attr("fill", "none")
+    .attr("stroke", "#888780")
+    .attr("stroke-width", 1.2)
+    .attr("stroke-dasharray", "6 4");
+
+  // Draw quadrilateral edges
+  const edges = [
+    ["A", "B"], ["B", "C"], ["C", "D"], ["D", "A"]
+  ];
+  edges.forEach(([p, q]) => {
+    svg.append("line")
+      .attr("x1", svgPoints[p].x)
+      .attr("y1", svgPoints[p].y)
+      .attr("x2", svgPoints[q].x)
+      .attr("y2", svgPoints[q].y)
+      .attr("stroke", "#5b4dc7")
+      .attr("stroke-width", 1.8)
+      .attr("fill", "none");
+  });
+
+  // Draw angle at A (75°)
+  const arcA = drawAngleArc(
+    svg,
+    svgPoints.A.x, svgPoints.A.y,
+    svgPoints.D.x, svgPoints.D.y,
+    svgPoints.B.x, svgPoints.B.y,
+    25, "#ba7517", 75, false
+  );
+  if (arcA) {
+    svg.append("text")
+      .attr("x", arcA.labelPos.x)
+      .attr("y", arcA.labelPos.y)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "13px")
+      .attr("fill", "#ba7517")
+      .text("75°");
+  }
+
+  // Draw angle at B (110°)
+  const arcB = drawAngleArc(
+    svg,
+    svgPoints.B.x, svgPoints.B.y,
+    svgPoints.A.x, svgPoints.A.y,
+    svgPoints.C.x, svgPoints.C.y,
+    25, "#ba7517", 110, false
+  );
+  if (arcB) {
+    svg.append("text")
+      .attr("x", arcB.labelPos.x)
+      .attr("y", arcB.labelPos.y)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "13px")
+      .attr("fill", "#ba7517")
+      .text("110°");
+  }
+
+  // Draw asked angle at C (?)
+  const arcC = drawAngleArc(
+    svg,
+    svgPoints.C.x, svgPoints.C.y,
+    svgPoints.B.x, svgPoints.B.y,
+    svgPoints.D.x, svgPoints.D.y,
+    25, "#d85a30", null, false
+  );
+  if (arcC) {
+    svg.append("text")
+      .attr("x", arcC.labelPos.x)
+      .attr("y", arcC.labelPos.y)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "14px")
+      .attr("fill", "#d85a30")
+      .attr("font-weight", "500")
+      .text("?");
+  }
+
+  // Draw points
+  for (const key in svgPoints) {
+    const p = svgPoints[key];
+    svg.append("circle")
+      .attr("cx", p.x)
+      .attr("cy", p.y)
+      .attr("r", 4)
+      .attr("fill", key === "C" ? "#d85a30" : "#5b4dc7");
+  }
+
+  // Point labels
+  const centroid = {
+    x: (svgPoints.A.x + svgPoints.B.x + svgPoints.C.x + svgPoints.D.x) / 4,
+    y: (svgPoints.A.y + svgPoints.B.y + svgPoints.C.y + svgPoints.D.y) / 4
+  };
+  for (const key in svgPoints) {
+    const p = svgPoints[key];
+    const dx = p.x - centroid.x;
+    const dy = p.y - centroid.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const offset = 20;
+    const labelX = p.x + (dx / dist) * offset;
+    const labelY = p.y + (dy / dist) * offset;
+    svg.append("text")
+      .attr("x", labelX)
+      .attr("y", labelY)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", "14px")
+      .attr("fill", "#333")
+      .attr("font-weight", "500")
+      .text(key);
+  }
+
+  // Center label
+  svg.append("text")
+    .attr("x", svgPoints.O.x)
+    .attr("y", svgPoints.O.y - 20)
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "middle")
+    .attr("font-size", "13px")
+    .attr("fill", "#888780")
+    .text("O");
+})();
+</script>
+</body>
+</html>

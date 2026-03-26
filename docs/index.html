@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geometry Diagram Generator</title>
+<style>
+  :root { --bg: #fafaf8; --surface: #fff; --text: #1a1a1a; --text2: #666; --border: #e0dfdb; --accent: #5b4dc7; --green: #0f6e56; --orange: #d85a30; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero { padding: 80px 0 48px; text-align: center; }
+  .hero h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 12px; }
+  .hero p { font-size: 18px; color: var(--text2); max-width: 600px; margin: 0 auto 32px; }
+  .hero-stats { display: flex; justify-content: center; gap: 32px; font-size: 14px; color: var(--text2); margin-bottom: 32px; }
+  .hero-stats .val { font-weight: 700; color: var(--text); display: block; font-size: 22px; }
+
+  /* Buttons */
+  .btn { display: inline-block; padding: 12px 28px; border-radius: 6px; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; border: none; }
+  .btn-primary:hover { background: #4a3db5; }
+  .btn-secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); margin-left: 12px; }
+  .btn-secondary:hover { background: var(--accent); color: #fff; }
+
+  /* Pipeline */
+  .pipeline { padding: 48px 0; }
+  .pipeline h2 { font-size: 24px; margin-bottom: 24px; text-align: center; }
+  .pipeline-flow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .pipeline-step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 160px; }
+  .pipeline-step .step-label { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pipeline-step .step-name { font-size: 14px; font-weight: 600; margin: 4px 0; }
+  .pipeline-step .step-detail { font-size: 12px; color: var(--text2); }
+  .pipeline-arrow { font-size: 20px; color: var(--text2); }
+
+  /* Examples */
+  .examples { padding: 48px 0; }
+  .examples h2 { font-size: 24px; margin-bottom: 8px; text-align: center; }
+  .examples .subtitle { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 24px; }
+  .example-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .example-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: box-shadow 0.15s; }
+  .example-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .example-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .example-title { font-size: 13px; font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-right: 6px; }
+  .badge-2d { background: #e8f4ea; color: #0f6e56; }
+  .badge-3d { background: #ede7fb; color: #5b4dc7; }
+  .example-frame { width: 100%; height: 320px; border: none; }
+  .example-desc { padding: 8px 14px; font-size: 12px; color: var(--text2); border-top: 1px solid var(--border); }
+
+  /* Try it */
+  .try-section { padding: 48px 0 80px; }
+  .try-section h2 { font-size: 24px; margin-bottom: 8px; text-align: center; }
+  .try-section .subtitle { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 24px; }
+  .try-box { max-width: 700px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+  .try-box textarea { width: 100%; height: 80px; border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; margin-bottom: 12px; }
+  .try-box textarea:focus { outline: none; border-color: var(--accent); }
+  .try-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .try-controls select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+  .try-status { font-size: 13px; color: var(--text2); margin-bottom: 12px; min-height: 20px; }
+  .try-status.error { color: var(--orange); }
+  .try-output { width: 100%; border: 1px solid var(--border); border-radius: 6px; min-height: 400px; display: none; }
+  .try-output iframe { width: 100%; height: 450px; border: none; border-radius: 6px; }
+
+  /* Footer */
+  .footer { padding: 32px 0; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--text2); }
+  .footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Geometry Diagram Generator</h1>
+    <p>AI pipeline that converts geometry questions into interactive HTML diagrams using D3.js and Three.js</p>
+    <div class="hero-stats">
+      <div><span class="val">60/60</span> pass rate</div>
+      <div><span class="val">$0.007</span> per diagram</div>
+      <div><span class="val">~85s</span> generation</div>
+    </div>
+    <a href="#try" class="btn btn-primary">Try it Live</a>
+    <a href="https://github.com/Kairos313/geometry-diagram-generator" class="btn btn-secondary">View Source</a>
+  </section>
+
+  <!-- Pipeline -->
+  <section class="pipeline">
+    <h2>How it Works</h2>
+    <div class="pipeline-flow">
+      <div class="pipeline-step">
+        <div class="step-label">Stage 1</div>
+        <div class="step-name">Classify</div>
+        <div class="step-detail">Gemini Flash<br>2D or 3D</div>
+      </div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-step">
+        <div class="step-label">Stage 2</div>
+        <div class="step-name">Blueprint</div>
+        <div class="step-detail">Gemini Flash<br>Coordinates + labels</div>
+      </div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-step">
+        <div class="step-label">Stage 3</div>
+        <div class="step-name">Generate JS</div>
+        <div class="step-detail">DeepSeek V3.2<br>D3.js / Three.js</div>
+      </div>
+      <div class="pipeline-arrow">&rarr;</div>
+      <div class="pipeline-step">
+        <div class="step-label">Output</div>
+        <div class="step-name">Interactive HTML</div>
+        <div class="step-detail">Open in browser<br>No server needed</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Examples -->
+  <section class="examples">
+    <h2>Examples</h2>
+    <p class="subtitle">Generated from text questions. 3D diagrams support drag-to-orbit and scroll-to-zoom.</p>
+    <div class="example-grid">
+      <div class="example-card">
+        <div class="example-header">
+          <div><span class="badge badge-2d">2D</span><span class="example-title">Cyclic Quadrilateral Angles</span></div>
+        </div>
+        <iframe class="example-frame" src="examples/2d_cyclic_quadrilateral.html"></iframe>
+        <div class="example-desc">ABCD inscribed in circle. DAB = 75, ABC = 110. Find BCD.</div>
+      </div>
+      <div class="example-card">
+        <div class="example-header">
+          <div><span class="badge badge-2d">2D</span><span class="example-title">Exterior Angle of Triangle</span></div>
+        </div>
+        <iframe class="example-frame" src="examples/2d_exterior_angle.html"></iframe>
+        <div class="example-desc">Triangle ABC, BC extended to D. BAC = 55, ABC = 70. Find ACD.</div>
+      </div>
+      <div class="example-card">
+        <div class="example-header">
+          <div><span class="badge badge-2d">2D</span><span class="example-title">Line-Circle Intersection</span></div>
+        </div>
+        <iframe class="example-frame" src="examples/2d_line_circle_intersection.html"></iframe>
+        <div class="example-desc">(x-2)^2 + (y-3)^2 = 25 and y = x + 4. Find intersection points.</div>
+      </div>
+      <div class="example-card">
+        <div class="example-header">
+          <div><span class="badge badge-2d">2D</span><span class="example-title">Parallelogram Diagonal</span></div>
+        </div>
+        <iframe class="example-frame" src="examples/2d_parallelogram_diagonal.html"></iframe>
+        <div class="example-desc">ABCD with AB = 10, BC = 7, angle ABC = 65. Find diagonal AC.</div>
+      </div>
+      <div class="example-card">
+        <div class="example-header">
+          <div><span class="badge badge-3d">3D</span><span class="example-title">Cuboid Space Diagonal</span></div>
+        </div>
+        <iframe class="example-frame" src="examples/3d_cuboid_space_diagonal.html"></iframe>
+        <div class="example-desc">ABCDEFGH with AB = 8, BC = 6, CG = 10. Find diagonal AG.</div>
+      </div>
+      <div class="example-card">
+        <div class="example-header">
+          <div><span class="badge badge-3d">3D</span><span class="example-title">Square Pyramid Slant Height</span></div>
+        </div>
+        <iframe class="example-frame" src="examples/3d_pyramid_slant_height.html"></iframe>
+        <div class="example-desc">VABCD, base 8cm, height 6cm. Find slant height to midpoint of AB.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Try it -->
+  <section class="try-section" id="try">
+    <h2>Try it Live</h2>
+    <p class="subtitle">Enter a geometry question and get an interactive diagram. Rate limited to 10/min.</p>
+    <div class="try-box">
+      <textarea id="question" placeholder="Example: In triangle PQR, PQ = 7cm, QR = 8cm, and angle PQR = 120 degrees. Find the length of PR."></textarea>
+      <div class="try-controls">
+        <select id="dim">
+          <option value="auto">Auto-detect dimension</option>
+          <option value="2d">2D</option>
+          <option value="3d">3D</option>
+        </select>
+        <button class="btn btn-primary" id="generateBtn" onclick="generate()">Generate Diagram</button>
+      </div>
+      <div class="try-status" id="status"></div>
+      <div class="try-output" id="output"></div>
+    </div>
+  </section>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    Built by Shayan &middot; <a href="https://github.com/Kairos313/geometry-diagram-generator">GitHub</a>
+  </div>
+</footer>
+
+<script>
+const API_URL = "https://geometry-diagram-api.onrender.com";
+
+async function generate() {
+  const question = document.getElementById("question").value.trim();
+  if (!question) { setStatus("Please enter a question.", true); return; }
+
+  const dim = document.getElementById("dim").value;
+  const btn = document.getElementById("generateBtn");
+  const output = document.getElementById("output");
+
+  btn.disabled = true;
+  btn.textContent = "Generating...";
+  output.style.display = "none";
+  setStatus("Classifying question...");
+
+  try {
+    const startTime = Date.now();
+
+    // Update status as time passes
+    const statusTimer = setInterval(() => {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+      if (elapsed < 5) setStatus("Classifying question...");
+      else if (elapsed < 20) setStatus("Computing coordinates and geometry... (" + elapsed + "s)");
+      else setStatus("Generating interactive diagram... (" + elapsed + "s)");
+    }, 1000);
+
+    const resp = await fetch(API_URL + "/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question, dimension: dim }),
+    });
+
+    clearInterval(statusTimer);
+    const data = await resp.json();
+
+    if (data.success) {
+      setStatus("Done in " + data.duration + "s (" + data.dimension.toUpperCase() + ")");
+      output.style.display = "block";
+      output.innerHTML = '<iframe srcdoc="' + escapeHtml(data.html) + '" style="width:100%;height:450px;border:none;border-radius:6px;"></iframe>';
+    } else {
+      setStatus("Error: " + data.error, true);
+    }
+  } catch (e) {
+    setStatus("Connection error: " + e.message + ". Is the API server running?", true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Generate Diagram";
+  }
+}
+
+function setStatus(msg, isError) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "try-status" + (isError ? " error" : "");
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+</script>
+</body>
+</html>

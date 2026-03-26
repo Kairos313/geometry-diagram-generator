@@ -441,6 +441,131 @@ def generate_diagram(
     }
 
 
+OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1"
+OPENROUTER_GEMINI_MODEL = "google/gemini-2.5-flash-preview"
+OPENROUTER_DEEPSEEK_MODEL = "deepseek/deepseek-chat"
+
+
+def generate_diagram_openrouter(
+    question_text,          # type: str
+    dimension_type="auto",  # type: str
+    openrouter_key=None,    # type: Optional[str]
+):
+    # type: (...) -> dict
+    """Full pipeline using OpenRouter for both Gemini and DeepSeek.
+
+    Used by the website API server. Does not save to disk.
+    Returns dict with: success, html, dimension, duration, error
+    """
+    from openai import OpenAI
+    from js_pipeline_prompts import get_js_prompt
+    from generate_code_js import extract_html, postprocess_js
+
+    if not openrouter_key:
+        openrouter_key = os.getenv("OPENROUTER_WEBSITE_API_KEY")
+    if not openrouter_key:
+        return {"success": False, "html": "", "dimension": "2d",
+                "duration": 0, "error": "OPENROUTER_WEBSITE_API_KEY not set"}
+
+    client = OpenAI(base_url=OPENROUTER_ENDPOINT, api_key=openrouter_key)
+    total_start = time.time()
+
+    # Stage 1: Classify via OpenRouter Gemini
+    if dimension_type == "auto":
+        try:
+            classify_resp = client.chat.completions.create(
+                model=OPENROUTER_GEMINI_MODEL,
+                messages=[{
+                    "role": "user",
+                    "content": "Classify this geometry question as exactly one of: 2d, 3d, coordinate_2d, coordinate_3d.\n\nQuestion: {}\n\nReply with ONLY the classification.".format(question_text),
+                }],
+                max_tokens=10,
+                temperature=0.0,
+            )
+            dim_text = (classify_resp.choices[0].message.content or "2d").strip().lower()
+            if dim_text in ("2d", "3d", "coordinate_2d", "coordinate_3d"):
+                dimension_type = dim_text
+            else:
+                dimension_type = "2d"
+            logger.info("Classified as: {}".format(dimension_type))
+        except Exception as e:
+            logger.warning("Classification failed ({}), defaulting to 2d".format(e))
+            dimension_type = "2d"
+
+    render_dim = dimension_type.replace("coordinate_", "")
+
+    # Stage 2: Hybrid blueprint via OpenRouter Gemini
+    try:
+        from js_pipeline_prompts_hybrid import get_hybrid_blueprint_prompt
+        blueprint_prompt = get_hybrid_blueprint_prompt(render_dim)
+
+        blueprint_resp = client.chat.completions.create(
+            model=OPENROUTER_GEMINI_MODEL,
+            messages=[
+                {"role": "system", "content": blueprint_prompt},
+                {"role": "user", "content": "Question: {}".format(question_text)},
+            ],
+            max_tokens=8000,
+            temperature=0.1,
+        )
+        raw_blueprint = blueprint_resp.choices[0].message.content or ""
+
+        json_match = re.search(r'\{[\s\S]*\}', raw_blueprint)
+        if not json_match:
+            return {"success": False, "html": "", "dimension": render_dim,
+                    "duration": time.time() - total_start,
+                    "error": "No JSON in blueprint response"}
+
+        math_notes = blueprint_json_to_notes(json_match.group(0), question_text)
+        logger.info("Blueprint computed via OpenRouter ({} chars)".format(len(math_notes)))
+
+    except Exception as e:
+        return {"success": False, "html": "", "dimension": render_dim,
+                "duration": time.time() - total_start,
+                "error": "Blueprint failed: {}".format(e)}
+
+    # Stage 3: JS code via OpenRouter DeepSeek
+    try:
+        system_prompt = get_js_prompt(render_dim)
+        user_message = (
+            "=== ORIGINAL QUESTION ===\n{q}\n\n"
+            "=== COMPUTATION NOTES ===\n{notes}\n=== END ==="
+        ).format(q=question_text, notes=math_notes)
+
+        js_resp = client.chat.completions.create(
+            model=OPENROUTER_DEEPSEEK_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            max_tokens=16384,
+            temperature=0.0,
+        )
+        content = js_resp.choices[0].message.content or ""
+        html = extract_html(content)
+        if not html:
+            return {"success": False, "html": "", "dimension": render_dim,
+                    "duration": time.time() - total_start,
+                    "error": "No valid HTML in DeepSeek response"}
+
+        html = postprocess_js(html)
+        duration = time.time() - total_start
+        logger.info("Pipeline completed via OpenRouter in {:.1f}s".format(duration))
+
+        return {
+            "success": True,
+            "html": html,
+            "dimension": render_dim,
+            "duration": round(duration, 1),
+            "error": None,
+        }
+
+    except Exception as e:
+        return {"success": False, "html": "", "dimension": render_dim,
+                "duration": time.time() - total_start,
+                "error": "JS generation failed: {}".format(e)}
+
+
 def main():
     parser = argparse.ArgumentParser(description="3-stage JS geometry pipeline")
     parser.add_argument("--question", "-q", required=True, help="Geometry question text")
