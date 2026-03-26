@@ -1,27 +1,9 @@
-# Core dependencies for geometry video generation pipeline
-manim>=0.18.0
-moviepy>=1.0.3
-opencv-python>=4.8.0
-numpy>=1.24.0
-pillow>=10.0.0
-requests>=2.31.0
+# Core dependencies for geometry diagram generator
 python-dotenv>=1.0.0
 
-# AI API (Google Gemini)
-google-genai>=1.0.0
-openai>=1.0.0
+# AI APIs
+google-genai>=1.0.0      # Gemini Flash (classify + blueprint)
+openai>=1.0.0            # DeepSeek V3.2 via Azure endpoint
 
-# Audio processing
-elevenlabs>=0.2.0
-pydub>=0.25.0
-
-# Video processing
-ffmpeg-python>=0.2.0
-
-# Utilities
-tqdm>=4.65.0
-pathlib2>=2.3.7
-typing-extensions>=4.7.0
-
-# Web demo
+# Web UI (batch testing)
 flask>=3.0.0

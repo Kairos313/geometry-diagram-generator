@@ -12,8 +12,15 @@ build/
 # Generated output
 output/
 media/
+test_output/
 frontend/output/
 frontend/test/output/
+
+# Logs and temp files
+*.log
+pipeline.log
+coordinates.txt
+coordinates.json
 
 # Playwright
 .playwright-mcp/
@@ -29,11 +36,6 @@ package-lock.json
 batch_gallery*.html
 batch_report*
 
-# Old experiment scripts (not part of pipeline)
-batch_render_js.py
-batch_test_js.py
-generate_report.py
-
 # OS
 .DS_Store
 Thumbs.db
@@ -45,3 +47,9 @@ Thumbs.db
 # Claude Code instructions (local only)
 CLAUDE.md
 frontend/CLAUDE.md
+
+# Legacy experiment scripts at root (moved to legacy/)
+batch_render_js.py
+batch_test_js.py
+generate_report.py
+math_solution_pipeline/
