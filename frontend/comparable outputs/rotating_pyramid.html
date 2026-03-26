@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Right Pyramid VABCD – 3D View</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+canvas{display:block}
+#info{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:13px;text-align:center;pointer-events:none;letter-spacing:.3px}
+#legend{position:absolute;top:20px;left:20px;color:rgba(255,255,255,.85);font-size:13px;line-height:2}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+#controls{position:absolute;top:20px;right:20px;display:flex;gap:8px}
+#controls button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .2s}
+#controls button:hover{background:rgba(255,255,255,.2)}
+#controls button.active{background:rgba(100,140,255,.35);border-color:rgba(100,140,255,.6)}
+</style>
+</head>
+<body>
+<div id="legend">
+  <div><span class="dot" style="background:#7b68ee"></span>Apex V & vertices</div>
+  <div><span class="dot" style="background:#ff6b4a"></span>M (midpoint of VA)</div>
+  <div><span class="dot" style="background:#4ae0b0"></span>Height = 12 cm</div>
+  <div><span class="dot" style="background:#ff6b4a;opacity:.5"></span>M to base = 6 cm</div>
+</div>
+<div id="controls">
+  <button id="btnRotate" class="active" onclick="toggleRotate()">Auto-rotate</button>
+  <button onclick="resetCam()">Reset view</button>
+</div>
+<div id="info">Drag to orbit · Scroll to zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,1000);
+camera.position.set(22,18,22);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x1a1a2e);
+document.body.appendChild(renderer.domElement);
+
+// Lights
+scene.add(new THREE.AmbientLight(0xffffff,0.5));
+const dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(10,20,15);scene.add(dl);
+
+const S=10,H=12,HS=S/2;
+
+// Base vertices
+const A=new THREE.Vector3(-HS,0,-HS);
+const B=new THREE.Vector3(HS,0,-HS);
+const C=new THREE.Vector3(HS,0,HS);
+const D=new THREE.Vector3(-HS,0,HS);
+const V=new THREE.Vector3(0,H,0);
+const M=new THREE.Vector3().lerpVectors(V,A,0.5);
+const Mfoot=new THREE.Vector3(M.x,0,M.z);
+const O=new THREE.Vector3(0,0,0);
+
+// Base plane (translucent)
+const baseGeo=new THREE.PlaneGeometry(S,S);
+baseGeo.rotateX(-Math.PI/2);
+const baseMat=new THREE.MeshPhongMaterial({color:0x4466aa,transparent:true,opacity:0.18,side:THREE.DoubleSide});
+scene.add(new THREE.Mesh(baseGeo,baseMat));
+
+// Grid on base
+const grid=new THREE.GridHelper(S,10,0x334466,0x222244);
+grid.position.y=0.01;
+scene.add(grid);
+
+// Pyramid edges
+function addEdge(a,b,color,dashed){
+  const mat=dashed?new THREE.LineDashedMaterial({color,dashSize:.4,gapSize:.2,linewidth:1}):new THREE.LineBasicMaterial({color});
+  const geo=new THREE.BufferGeometry().setFromPoints([a,b]);
+  const line=new THREE.Line(geo,mat);
+  if(dashed)line.computeLineDistances();
+  scene.add(line);
+}
+const ec=0x7b68ee;
+// Base edges
+addEdge(A,B,ec);addEdge(B,C,ec);addEdge(C,D,ec);addEdge(D,A,ec);
+// Lateral edges
+addEdge(V,A,ec);addEdge(V,B,ec);addEdge(V,C,ec);addEdge(V,D,ec);
+
+// Height line V→O
+addEdge(V,O,0x4ae0b0,true);
+
+// M perpendicular to base
+addEdge(M,Mfoot,0xff6b4a,true);
+
+// Spheres at vertices
+function addSphere(pos,color,r=0.25){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,16),new THREE.MeshPhongMaterial({color,emissive:color,emissiveIntensity:0.4}));
+  m.position.copy(pos);scene.add(m);
+}
+[A,B,C,D].forEach(v=>addSphere(v,0x7b68ee));
+addSphere(V,0x7b68ee,0.3);
+addSphere(O,0x4ae0b0,0.2);
+addSphere(M,0xff6b4a,0.35);
+addSphere(Mfoot,0xff6b4a,0.2);
+
+// Labels as sprites
+function makeLabel(text,pos,color='#ffffff',size=0.7){
+  const c=document.createElement('canvas');c.width=256;c.height=64;
+  const ctx=c.getContext('2d');
+  ctx.font='bold 36px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(text,128,32);
+  const tex=new THREE.CanvasTexture(c);
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false});
+  const sp=new THREE.Sprite(mat);
+  sp.position.copy(pos).add(new THREE.Vector3(0,0.6,0));
+  sp.scale.set(size*4,size,1);
+  scene.add(sp);
+}
+makeLabel('V',V.clone().add(new THREE.Vector3(0,0.4,0)),'#b8a9ff');
+makeLabel('A',A,'#b8a9ff');
+makeLabel('B',B,'#b8a9ff');
+makeLabel('C',C,'#b8a9ff');
+makeLabel('D',D,'#b8a9ff');
+makeLabel("O'",O.clone().add(new THREE.Vector3(0.6,0,0)),'#4ae0b0',0.55);
+makeLabel('M',M.clone().add(new THREE.Vector3(-0.5,0,0)),'#ff6b4a');
+makeLabel("M'",Mfoot.clone().add(new THREE.Vector3(-0.5,-0.3,0)),'#ff6b4a',0.5);
+makeLabel('12 cm',new THREE.Vector3(0.8,H/2,0),'#4ae0b0',0.5);
+makeLabel('6 cm',new THREE.Vector3(M.x-1.4,M.y/2,M.z),'#ff6b4a',0.5);
+makeLabel('10 cm',new THREE.Vector3(0,0.05,-HS-1),'#8888bb',0.45);
+
+// Orbit controls (manual)
+let autoRotate=true,isDragging=false,prevMouse={x:0,y:0};
+let theta=Math.PI/4,phi=Math.PI/5,radius=32;
+
+function updateCam(){
+  camera.position.set(
+    radius*Math.cos(phi)*Math.sin(theta),
+    radius*Math.sin(phi)+6,
+    radius*Math.cos(phi)*Math.cos(theta)
+  );
+  camera.lookAt(0,5,0);
+}
+updateCam();
+
+renderer.domElement.addEventListener('pointerdown',e=>{isDragging=true;prevMouse={x:e.clientX,y:e.clientY}});
+window.addEventListener('pointerup',()=>isDragging=false);
+window.addEventListener('pointermove',e=>{
+  if(!isDragging)return;
+  const dx=e.clientX-prevMouse.x,dy=e.clientY-prevMouse.y;
+  theta-=dx*0.008;
+  phi=Math.max(-0.2,Math.min(Math.PI/2.2,phi+dy*0.008));
+  prevMouse={x:e.clientX,y:e.clientY};
+  updateCam();
+});
+renderer.domElement.addEventListener('wheel',e=>{
+  radius=Math.max(12,Math.min(60,radius+e.deltaY*0.03));
+  updateCam();
+},{passive:true});
+
+function toggleRotate(){
+  autoRotate=!autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active',autoRotate);
+}
+function resetCam(){theta=Math.PI/4;phi=Math.PI/5;radius=32;updateCam()}
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRotate&&!isDragging){theta+=0.006;updateCam()}
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>

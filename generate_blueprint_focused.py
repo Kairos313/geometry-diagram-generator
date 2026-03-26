@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
-Stage 1: Generate geometric blueprint using LLM classifier + focused prompts.
+Stage 1: Generate geometric blueprint using LLM classifier + adaptive prompts.
 
 This approach:
-1. Uses LLM to classify question type (2d, 3d, coordinate_2d, coordinate_3d)
-2. Selects appropriate focused prompt (~1200 tokens each, 70% smaller)
-3. Generates blueprint with optimal prompt
+1. Uses LLM to classify question type (binary: 2d or 3d)
+2. Selects adaptive prompt that handles both traditional and coordinate geometry
+3. Blueprint LLM decides axes=true/false based on question content
 
 Total cost: Classifier (~$0.0001) + Blueprint (~$0.003) = ~$0.0031
-vs Comprehensive: ~$0.005
-Savings: ~38% on blueprint generation
 
 Output: coordinates.json (JSON blueprint)
 
@@ -29,16 +27,16 @@ from typing import Optional
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from openai import OpenAI
 
 from classify_geometry_type import classify_geometry_type
-from coordinate_geometry_prompts import (
-    Question_to_Blueprint_2D,
-    Question_to_Blueprint_3D,
-    Question_to_Blueprint_Coordinate_2D,
-    Question_to_Blueprint_Coordinate_3D,
-)
+from individual_prompts import get_adaptive_blueprint_prompt
 
 load_dotenv(".env")
+
+# OpenRouter endpoint for DeepSeek-V3.2-Speciale (with reasoning)
+OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1"
+OPENROUTER_BLUEPRINT_MODEL = "deepseek/deepseek-v3.2-speciale"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -81,17 +79,21 @@ def generate_blueprint(
     output_dir,       # type: str
     image_path=None,  # type: Optional[str]
     dimension_type=None,  # type: Optional[str]
+    use_openrouter=False,   # type: bool
+    openrouter_key=None,    # type: Optional[str]
 ):
     # type: (...) -> dict
-    """Call Gemini to generate geometric blueprint using classifier + focused prompts.
+    """Generate geometric blueprint using Gemini (default) or OpenRouter DeepSeek.
 
     Args:
-        api_key: Gemini API key
+        api_key: Gemini API key (always required — used for classification)
         question_text: The geometry question text
         output_dir: Output directory for blueprint file
-        image_path: Optional path to question image
+        image_path: Optional path to question image (Gemini path only)
         dimension_type: Optional explicit dimension type (skips classification)
                        One of: "2d", "3d", "coordinate_2d", "coordinate_3d"
+        use_openrouter: If True, use OpenRouter DeepSeek-V3.2-Speciale with reasoning.
+        openrouter_key: OpenRouter API key (required when use_openrouter=True).
 
     Returns:
         dict with keys: success, blueprint, coordinates_file, dimension,
@@ -117,16 +119,9 @@ def generate_blueprint(
     else:
         logger.info(f"Using explicit dimension type: {dimension_type}")
 
-    # Step 2: Select appropriate focused prompt
-    prompt_map = {
-        "2d": Question_to_Blueprint_2D,
-        "3d": Question_to_Blueprint_3D,
-        "coordinate_2d": Question_to_Blueprint_Coordinate_2D,
-        "coordinate_3d": Question_to_Blueprint_Coordinate_3D,
-    }
-
-    prompt_template = prompt_map.get(dimension_type, Question_to_Blueprint_2D)
-    logger.info(f"=== Step 2: Generating blueprint with {dimension_type} prompt ===")
+    # Step 2: Select adaptive prompt (handles both traditional and coordinate geometry)
+    prompt_template = get_adaptive_blueprint_prompt(dimension_type)
+    logger.info(f"=== Step 2: Generating blueprint with {dimension_type} adaptive prompt ===")
 
     # Build content parts
     text_prompt = (
@@ -146,24 +141,51 @@ def generate_blueprint(
 
     try:
         start = time.time()
-        response = client.models.generate_content(
-            model="gemini-3-flash-preview",
-            contents=content_parts,
-            config={
-                "max_output_tokens": 20000,
-                "temperature": 0.1,
-                "thinking_config": types.ThinkingConfig(thinking_budget=8000),
-            },
-        )
-        elapsed = time.time() - start
 
-        blueprint_text = response.text
-        usage = response.usage_metadata
+        if use_openrouter and openrouter_key:
+            logger.info(f"=== Step 2: Generating blueprint via OpenRouter {OPENROUTER_BLUEPRINT_MODEL} (reasoning=True) ===")
+            or_client = OpenAI(
+                base_url=OPENROUTER_ENDPOINT,
+                api_key=openrouter_key,
+            )
+            response = or_client.chat.completions.create(
+                model=OPENROUTER_BLUEPRINT_MODEL,
+                messages=[{"role": "user", "content": text_prompt}],
+                max_tokens=20000,
+                temperature=0.1,
+                extra_body={"reasoning": {"enabled": True}},
+            )
+            elapsed = time.time() - start
 
-        # Calculate blueprint cost
-        input_cost = (usage.prompt_token_count / 1e6) * 0.50
-        output_cost = (usage.candidates_token_count / 1e6) * 3.00
-        blueprint_cost = input_cost + output_cost
+            blueprint_text = response.choices[0].message.content
+            usage = response.usage
+            prompt_tokens_count = usage.prompt_tokens if usage else 0
+            completion_tokens_count = usage.completion_tokens if usage else 0
+            total_tokens_count = usage.total_tokens if usage else 0
+            # DeepSeek V3.2 pricing (Speciale pricing may differ)
+            input_cost = (prompt_tokens_count / 1e6) * 0.28
+            output_cost = (completion_tokens_count / 1e6) * 0.42
+            blueprint_cost = input_cost + output_cost
+        else:
+            response = client.models.generate_content(
+                model="gemini-3-flash-preview",
+                contents=content_parts,
+                config={
+                    "max_output_tokens": 40000,
+                    "temperature": 0.1,
+                    "thinking_config": types.ThinkingConfig(thinking_budget=8000),
+                },
+            )
+            elapsed = time.time() - start
+
+            blueprint_text = response.text
+            usage = response.usage_metadata
+            prompt_tokens_count = usage.prompt_token_count
+            completion_tokens_count = usage.candidates_token_count
+            total_tokens_count = usage.total_token_count
+            input_cost = (prompt_tokens_count / 1e6) * 0.50
+            output_cost = (completion_tokens_count / 1e6) * 3.00
+            blueprint_cost = input_cost + output_cost
 
         logger.info(f"Blueprint generated: {elapsed:.2f}s, ${blueprint_cost:.6f}")
 
@@ -195,9 +217,9 @@ def generate_blueprint(
             "coordinates_file": coords_file,
             "api_call_duration": elapsed,
             "total_duration": total_duration,
-            "prompt_tokens": usage.prompt_token_count,
-            "completion_tokens": usage.candidates_token_count,
-            "total_tokens": usage.total_token_count,
+            "prompt_tokens": prompt_tokens_count,
+            "completion_tokens": completion_tokens_count,
+            "total_tokens": total_tokens_count,
             "dimension": dimension_type,
             "classifier_cost": classifier_cost,
             "blueprint_cost": blueprint_cost,
@@ -241,7 +263,7 @@ def main():
     )
     parser.add_argument(
         "--dimension-type",
-        choices=["2d", "3d", "coordinate_2d", "coordinate_3d"],
+        choices=["2d", "3d"],
         help="Explicit dimension type (skips classification)",
     )
     parser.add_argument(

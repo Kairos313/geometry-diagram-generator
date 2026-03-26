@@ -26,15 +26,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from diagram_prompts import (
-    Blueprint_to_Code_2D_Gemini,
-    Blueprint_to_Code_3D_Gemini,
-    Blueprint_to_Code_Coordinate,
-    Blueprint_to_Code_2D_Compact,
-    Blueprint_to_Code_3D_Compact,
-    Blueprint_to_Code_2D_DeepSeek,
-    Blueprint_to_Code_3D_DeepSeek,
-)
+from individual_prompts import get_adaptive_code_prompt
 
 load_dotenv(".env")
 
@@ -48,34 +40,34 @@ logger = logging.getLogger(__name__)
 DEEPSEEK_ENDPOINT = "https://raksh-m4jj47jc-japaneast.services.ai.azure.com/openai/v1/"
 DEEPSEEK_MODEL = "DeepSeek-V3.2"
 
+# OpenRouter endpoint for DeepSeek-V3.2-Speciale (with reasoning)
+OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1"
+OPENROUTER_CODEGEN_MODEL = "deepseek/deepseek-v3.2-speciale"
+
 
 def detect_dimension(blueprint_text, is_json=False):
     # type: (str, bool) -> str
     """Detect dimension type from the blueprint.
 
-    First checks for explicit DIMENSION declaration (preferred).
-    Falls back to Z-coordinate parsing if not found.
+    Returns "2d" or "3d" only.
 
-    Returns "2d", "3d", or "coordinate_2d".
+    For JSON blueprints, reads the "dimension" field.
+    For text blueprints, checks DIMENSION declaration or parses Z coords.
     """
     # Handle JSON blueprint
     if is_json:
         try:
             data = json.loads(blueprint_text)
             dim = data.get("dimension", "2d").lower()
-            if dim in ("2d", "3d", "coordinate_2d"):
+            # Normalize coordinate_* to plain 2d/3d
+            dim = dim.replace("coordinate_", "")
+            if dim in ("2d", "3d"):
                 logger.info(f"Found dimension in JSON blueprint: {dim}")
                 return dim
         except json.JSONDecodeError:
             pass
         logger.warning("Could not parse JSON blueprint dimension; defaulting to 2d")
         return "2d"
-
-    # First, check for COORDINATE_2D declaration
-    coord_match = re.search(r'\*{0,2}DIMENSION:\s*(COORDINATE_2D)\*{0,2}', blueprint_text, re.IGNORECASE)
-    if coord_match:
-        logger.info("Found explicit dimension declaration: coordinate_2d")
-        return "coordinate_2d"
 
     # Check for explicit 2D/3D DIMENSION declaration
     match = re.search(r'\*{0,2}DIMENSION:\s*(2D|3D)\*{0,2}', blueprint_text, re.IGNORECASE)
@@ -117,42 +109,37 @@ def generate_render_code(
     question_text="",  # type: str
     error_context=None,  # type: Optional[str]
     compact=False,     # type: bool
+    use_openrouter=False,   # type: bool
+    openrouter_key=None,    # type: Optional[str]
 ):
     # type: (...) -> dict
-    """Call DeepSeek-V3.2 via Azure OpenAI to generate rendering code.
+    """Call DeepSeek to generate rendering code.
 
     Args:
         compact: If True, use compact prompts for JSON blueprints.
+        use_openrouter: If True, use OpenRouter DeepSeek-V3.2-Speciale with reasoning.
+        openrouter_key: OpenRouter API key (required when use_openrouter=True).
 
     Returns dict with keys: success, code, api_call_duration, tokens.
     """
-    client = OpenAI(
-        base_url=DEEPSEEK_ENDPOINT,
-        api_key=api_key,
-    )
+    if use_openrouter and openrouter_key:
+        client = OpenAI(
+            base_url=OPENROUTER_ENDPOINT,
+            api_key=openrouter_key,
+        )
+        model = OPENROUTER_CODEGEN_MODEL
+    else:
+        client = OpenAI(
+            base_url=DEEPSEEK_ENDPOINT,
+            api_key=api_key,
+        )
+        model = DEEPSEEK_MODEL
 
-    # Select target library and prompt based on dimension type and compact mode
-    # DeepSeek-specific prompts have stronger guardrails (helper imports, prohibited APIs)
-    if dimension_type == "coordinate_2d":
-        target_library = "matplotlib"
-        system_prompt = Blueprint_to_Code_Coordinate
-        prompt_label = "COORDINATE"
-    elif dimension_type == "3d":
-        target_library = "manim"
-        if compact:
-            system_prompt = Blueprint_to_Code_3D_DeepSeek
-            prompt_label = "DEEPSEEK-3D"
-        else:
-            system_prompt = Blueprint_to_Code_3D_Gemini
-            prompt_label = "VERBOSE-3D"
-    else:  # "2d"
-        target_library = "matplotlib"
-        if compact:
-            system_prompt = Blueprint_to_Code_2D_DeepSeek
-            prompt_label = "DEEPSEEK-2D"
-        else:
-            system_prompt = Blueprint_to_Code_2D_Gemini
-            prompt_label = "VERBOSE-2D"
+    # Select target library and adaptive prompt based on dimension type
+    is_3d = dimension_type == "3d"
+    target_library = "manim" if is_3d else "matplotlib"
+    system_prompt = get_adaptive_code_prompt(dimension_type)
+    prompt_label = "ADAPTIVE-3D" if is_3d else "ADAPTIVE-2D"
 
     logger.info(f"Using {prompt_label} prompt for {target_library} code generation")
 
@@ -184,14 +171,21 @@ def generate_render_code(
 
     try:
         start = time.time()
-        logger.info(f"Calling DeepSeek-V3.2 for {target_library} code generation...")
+        if use_openrouter and openrouter_key:
+            logger.info(f"Calling OpenRouter {OPENROUTER_CODEGEN_MODEL} (reasoning=True) for {target_library} code generation...")
+        else:
+            logger.info(f"Calling Azure {DEEPSEEK_MODEL} for {target_library} code generation...")
 
-        response = client.chat.completions.create(
-            model=DEEPSEEK_MODEL,
+        create_kwargs = dict(
+            model=model,
             messages=messages,
             max_tokens=16384,
             temperature=0.0,
         )
+        if use_openrouter and openrouter_key:
+            create_kwargs["extra_body"] = {"reasoning": {"enabled": True}}
+
+        response = client.chat.completions.create(**create_kwargs)
         elapsed = time.time() - start
 
         message = response.choices[0].message
@@ -290,6 +284,20 @@ def postprocess_code(code, dimension_type):
 
     # --- 3D Manim patches ---
     if dimension_type == "3d":
+        # 0. Inject manim config block if missing entirely
+        #    DeepSeek sometimes omits config lines, causing black background + wrong resolution.
+        if "config.background_color" not in code and "from manim import *" in code:
+            config_block = (
+                "from manim import *\n\n"
+                'config.background_color = "#FFFFFF"\n'
+                "config.pixel_height = 360\n"
+                "config.pixel_width = 640\n"
+                "config.frame_rate = 10\n"
+                'config.format = "gif"\n'
+                'config.output_file = "diagram"\n'
+            )
+            code = code.replace("from manim import *\n", config_block, 1)
+            patches_applied.append("injected missing manim config block")
         # 1. Replace Polyline(...) with VMobject(stroke_width=2).set_points_as_corners([...])
         #    Handles:  Polyline(*arc_points, color=X, stroke_width=N)
         polyline_pattern = re.compile(
@@ -363,8 +371,25 @@ def postprocess_code(code, dimension_type):
         # Fix Manim media path to match new frame rate
         code = re.sub(r'360p15', '360p10', code)
 
+        # 9. Fix broken label pattern: remove .rotate(PI/2, axis=RIGHT) on any object.
+        #    add_fixed_orientation_mobjects makes labels face the camera (billboard effect).
+        #    The rotate was the problem — without it, add_fixed_orientation_mobjects works fine.
+        rotated_before = len(re.findall(r'\.rotate\(PI\s*/\s*2\s*,\s*axis\s*=\s*RIGHT\)', code))
+        code = re.sub(r'\n(\s+)\w+\.rotate\(PI\s*/\s*2\s*,\s*axis\s*=\s*RIGHT\)', '', code)
+        if rotated_before:
+            patches_applied.append(f"removed {rotated_before}x .rotate(PI/2,RIGHT) (conflicted with add_fixed_orientation_mobjects)")
+
+        # 10. Fix camera rotation: enforce full 360° in 4 seconds (TAU/4 rad/s)
+        if 'begin_ambient_camera_rotation' in code:
+            code = re.sub(
+                r'begin_ambient_camera_rotation\(rate\s*=\s*[0-9.TAU/PI*]+\)',
+                'begin_ambient_camera_rotation(rate=TAU/4)',
+                code,
+            )
+            patches_applied.append("camera rotation: rate→TAU/4 (full 360° in 4s)")
+
     # --- 2D Matplotlib patches ---
-    if dimension_type in ("2d", "coordinate_2d"):
+    if dimension_type == "2d":
         # 1. Fix malformed plt.subplots() syntax error
         #    DeepSeek sometimes generates: fig, ax = plt.subplots(1, 1, figsize=(8.54, 4.80)
         #                                    fig.subplots_adjust(...), dpi=150)
@@ -462,7 +487,7 @@ def ensure_helpers(code_dir, dimension_type="3d"):
             shutil.copy2(str(MANIM_HELPERS_PATH), str(dst))
 
     # Always copy matplotlib_helpers for 2D
-    if dimension_type in ("2d", "coordinate_2d"):
+    if dimension_type == "2d":
         dst = Path(code_dir) / "matplotlib_helpers.py"
         if MATPLOTLIB_HELPERS_PATH.exists() and not dst.exists():
             shutil.copy2(str(MATPLOTLIB_HELPERS_PATH), str(dst))
@@ -594,7 +619,7 @@ def main():
 
     # Validate format for dimension type
     output_format = args.format
-    if dimension_type in ("2d", "coordinate_2d") and output_format in ("gif", "mp4"):
+    if dimension_type == "2d" and output_format in ("gif", "mp4"):
         logger.info(f"2D geometry uses static images; switching from {output_format} to png")
         output_format = "png"
     if dimension_type == "3d" and output_format in ("png", "svg"):

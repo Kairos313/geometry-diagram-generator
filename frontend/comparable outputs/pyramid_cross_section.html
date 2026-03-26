@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Square Pyramid – Cross Section at Height 6cm</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#ffffff;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+canvas{display:block}
+#info{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(0,0,0,.5);font-size:13px;text-align:center;pointer-events:none;letter-spacing:.3px}
+#legend{position:absolute;top:20px;left:20px;color:rgba(0,0,0,.75);font-size:13px;line-height:2}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+#controls{position:absolute;top:20px;right:20px;display:flex;gap:8px}
+#controls button{background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.15);color:#333;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .2s}
+#controls button:hover{background:rgba(0,0,0,.1)}
+#controls button.active{background:rgba(100,140,255,.2);border-color:rgba(100,140,255,.5);color:#1a4eaa}
+#answer{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);color:#0f6e56;font-size:15px;font-weight:600;text-align:center;pointer-events:none;letter-spacing:.3px}
+#slider-wrap{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;color:rgba(0,0,0,.7);font-size:13px}
+#slider-wrap input{width:180px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="legend">
+  <div><span class="dot" style="background:#7b68ee"></span>Pyramid VABCD (base 10 cm)</div>
+  <div><span class="dot" style="background:#4ae0b0"></span>Height V to base = 15 cm</div>
+  <div><span class="dot" style="background:#ff6b4a"></span>Cross-section plane at h = 6 cm</div>
+  <div><span class="dot" style="background:#ffcf40"></span>Cross-section square (side 6 cm)</div>
+</div>
+<div id="controls">
+  <button id="btnRotate" class="active" onclick="toggleRotate()">Auto-rotate</button>
+  <button onclick="resetCam()">Reset view</button>
+</div>
+<div id="slider-wrap">
+  <span>Height:</span>
+  <input type="range" id="hSlider" min="0" max="14.5" step="0.5" value="6" oninput="updateSlice(+this.value)">
+  <span id="hLabel">6.0 cm</span>
+</div>
+<div id="answer">Cross-section area = 36 cm²</div>
+<div id="info">Drag to orbit · Scroll to zoom · Slider adjusts cutting plane</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0xffffff);
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+dl.position.set(10, 20, 15);
+scene.add(dl);
+
+const S = 10, H = 15, HS = S/2;
+
+const A = new THREE.Vector3(-HS, 0, -HS);
+const B = new THREE.Vector3( HS, 0, -HS);
+const C = new THREE.Vector3( HS, 0,  HS);
+const D = new THREE.Vector3(-HS, 0,  HS);
+const V = new THREE.Vector3(0, H, 0);
+const O = new THREE.Vector3(0, 0, 0);
+
+function addEdge(a, b, color, dashed) {
+  const mat = dashed
+    ? new THREE.LineDashedMaterial({color, dashSize:.4, gapSize:.2})
+    : new THREE.LineBasicMaterial({color});
+  const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
+  const line = new THREE.Line(geo, mat);
+  if (dashed) line.computeLineDistances();
+  scene.add(line);
+  return line;
+}
+
+function addSphere(pos, color, r=0.2) {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(r, 16, 16),
+    new THREE.MeshPhongMaterial({color, emissive: color, emissiveIntensity: 0.4})
+  );
+  m.position.copy(pos);
+  scene.add(m);
+  return m;
+}
+
+function makeLabel(text, pos, color='#333333', size=0.6) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false});
+  const sp = new THREE.Sprite(mat);
+  sp.position.copy(pos).add(new THREE.Vector3(0, 0.5, 0));
+  sp.scale.set(size * 4, size, 1);
+  scene.add(sp);
+  return sp;
+}
+
+// Base edges
+const ec = 0x7b68ee;
+addEdge(A, B, ec); addEdge(B, C, ec); addEdge(C, D, ec); addEdge(D, A, ec);
+// Lateral edges
+addEdge(V, A, ec); addEdge(V, B, ec); addEdge(V, C, ec); addEdge(V, D, ec);
+
+// Height line
+addEdge(V, O, 0x4ae0b0, true);
+
+// Base plane
+const baseGeo = new THREE.PlaneGeometry(S, S);
+baseGeo.rotateX(-Math.PI / 2);
+scene.add(new THREE.Mesh(baseGeo, new THREE.MeshPhongMaterial({
+  color: 0x4466aa, transparent: true, opacity: 0.12, side: THREE.DoubleSide
+})));
+
+// Grid
+const grid = new THREE.GridHelper(S, 10, 0xaabbcc, 0xdde2e8);
+grid.position.y = 0.01;
+scene.add(grid);
+
+// Vertex spheres
+addSphere(A, ec); addSphere(B, ec); addSphere(C, ec); addSphere(D, ec);
+addSphere(V, ec, 0.25); addSphere(O, 0x4ae0b0, 0.18);
+
+// Labels
+makeLabel('A', A, '#4a3aad'); makeLabel('B', B, '#4a3aad');
+makeLabel('C', C, '#4a3aad'); makeLabel('D', D, '#4a3aad');
+makeLabel('V', V, '#4a3aad'); makeLabel("O'", O.clone().add(new THREE.Vector3(0.5, -0.3, 0)), '#0a7a5a', 0.45);
+makeLabel('15 cm', new THREE.Vector3(0.8, H/2, 0), '#0a7a5a', 0.45);
+makeLabel('10 cm', new THREE.Vector3(0, 0.05, -HS - 1.2), '#555577', 0.4);
+
+// Cross-section (dynamic)
+let sliceMesh, sliceEdges, sliceLabel, sliceSpheres = [], sliceLabels = [];
+let dimLabel, heightDash;
+
+function clearSlice() {
+  [sliceMesh, sliceEdges, dimLabel, heightDash, ...sliceSpheres, ...sliceLabels].forEach(o => {
+    if (o) scene.remove(o);
+  });
+  sliceSpheres = []; sliceLabels = [];
+}
+
+function buildSlice(h) {
+  clearSlice();
+  const f = (H - h) / H;
+  const half = HS * f;
+  const p1 = new THREE.Vector3(-half, h, -half);
+  const p2 = new THREE.Vector3( half, h, -half);
+  const p3 = new THREE.Vector3( half, h,  half);
+  const p4 = new THREE.Vector3(-half, h,  half);
+
+  // Filled quad
+  const geo = new THREE.BufferGeometry();
+  const verts = new Float32Array([
+    p1.x,p1.y,p1.z, p2.x,p2.y,p2.z, p3.x,p3.y,p3.z,
+    p1.x,p1.y,p1.z, p3.x,p3.y,p3.z, p4.x,p4.y,p4.z
+  ]);
+  geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+  geo.computeVertexNormals();
+  sliceMesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+    color: 0xff6b4a, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false
+  }));
+  scene.add(sliceMesh);
+
+  // Edges of cross-section
+  const pts = [p1, p2, p3, p4, p1];
+  const eGeo = new THREE.BufferGeometry().setFromPoints(pts);
+  sliceEdges = new THREE.Line(eGeo, new THREE.LineBasicMaterial({color: 0xffcf40, linewidth: 2}));
+  scene.add(sliceEdges);
+
+  // Corner spheres & labels
+  const names = ["A'", "B'", "C'", "D'"];
+  [p1, p2, p3, p4].forEach((p, i) => {
+    const sp = addSphere(p, 0xffcf40, 0.15);
+    sliceSpheres.push(sp);
+    const lb = makeLabel(names[i], p, '#cc8800', 0.4);
+    sliceLabels.push(lb);
+  });
+
+  // Height dashed line from base to slice center
+  const sliceCenter = new THREE.Vector3(0, h, 0);
+  const hGeo = new THREE.BufferGeometry().setFromPoints([O, sliceCenter]);
+  heightDash = new THREE.Line(hGeo, new THREE.LineDashedMaterial({color: 0xff6b4a, dashSize:.3, gapSize:.15}));
+  heightDash.computeLineDistances();
+  scene.add(heightDash);
+
+  // Dimension label
+  const sideLen = (S * f).toFixed(1);
+  const area = (S * f * S * f).toFixed(1);
+  dimLabel = makeLabel(sideLen + ' cm', new THREE.Vector3(half + 0.8, h, 0), '#cc8800', 0.42);
+
+  document.getElementById('hLabel').textContent = h.toFixed(1) + ' cm';
+  document.getElementById('answer').textContent =
+    'Cross-section side = ' + sideLen + ' cm  ·  Area = ' + area + ' cm²';
+}
+
+buildSlice(6);
+
+window.updateSlice = function(h) { buildSlice(h); };
+
+// Orbit controls
+let autoRotate = true, isDragging = false, prevMouse = {x:0, y:0};
+let theta = Math.PI / 4, phi = Math.PI / 5.5, radius = 30;
+
+function updateCam() {
+  camera.position.set(
+    radius * Math.cos(phi) * Math.sin(theta),
+    radius * Math.sin(phi) + 4,
+    radius * Math.cos(phi) * Math.cos(theta)
+  );
+  camera.lookAt(0, 5, 0);
+}
+updateCam();
+
+renderer.domElement.addEventListener('pointerdown', e => {
+  isDragging = true; prevMouse = {x: e.clientX, y: e.clientY};
+});
+window.addEventListener('pointerup', () => isDragging = false);
+window.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouse.x, dy = e.clientY - prevMouse.y;
+  theta -= dx * 0.008;
+  phi = Math.max(-0.2, Math.min(Math.PI / 2.2, phi + dy * 0.008));
+  prevMouse = {x: e.clientX, y: e.clientY};
+  updateCam();
+});
+renderer.domElement.addEventListener('wheel', e => {
+  radius = Math.max(12, Math.min(55, radius + e.deltaY * 0.03));
+  updateCam();
+}, {passive: true});
+
+function toggleRotate() {
+  autoRotate = !autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', autoRotate);
+}
+function resetCam() { theta = Math.PI/4; phi = Math.PI/5.5; radius = 30; updateCam(); }
+
+window.setRotation = function(deg) { autoRotate = false; theta = deg * Math.PI/180; updateCam(); };
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (autoRotate && !isDragging) { theta += 0.005; updateCam(); }
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>Pipeline A/B/C Comparison</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0C0C0C;color:#e0e0e0;font-family:-apple-system,monospace}
+.container{max-width:1800px;margin:0 auto;padding:1.5rem}
+h1{color:#4ECDC4;text-align:center;margin-bottom:.5rem}
+.subtitle{text-align:center;color:#888;margin-bottom:1.5rem;font-size:.85rem}
+.summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:2rem}
+.summary-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:1rem;text-align:center}
+.summary-card h3{color:#4ECDC4;font-size:.85rem;margin-bottom:.5rem}
+.summary-card .val{font-size:1.4rem;color:#e0e0e0;font-weight:700}
+.summary-card .sub{color:#888;font-size:.8rem}
+.col-headers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:.5rem;padding-left:0}
+.col-headers div{background:#1a2a2a;color:#4ECDC4;padding:.5rem;border-radius:4px;text-align:center;font-weight:700;font-size:.85rem}
+.row{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;margin-bottom:1rem;overflow:hidden}
+.row-header{padding:.75rem 1rem;border-bottom:1px solid #2a2a2a}
+.row-header strong{color:#e0e0e0}
+.qid{color:#666;font-size:.75rem;margin-left:.5rem;font-family:monospace}
+.dim-badge{background:#457B9D;color:#fff;padding:.1rem .4rem;border-radius:3px;font-size:.7rem;margin-left:.5rem}
+.q-text{color:#888;font-size:.8rem;margin-top:.25rem}
+.row-cells{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+.cell{border-right:1px solid #2a2a2a;padding:.5rem}
+.cell:last-child{border-right:none}
+.cell-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;font-size:.8rem}
+.pipeline-label{color:#888;font-size:.75rem}
+.status-pass{color:#96CEB4;font-weight:700}
+.status-fail{color:#FF6B6B;font-weight:700}
+.cell-render{height:350px;background:#0C0C0C;border-radius:4px;overflow:hidden}
+.cell-render iframe{width:100%;height:100%;border:none}
+.cell-stats{font-size:.75rem;color:#666;margin-top:.25rem;text-align:center}
+.cell.empty{display:flex;align-items:center;justify-content:center;color:#555;font-style:italic}
+.error{color:#FF6B6B;font-size:.75rem;padding:.5rem}
+</style>
+</head><body>
+<div class="container">
+<h1>Pipeline A/B/C Comparison</h1>
+<p class="subtitle">A: New Math Prompt | B: Old Blueprint (JSON direct) | C: Old Blueprint → Notes Conversion</p>
+
+<div class="summary">
+    <div class="summary-card">
+        <h3>A: New Math Prompt</h3>
+        <div class="val">10/10</div>
+        <div class="sub">Avg 140.8s per diagram</div>
+    </div>
+    <div class="summary-card">
+        <h3>B: Old Blueprint (JSON)</h3>
+        <div class="val">10/10</div>
+        <div class="sub">Avg 79.4s per diagram</div>
+    </div>
+    <div class="summary-card">
+        <h3>C: Old Blueprint → Notes</h3>
+        <div class="val">10/10</div>
+        <div class="sub">Avg 71.6s per diagram</div>
+    </div>
+</div>
+
+<div class="col-headers">
+    <div>A: New Math Prompt (Gemini)</div>
+    <div>B: Old Blueprint JSON → DeepSeek</div>
+    <div>C: Old Blueprint → Notes → DeepSeek</div>
+</div>
+
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Inscribed Angle and Central Angle</strong>
+                <span class="qid">hkdse_new_01</span>
+                <span class="dim-badge">2d</span>
+                <p class="q-text">In a circle with center O and radius 8 cm, chord AB subtends an angle of 50 degrees at a point C on the major arc. Find the angle AOB at the center.</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_01/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">87.3s | G:10040 D:7809</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_01/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">66.5s | G:3656 D:7348</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_01/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">51.0s | G:4214 D:8101</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Two Chords Intersecting Inside Circle</strong>
+                <span class="qid">hkdse_new_02</span>
+                <span class="dim-badge">2d</span>
+                <p class="q-text">Two chords AC and BD of a circle intersect at point P inside the circle. If AP = 4 cm, PC = 9 cm, and BP = 6 cm, find the length of PD.</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_02/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">204.9s | G:40842 D:7527</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_02/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">67.1s | G:4269 D:8139</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_02/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">57.3s | G:5287 D:8239</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Sector Area and Arc Length</strong>
+                <span class="qid">hkdse_new_03</span>
+                <span class="dim-badge">2d</span>
+                <p class="q-text">A sector of a circle has radius 10 cm and central angle 72 degrees. Find the arc length and the area of the sector.</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_03/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">92.2s | G:9529 D:8400</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_03/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">59.8s | G:2597 D:8203</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_03/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">61.3s | G:3009 D:8263</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Exterior Angle of Triangle</strong>
+                <span class="qid">hkdse_new_04</span>
+                <span class="dim-badge">2d</span>
+                <p class="q-text">In triangle ABC, side BC is extended to point D. If angle BAC = 55 degrees and angle ABC = 70 degrees, find angle ACD.</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_04/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">200.7s | G:40559 D:7752</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_04/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">57.6s | G:5027 D:7628</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_04/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">89.4s | G:7720 D:7914</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Parallelogram with Diagonal</strong>
+                <span class="qid">hkdse_new_05</span>
+                <span class="dim-badge">2d</span>
+                <p class="q-text">In parallelogram ABCD, diagonal AC is drawn. If AB = 10 cm, BC = 7 cm, and angle ABC = 65 degrees, find the length of diagonal AC using the cosine rul</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_05/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">90.8s | G:8082 D:7744</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_05/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">64.7s | G:6698 D:7976</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_05/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">57.2s | G:5385 D:8091</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Hexagonal Prism</strong>
+                <span class="qid">hkdse_new_06</span>
+                <span class="dim-badge">3d</span>
+                <p class="q-text">A regular hexagonal prism has a base edge of 4 cm and height 10 cm. The apex of each base hexagon has vertices A, B, C, D, E, F on the bottom and G, H</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_06/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">113.1s | G:15802 D:9188</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_06/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">103.0s | G:10688 D:9512</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_06/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">106.8s | G:11162 D:8910</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Sphere Inscribed in Cylinder</strong>
+                <span class="qid">hkdse_new_07</span>
+                <span class="dim-badge">3d</span>
+                <p class="q-text">A sphere of radius 5 cm is inscribed in a cylinder such that the sphere touches the top, bottom, and curved surface of the cylinder. Find the height a</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_07/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">106.0s | G:9457 D:8670</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_07/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">95.0s | G:4514 D:8756</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_07/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">75.3s | G:3628 D:8419</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Angle Between Two Faces of Cube</strong>
+                <span class="qid">hkdse_new_08</span>
+                <span class="dim-badge">3d</span>
+                <p class="q-text">In a cube ABCDEFGH with side length 6 cm, where ABCD is the bottom face and EFGH is the top face with E above A, find the angle between the diagonal p</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_08/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">204.5s | G:40724 D:8808</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_08/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">90.4s | G:4350 D:8841</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_08/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">78.1s | G:9769 D:8560</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Triangular Pyramid with Right Angle</strong>
+                <span class="qid">hkdse_new_09</span>
+                <span class="dim-badge">3d</span>
+                <p class="q-text">A triangular pyramid VABC has a right-angled triangle base ABC with the right angle at B. AB = 5 cm, BC = 12 cm. The apex V is directly above B at a h</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_09/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">192.3s | G:40560 D:8261</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_09/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">100.7s | G:9706 D:8298</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_09/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">85.9s | G:7276 D:8115</div>
+        </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="row-header">
+                <strong>Cone Unfolded Sector Angle</strong>
+                <span class="qid">hkdse_new_10</span>
+                <span class="dim-badge">3d</span>
+                <p class="q-text">A right circular cone has base radius 6 cm and slant height 15 cm. When the lateral surface is unfolded, it forms a sector. Find the angle of this sec</p>
+            </div>
+            <div class="row-cells">
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">A: New Math Prompt</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_a/hkdse_new_10/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">116.5s | G:17025 D:8643</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">B: Old Blueprint (JSON)</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_b/hkdse_new_10/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">89.4s | G:4767 D:8102</div>
+        </div>
+                <div class="cell pass">
+            <div class="cell-header">
+                <span class="pipeline-label">C: Old Blueprint → Notes</span>
+                <span class="status-pass">PASS</span>
+            </div>
+            <div class="cell-render"><iframe src="output/pipeline_c/hkdse_new_10/diagram.html" loading="lazy"></iframe></div>
+            <div class="cell-stats">53.5s | G:4163 D:7582</div>
+        </div>
+            </div>
+        </div>
+</div>
+</body></html>

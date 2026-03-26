@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Hybrid Pipeline D Results</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0C0C0C;color:#e0e0e0;font-family:monospace}
+.container{max-width:1400px;margin:0 auto;padding:1.5rem}
+h1{color:#4ECDC4;text-align:center;margin-bottom:.5rem}
+.subtitle{text-align:center;color:#888;margin-bottom:1.5rem;font-size:.85rem}
+.summary{display:flex;gap:1rem;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap}
+.stat{background:#1a1a1a;padding:.5rem 1rem;border-radius:4px;text-align:center}
+.stat .val{color:#4ECDC4;font-weight:700;font-size:1.2rem}
+.stat .label{color:#888;font-size:.75rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:1rem}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;overflow:hidden}
+.card.pass{border-color:#96CEB4}
+.card.fail{border-color:#FF6B6B}
+.card-header{padding:.75rem 1rem;border-bottom:1px solid #2a2a2a;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.qid{color:#666;font-size:.75rem;font-family:monospace}
+.badge{background:#457B9D;color:#fff;padding:.1rem .4rem;border-radius:3px;font-size:.7rem}
+.pass{color:#96CEB4;font-weight:700}
+.fail{color:#FF6B6B;font-weight:700}
+.card-q{padding:.5rem 1rem;font-size:.8rem;color:#888}
+.card-render{height:380px;background:#0C0C0C}
+.card-render iframe{width:100%;height:100%;border:none}
+.card-stats{padding:.5rem 1rem;font-size:.75rem;color:#666;border-top:1px solid #2a2a2a}
+.error{color:#FF6B6B;padding:.5rem;font-size:.75rem}
+</style></head><body>
+<div class="container">
+<h1>Pipeline D: Hybrid Blueprint</h1>
+<p class="subtitle">Old JSON format + New quality rules → DeepSeek JS</p>
+<div class="summary">
+    <div class="stat"><div class="val">10/10</div><div class="label">Pass</div></div>
+    <div class="stat"><div class="val">83.1s</div><div class="label">Avg Time</div></div>
+    <div class="stat"><div class="val">$0.0664</div><div class="label">Total Cost</div></div>
+    <div class="stat"><div class="val">$0.0066</div><div class="label">Per Diagram</div></div>
+    <div class="stat"><div class="val">69,744</div><div class="label">Gemini Tokens</div></div>
+    <div class="stat"><div class="val">78,747</div><div class="label">DeepSeek Tokens</div></div>
+</div>
+<div class="grid">
+        <div class="card pass">
+            <div class="card-header"><strong>Inscribed Angle and Central Angle</strong> <span class="qid">hkdse_new_01</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In a circle with center O and radius 8 cm, chord AB subtends an angle of 50 degrees at a point C on the major arc. Find the angle AOB at the center.</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_01/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">107.7s | G:6717 D:8184</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Two Chords Intersecting Inside Circle</strong> <span class="qid">hkdse_new_02</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">Two chords AC and BD of a circle intersect at point P inside the circle. If AP = 4 cm, PC = 9 cm, and BP = 6 cm, find the length of PD.</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_02/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">68.7s | G:6203 D:5831</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Sector Area and Arc Length</strong> <span class="qid">hkdse_new_03</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A sector of a circle has radius 10 cm and central angle 72 degrees. Find the arc length and the area of the sector.</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_03/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">81.3s | G:3821 D:7490</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Exterior Angle of Triangle</strong> <span class="qid">hkdse_new_04</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In triangle ABC, side BC is extended to point D. If angle BAC = 55 degrees and angle ABC = 70 degrees, find angle ACD.</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_04/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">104.2s | G:9481 D:7915</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Parallelogram with Diagonal</strong> <span class="qid">hkdse_new_05</span>
+                <span class="badge">2d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In parallelogram ABCD, diagonal AC is drawn. If AB = 10 cm, BC = 7 cm, and angle ABC = 65 degrees, find the length of diagonal AC using the cosine rul</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_05/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">87.7s | G:6551 D:7510</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Hexagonal Prism</strong> <span class="qid">hkdse_new_06</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A regular hexagonal prism has a base edge of 4 cm and height 10 cm. The apex of each base hexagon has vertices A, B, C, D, E, F on the bottom and G, H</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_06/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">93.4s | G:9685 D:9060</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Sphere Inscribed in Cylinder</strong> <span class="qid">hkdse_new_07</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A sphere of radius 5 cm is inscribed in a cylinder such that the sphere touches the top, bottom, and curved surface of the cylinder. Find the height a</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_07/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">79.1s | G:6900 D:8296</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Angle Between Two Faces of Cube</strong> <span class="qid">hkdse_new_08</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">In a cube ABCDEFGH with side length 6 cm, where ABCD is the bottom face and EFGH is the top face with E above A, find the angle between the diagonal p</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_08/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">77.9s | G:9615 D:8479</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Triangular Pyramid with Right Angle</strong> <span class="qid">hkdse_new_09</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A triangular pyramid VABC has a right-angled triangle base ABC with the right angle at B. AB = 5 cm, BC = 12 cm. The apex V is directly above B at a h</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_09/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">75.3s | G:5922 D:8171</div>
+        </div>
+
+        <div class="card pass">
+            <div class="card-header"><strong>Cone Unfolded Sector Angle</strong> <span class="qid">hkdse_new_10</span>
+                <span class="badge">3d</span>
+                <span class="pass">PASS</span></div>
+            <div class="card-q">A right circular cone has base radius 6 cm and slant height 15 cm. When the lateral surface is unfolded, it forms a sector. Find the angle of this sec</div>
+            <div class="card-render"><iframe src="output/pipeline_d/hkdse_new_10/diagram.html" loading="lazy"></iframe></div>
+            <div class="card-stats">55.3s | G:4849 D:7811</div>
+        </div></div>
+</div></body></html>

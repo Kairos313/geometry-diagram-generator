@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotated Ellipse – 5x² + 4xy + 2y² = 18</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#ffffff;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
+svg{display:block;max-width:100%;max-height:80vh}
+#info{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(0,0,0,.5);font-size:13px;text-align:center;pointer-events:none}
+#legend{position:absolute;top:20px;left:20px;color:rgba(0,0,0,.8);font-size:13px;line-height:2.1}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.line-swatch{display:inline-block;width:16px;height:2px;margin-right:6px;vertical-align:middle}
+#controls{position:absolute;top:20px;right:20px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+#controls label{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(0,0,0,.7)}
+#controls input[type=range]{width:140px}
+#controls span.val{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+#equation{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:16px;font-weight:600;color:#333;text-align:center;pointer-events:none}
+#answer{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);color:#0f6e56;font-size:14px;font-weight:600;text-align:center;pointer-events:none;max-width:600px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div id="equation">5x² + 4xy + 2y² = 18</div>
+
+<div id="legend">
+  <div><span class="line-swatch" style="background:#999"></span>Original xy-axes</div>
+  <div><span class="line-swatch" style="background:#d85a30"></span>Rotated X'Y'-axes (θ ≈ 26.57°)</div>
+  <div><span class="dot" style="background:#5b4dc7"></span>Ellipse</div>
+  <div><span class="line-swatch" style="background:#0f6e56;height:3px"></span>Semi-major a = 3√2 ≈ 4.24</div>
+  <div><span class="line-swatch" style="background:#ba7517;height:3px"></span>Semi-minor b = √3 ≈ 1.73</div>
+</div>
+
+<div id="controls">
+  <label>
+    Rotation θ:
+    <input type="range" id="thetaSlider" min="0" max="90" step="0.5" value="26.57" oninput="updateTheta(+this.value)">
+    <span class="val" id="thetaLabel">26.6°</span>
+  </label>
+  <label>
+    <input type="checkbox" id="showGrid" checked onchange="toggleGrid(this.checked)"> Show grid
+  </label>
+</div>
+
+<div id="answer">θ = ½ arctan(4/3) = arctan(½) ≈ 26.57° · Semi-major a = 3√2 · Semi-minor b = √3</div>
+<div id="info">Drag the slider to see the ellipse at different rotations · Correct rotation eliminates the xy term</div>
+
+<svg id="canvas" width="680" viewBox="-8 -8 16 16" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ah-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M1 1L9 5L1 9" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="ah-rot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M1 1L9 5L1 9" fill="none" stroke="#d85a30" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Grid -->
+  <g id="gridGroup" stroke="#e8e8e8" stroke-width="0.03">
+    <line x1="-7" y1="-7" x2="-7" y2="7"/><line x1="-6" y1="-7" x2="-6" y2="7"/>
+    <line x1="-5" y1="-7" x2="-5" y2="7"/><line x1="-4" y1="-7" x2="-4" y2="7"/>
+    <line x1="-3" y1="-7" x2="-3" y2="7"/><line x1="-2" y1="-7" x2="-2" y2="7"/>
+    <line x1="-1" y1="-7" x2="-1" y2="7"/><line x1="0" y1="-7" x2="0" y2="7"/>
+    <line x1="1" y1="-7" x2="1" y2="7"/><line x1="2" y1="-7" x2="2" y2="7"/>
+    <line x1="3" y1="-7" x2="3" y2="7"/><line x1="4" y1="-7" x2="4" y2="7"/>
+    <line x1="5" y1="-7" x2="5" y2="7"/><line x1="6" y1="-7" x2="6" y2="7"/>
+    <line x1="7" y1="-7" x2="7" y2="7"/>
+    <line y1="-7" x1="-7" y2="-7" x2="7"/><line y1="-6" x1="-7" y2="-6" x2="7"/>
+    <line y1="-5" x1="-7" y2="-5" x2="7"/><line y1="-4" x1="-7" y2="-4" x2="7"/>
+    <line y1="-3" x1="-7" y2="-3" x2="7"/><line y1="-2" x1="-7" y2="-2" x2="7"/>
+    <line y1="-1" x1="-7" y2="-1" x2="7"/><line y1="0" x1="-7" y2="0" x2="7"/>
+    <line y1="1" x1="-7" y2="1" x2="7"/><line y1="2" x1="-7" y2="2" x2="7"/>
+    <line y1="3" x1="-7" y2="3" x2="7"/><line y1="4" x1="-7" y2="4" x2="7"/>
+    <line y1="5" x1="-7" y2="5" x2="7"/><line y1="6" x1="-7" y2="6" x2="7"/>
+    <line y1="7" x1="-7" y2="7" x2="7"/>
+  </g>
+
+  <!-- Original axes -->
+  <line x1="-7.5" y1="0" x2="7.5" y2="0" stroke="#999" stroke-width="0.05" marker-end="url(#ah-gray)"/>
+  <line x1="0" y1="7.5" x2="0" y2="-7.5" stroke="#999" stroke-width="0.05" marker-end="url(#ah-gray)"/>
+  <!-- Note: SVG y is flipped, so y=7.5 is bottom in math coords. We flip the whole scene. -->
+
+  <!-- Axis labels (original) -->
+  <text x="7.2" y="0.45" font-size="0.45" fill="#999" font-weight="500">x</text>
+  <text x="0.25" y="-7.0" font-size="0.45" fill="#999" font-weight="500">y</text>
+
+  <!-- Rotated axes (dynamic) -->
+  <g id="rotAxes">
+    <line id="rotX" stroke="#d85a30" stroke-width="0.06" marker-end="url(#ah-rot)"/>
+    <line id="rotY" stroke="#d85a30" stroke-width="0.06" marker-end="url(#ah-rot)"/>
+    <text id="rotXLabel" font-size="0.45" fill="#d85a30" font-weight="600">X'</text>
+    <text id="rotYLabel" font-size="0.45" fill="#d85a30" font-weight="600">Y'</text>
+  </g>
+
+  <!-- Angle arc -->
+  <path id="angleArc" fill="none" stroke="#ba7517" stroke-width="0.04"/>
+  <text id="angleLabel" font-size="0.35" fill="#ba7517"></text>
+
+  <!-- Ellipse (drawn as a path, updated dynamically) -->
+  <path id="ellipsePath" fill="rgba(91,77,199,0.06)" stroke="#5b4dc7" stroke-width="0.07"/>
+
+  <!-- Semi-axes lines -->
+  <line id="semiMajorLine" stroke="#0f6e56" stroke-width="0.08" stroke-linecap="round"/>
+  <line id="semiMinorLine" stroke="#ba7517" stroke-width="0.08" stroke-linecap="round"/>
+
+  <!-- Semi-axes endpoint dots -->
+  <circle id="semiMajorDot1" r="0.12" fill="#0f6e56"/>
+  <circle id="semiMajorDot2" r="0.12" fill="#0f6e56"/>
+  <circle id="semiMinorDot1" r="0.12" fill="#ba7517"/>
+  <circle id="semiMinorDot2" r="0.12" fill="#ba7517"/>
+
+  <!-- Semi-axes labels -->
+  <text id="semiMajorLabel" font-size="0.38" fill="#0f6e56" font-weight="600"></text>
+  <text id="semiMinorLabel" font-size="0.38" fill="#ba7517" font-weight="600"></text>
+
+  <!-- Origin dot -->
+  <circle cx="0" cy="0" r="0.1" fill="#333"/>
+</svg>
+
+<script>
+// Math constants
+const A = 5, B = 4, C = 2, K = 18;
+const trueTheta = 0.5 * Math.atan2(B, A - C); // ≈ 26.57°
+
+// Eigenvalues
+const lambda1 = 1, lambda2 = 6;
+const a = Math.sqrt(K / lambda1); // semi-major = sqrt(18) = 3√2
+const b_semi = Math.sqrt(K / lambda2); // semi-minor = sqrt(3)
+
+// SVG is y-down, math is y-up. We apply transform="scale(1,-1)" concept
+// by flipping y in our computations. Actually let's keep it simple:
+// In SVG: positive y = down. We'll negate y for math coords.
+// So point (mx, my) in math → (mx, -my) in SVG.
+
+const svg = document.getElementById('canvas');
+
+function mathToSvg(mx, my) { return [mx, -my]; }
+
+function drawEllipse(theta) {
+  // Sample the ellipse in rotated coords, then rotate to original
+  const cosT = Math.cos(theta);
+  const sinT = Math.sin(theta);
+  const steps = 200;
+  let d = '';
+
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * 2 * Math.PI;
+    // Ellipse in rotated frame: X = b_semi * cos(t), Y = a * sin(t)
+    const X = b_semi * Math.cos(t);
+    const Y = a * Math.sin(t);
+    // Rotate back to original frame
+    const x = X * cosT - Y * sinT;
+    const y = X * sinT + Y * cosT;
+    const [sx, sy] = mathToSvg(x, y);
+    d += (i === 0 ? 'M' : 'L') + sx.toFixed(4) + ',' + sy.toFixed(4);
+  }
+  d += 'Z';
+  document.getElementById('ellipsePath').setAttribute('d', d);
+}
+
+function drawRotatedAxes(theta) {
+  const cosT = Math.cos(theta);
+  const sinT = Math.sin(theta);
+  const len = 7.2;
+
+  // X' axis
+  const [x1, y1] = mathToSvg(-len * cosT, -len * sinT);
+  const [x2, y2] = mathToSvg(len * cosT, len * sinT);
+  const rotX = document.getElementById('rotX');
+  rotX.setAttribute('x1', x1); rotX.setAttribute('y1', y1);
+  rotX.setAttribute('x2', x2); rotX.setAttribute('y2', y2);
+
+  // Y' axis (perpendicular)
+  const [x3, y3] = mathToSvg(-len * (-sinT), -len * cosT);
+  const [x4, y4] = mathToSvg(len * (-sinT), len * cosT);
+  const rotY = document.getElementById('rotY');
+  rotY.setAttribute('x1', x3); rotY.setAttribute('y1', y3);
+  rotY.setAttribute('x2', x4); rotY.setAttribute('y2', y4);
+
+  // Labels
+  const lOff = 0.35;
+  const [lx1, ly1] = mathToSvg(len * cosT + lOff * sinT, len * sinT - lOff * cosT);
+  document.getElementById('rotXLabel').setAttribute('x', lx1);
+  document.getElementById('rotXLabel').setAttribute('y', ly1);
+
+  const [lx2, ly2] = mathToSvg(len * (-sinT) + lOff * cosT, len * cosT + lOff * sinT);
+  document.getElementById('rotYLabel').setAttribute('x', lx2);
+  document.getElementById('rotYLabel').setAttribute('y', ly2);
+}
+
+function drawAngleArc(theta) {
+  const r = 1.8;
+  const steps = 40;
+  let d = '';
+  const sweep = theta;
+  for (let i = 0; i <= steps; i++) {
+    const angle = (i / steps) * sweep;
+    const [sx, sy] = mathToSvg(r * Math.cos(angle), r * Math.sin(angle));
+    d += (i === 0 ? 'M' : 'L') + sx.toFixed(4) + ',' + sy.toFixed(4);
+  }
+  document.getElementById('angleArc').setAttribute('d', d);
+
+  // Label
+  const midAngle = sweep / 2;
+  const lr = r + 0.35;
+  const [lx, ly] = mathToSvg(lr * Math.cos(midAngle), lr * Math.sin(midAngle));
+  const label = document.getElementById('angleLabel');
+  label.setAttribute('x', lx);
+  label.setAttribute('y', ly);
+  label.textContent = (theta * 180 / Math.PI).toFixed(1) + '°';
+}
+
+function drawSemiAxes(theta) {
+  const cosT = Math.cos(theta);
+  const sinT = Math.sin(theta);
+
+  // Semi-major along Y' (perpendicular to X')
+  const majDx = -sinT * a;
+  const majDy = cosT * a;
+  const [mx1, my1] = mathToSvg(-majDx, -majDy);
+  const [mx2, my2] = mathToSvg(majDx, majDy);
+
+  const majLine = document.getElementById('semiMajorLine');
+  majLine.setAttribute('x1', mx1); majLine.setAttribute('y1', my1);
+  majLine.setAttribute('x2', mx2); majLine.setAttribute('y2', my2);
+
+  document.getElementById('semiMajorDot1').setAttribute('cx', mx1);
+  document.getElementById('semiMajorDot1').setAttribute('cy', my1);
+  document.getElementById('semiMajorDot2').setAttribute('cx', mx2);
+  document.getElementById('semiMajorDot2').setAttribute('cy', my2);
+
+  // Label for semi-major
+  const majLabel = document.getElementById('semiMajorLabel');
+  const [mlx, mly] = mathToSvg(majDx + 0.3 * cosT, majDy + 0.3 * sinT);
+  majLabel.setAttribute('x', mlx);
+  majLabel.setAttribute('y', mly);
+  majLabel.textContent = 'a = 3√2';
+
+  // Semi-minor along X'
+  const minDx = cosT * b_semi;
+  const minDy = sinT * b_semi;
+  const [nx1, ny1] = mathToSvg(-minDx, -minDy);
+  const [nx2, ny2] = mathToSvg(minDx, minDy);
+
+  const minLine = document.getElementById('semiMinorLine');
+  minLine.setAttribute('x1', nx1); minLine.setAttribute('y1', ny1);
+  minLine.setAttribute('x2', nx2); minLine.setAttribute('y2', ny2);
+
+  document.getElementById('semiMinorDot1').setAttribute('cx', nx1);
+  document.getElementById('semiMinorDot1').setAttribute('cy', ny1);
+  document.getElementById('semiMinorDot2').setAttribute('cx', nx2);
+  document.getElementById('semiMinorDot2').setAttribute('cy', ny2);
+
+  // Label for semi-minor
+  const minLabel = document.getElementById('semiMinorLabel');
+  const [nlx, nly] = mathToSvg(minDx + 0.3 * (-sinT), minDy + 0.3 * cosT);
+  minLabel.setAttribute('x', nlx);
+  minLabel.setAttribute('y', nly);
+  minLabel.textContent = 'b = √3';
+}
+
+function render(thetaDeg) {
+  const theta = thetaDeg * Math.PI / 180;
+  drawEllipse(theta);
+  drawRotatedAxes(theta);
+  drawAngleArc(theta);
+  drawSemiAxes(theta);
+}
+
+function updateTheta(val) {
+  document.getElementById('thetaLabel').textContent = val.toFixed(1) + '°';
+  render(val);
+}
+
+function toggleGrid(show) {
+  document.getElementById('gridGroup').style.display = show ? '' : 'none';
+}
+
+// Resize SVG to fill window nicely
+function resizeSvg() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const size = Math.min(w - 40, h - 160);
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
+}
+window.addEventListener('resize', resizeSvg);
+resizeSvg();
+
+// Initial render at true angle
+render(26.57);
+</script>
+</body>
+</html>

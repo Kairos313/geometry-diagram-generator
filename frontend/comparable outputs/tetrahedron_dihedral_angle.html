@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regular Tetrahedron – Dihedral Angle</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+canvas{display:block}
+#info{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:13px;text-align:center;pointer-events:none;letter-spacing:.3px}
+#legend{position:absolute;top:20px;left:20px;color:rgba(255,255,255,.85);font-size:13px;line-height:2}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+#controls{position:absolute;top:20px;right:20px;display:flex;gap:8px}
+#controls button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .2s}
+#controls button:hover{background:rgba(255,255,255,.2)}
+#controls button.active{background:rgba(100,140,255,.35);border-color:rgba(100,140,255,.6)}
+#answer{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);color:#4ae0b0;font-size:15px;font-weight:600;text-align:center;pointer-events:none;letter-spacing:.3px}
+</style>
+</head>
+<body>
+<div id="legend">
+  <div><span class="dot" style="background:#7b68ee"></span>Tetrahedron edges (6 cm each)</div>
+  <div><span class="dot" style="background:#ff6b4a"></span>M (midpoint of AB)</div>
+  <div><span class="dot" style="background:#ffcf40"></span>MC &amp; MD (perpendicular to AB)</div>
+  <div><span class="dot" style="background:#4ae0b0"></span>Dihedral angle ≈ 70.53°</div>
+</div>
+<div id="controls">
+  <button id="btnRotate" class="active" onclick="toggleRotate()">Auto-rotate</button>
+  <button onclick="resetCam()">Reset view</button>
+</div>
+<div id="answer">Dihedral angle = arccos(1/3) ≈ 70.53°</div>
+<div id="info">Drag to orbit · Scroll to zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x1a1a2e);
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+dl.position.set(10, 20, 15);
+scene.add(dl);
+
+// Regular tetrahedron, edge = 6
+// Base ABC in xz-plane (y=0), centroid at origin
+const s3 = Math.sqrt(3);
+const s6 = Math.sqrt(6);
+const A = new THREE.Vector3(-3, 0, -s3);
+const B = new THREE.Vector3( 3, 0, -s3);
+const C = new THREE.Vector3( 0, 0, 2*s3);
+const D = new THREE.Vector3( 0, 2*s6, 0);
+
+// M = midpoint of AB
+const M = new THREE.Vector3().addVectors(A, B).multiplyScalar(0.5);
+
+// Shift everything so centroid is roughly at origin vertically
+const cy = s6 / 2;
+[A,B,C,D,M].forEach(v => v.y -= cy);
+
+function addEdge(a, b, color, dashed, linewidth) {
+  const mat = dashed
+    ? new THREE.LineDashedMaterial({color, dashSize:.3, gapSize:.15})
+    : new THREE.LineBasicMaterial({color});
+  const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
+  const line = new THREE.Line(geo, mat);
+  if (dashed) line.computeLineDistances();
+  scene.add(line);
+}
+
+function addSphere(pos, color, r=0.2) {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(r, 16, 16),
+    new THREE.MeshPhongMaterial({color, emissive: color, emissiveIntensity: 0.4})
+  );
+  m.position.copy(pos);
+  scene.add(m);
+}
+
+function makeLabel(text, pos, color='#ffffff', size=0.6) {
+  const c = document.createElement('canvas'); c.width=256; c.height=64;
+  const ctx = c.getContext('2d');
+  ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false});
+  const sp = new THREE.Sprite(mat);
+  sp.position.copy(pos).add(new THREE.Vector3(0, 0.5, 0));
+  sp.scale.set(size*4, size, 1);
+  scene.add(sp);
+}
+
+// Tetrahedron edges
+const ec = 0x7b68ee;
+addEdge(A, B, ec); addEdge(A, C, ec); addEdge(A, D, ec);
+addEdge(B, C, ec); addEdge(B, D, ec); addEdge(C, D, ec);
+
+// Translucent faces ABC and ABD
+function addFace(v1, v2, v3, color, opacity) {
+  const geo = new THREE.BufferGeometry();
+  const verts = new Float32Array([
+    v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z
+  ]);
+  geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshPhongMaterial({
+    color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false
+  });
+  scene.add(new THREE.Mesh(geo, mat));
+}
+
+addFace(A, B, C, 0x7b68ee, 0.12);
+addFace(A, B, D, 0x4ae0b0, 0.12);
+
+// Highlight edge AB (the hinge)
+addEdge(A, B, 0xffffff, false);
+
+// M point and lines MC, MD
+addSphere(M, 0xff6b4a, 0.25);
+addEdge(M, C, 0xffcf40, false);
+addEdge(M, D, 0xffcf40, false);
+
+// Dihedral angle arc from MC to MD at M
+const arcPoints = [];
+const vMC = new THREE.Vector3().subVectors(C, M).normalize();
+const vMD = new THREE.Vector3().subVectors(D, M).normalize();
+const arcR = 1.2;
+const angle = Math.acos(1/3);
+const steps = 30;
+// Build arc by interpolating in the plane of MC and MD
+const axis = new THREE.Vector3().crossVectors(vMC, vMD).normalize();
+for (let i = 0; i <= steps; i++) {
+  const t = i / steps;
+  const q = new THREE.Quaternion().setFromAxisAngle(axis, angle * t);
+  const p = vMC.clone().applyQuaternion(q).multiplyScalar(arcR).add(M);
+  arcPoints.push(p);
+}
+const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPoints);
+const arcLine = new THREE.Line(arcGeo, new THREE.LineBasicMaterial({color: 0x4ae0b0}));
+scene.add(arcLine);
+
+// Vertex spheres
+addSphere(A, ec, 0.2); addSphere(B, ec, 0.2);
+addSphere(C, ec, 0.2); addSphere(D, ec, 0.2);
+
+// Labels
+makeLabel('A', A, '#b8a9ff');
+makeLabel('B', B, '#b8a9ff');
+makeLabel('C', C, '#b8a9ff');
+makeLabel('D', D, '#b8a9ff');
+makeLabel('M', M.clone().add(new THREE.Vector3(-0.3, -0.2, 0)), '#ff6b4a', 0.5);
+makeLabel('70.53°', M.clone().add(new THREE.Vector3(0, 1.2, 0.8)), '#4ae0b0', 0.5);
+
+// Orbit controls
+let autoRotate = true, isDragging = false, prevMouse = {x:0,y:0};
+let theta = Math.PI/4, phi = Math.PI/5.5, radius = 24;
+
+function updateCam() {
+  camera.position.set(
+    radius * Math.cos(phi) * Math.sin(theta),
+    radius * Math.sin(phi) + 2,
+    radius * Math.cos(phi) * Math.cos(theta)
+  );
+  camera.lookAt(0, 0, 0);
+}
+updateCam();
+
+renderer.domElement.addEventListener('pointerdown', e => {
+  isDragging = true; prevMouse = {x: e.clientX, y: e.clientY};
+});
+window.addEventListener('pointerup', () => isDragging = false);
+window.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouse.x, dy = e.clientY - prevMouse.y;
+  theta -= dx * 0.008;
+  phi = Math.max(-0.3, Math.min(Math.PI/2.2, phi + dy * 0.008));
+  prevMouse = {x: e.clientX, y: e.clientY};
+  updateCam();
+});
+renderer.domElement.addEventListener('wheel', e => {
+  radius = Math.max(10, Math.min(50, radius + e.deltaY * 0.03));
+  updateCam();
+}, {passive: true});
+
+function toggleRotate() {
+  autoRotate = !autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', autoRotate);
+}
+function resetCam() { theta = Math.PI/4; phi = Math.PI/5.5; radius = 24; updateCam(); }
+
+// For GIF export
+window.setRotation = function(deg) { autoRotate = false; theta = deg * Math.PI/180; updateCam(); };
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (autoRotate && !isDragging) { theta += 0.005; updateCam(); }
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orthogonal Projection &amp; Reflection – P onto 2x+3y+6z=28</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#ffffff;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+canvas{display:block}
+#info{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(0,0,0,.45);font-size:13px;text-align:center;pointer-events:none}
+#legend{position:absolute;top:20px;left:20px;color:rgba(0,0,0,.8);font-size:13px;line-height:2.1}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.line-sw{display:inline-block;width:16px;height:3px;margin-right:6px;vertical-align:middle;border-radius:1px}
+#controls{position:absolute;top:20px;right:20px;display:flex;gap:8px}
+#controls button{background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.15);color:#333;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .2s}
+#controls button:hover{background:rgba(0,0,0,.12)}
+#controls button.active{background:rgba(100,140,255,.2);border-color:rgba(100,140,255,.5);color:#1a4eaa}
+#equation{position:absolute;top:60px;right:20px;font-size:13px;color:rgba(0,0,0,.55);text-align:right;line-height:1.8;pointer-events:none}
+#answer{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);color:#0f6e56;font-size:14px;font-weight:600;text-align:center;pointer-events:none;max-width:700px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div id="legend">
+  <div><span class="dot" style="background:#5b4dc7"></span>P (5, 7, 3) — original point</div>
+  <div><span class="dot" style="background:#0f6e56"></span>Q (29/7, 40/7, 3/7) — foot of perpendicular</div>
+  <div><span class="dot" style="background:#d85a30"></span>P' (23/7, 31/7, −15/7) — reflection</div>
+  <div><span class="line-sw" style="background:rgba(100,140,255,0.3)"></span>Plane 2x + 3y + 6z = 28</div>
+  <div><span class="line-sw" style="background:#ffcf40;height:2px;border-style:dashed"></span>Perpendicular PQ &amp; QP'</div>
+  <div><span class="line-sw" style="background:#d85a30;height:1px"></span>Normal vector n̂</div>
+</div>
+
+<div id="controls">
+  <button id="btnRotate" class="active" onclick="toggleRotate()">Auto-rotate</button>
+  <button onclick="resetCam()">Reset view</button>
+</div>
+
+<div id="equation">
+  Plane: 2x + 3y + 6z = 28<br>
+  |n| = 7 · d = PQ = 3<br>
+  PP' = 6
+</div>
+
+<div id="answer">Q = (29/7, 40/7, 3/7) · PQ = 3 · P' = (23/7, 31/7, −15/7)</div>
+<div id="info">Drag to orbit · Scroll to zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0xffffff);
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+dl.position.set(10, 20, 15);
+scene.add(dl);
+
+// Key points
+const P  = new THREE.Vector3(5, 7, 3);
+const Q  = new THREE.Vector3(29/7, 40/7, 3/7);
+const Pp = new THREE.Vector3(23/7, 31/7, -15/7);
+const O  = new THREE.Vector3(0, 0, 0);
+const normal = new THREE.Vector3(2, 3, 6).normalize();
+
+// Center the scene around Q for better viewing
+const center = Q.clone();
+
+// --- Helpers ---
+function addEdge(a, b, color, dashed, linewidth) {
+  const mat = dashed
+    ? new THREE.LineDashedMaterial({color, dashSize: 0.3, gapSize: 0.15})
+    : new THREE.LineBasicMaterial({color});
+  const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
+  const line = new THREE.Line(geo, mat);
+  if (dashed) line.computeLineDistances();
+  scene.add(line);
+  return line;
+}
+
+function addSphere(pos, color, r) {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(r, 20, 20),
+    new THREE.MeshPhongMaterial({color, emissive: color, emissiveIntensity: 0.35})
+  );
+  m.position.copy(pos);
+  scene.add(m);
+  return m;
+}
+
+function makeLabel(text, pos, color, size) {
+  size = size || 0.5;
+  const c = document.createElement('canvas'); c.width = 512; c.height = 80;
+  const ctx = c.getContext('2d');
+  ctx.font = 'bold 38px "Segoe UI", system-ui, sans-serif';
+  ctx.fillStyle = color || '#333';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 40);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false});
+  const sp = new THREE.Sprite(mat);
+  sp.position.copy(pos).add(new THREE.Vector3(0, 0.45, 0));
+  sp.scale.set(size * 5, size * 0.8, 1);
+  scene.add(sp);
+  return sp;
+}
+
+// --- Plane visualization ---
+// Build a quad on the plane centered at Q
+// Plane: 2x + 3y + 6z = 28. Two tangent vectors:
+const t1 = new THREE.Vector3(3, -2, 0).normalize(); // perp to n in xy
+const t2 = new THREE.Vector3().crossVectors(normal, t1).normalize();
+const planeSize = 7;
+
+const planeGeo = new THREE.BufferGeometry();
+const v1 = Q.clone().add(t1.clone().multiplyScalar(-planeSize)).add(t2.clone().multiplyScalar(-planeSize));
+const v2 = Q.clone().add(t1.clone().multiplyScalar( planeSize)).add(t2.clone().multiplyScalar(-planeSize));
+const v3 = Q.clone().add(t1.clone().multiplyScalar( planeSize)).add(t2.clone().multiplyScalar( planeSize));
+const v4 = Q.clone().add(t1.clone().multiplyScalar(-planeSize)).add(t2.clone().multiplyScalar( planeSize));
+
+const verts = new Float32Array([
+  v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
+  v1.x,v1.y,v1.z, v3.x,v3.y,v3.z, v4.x,v4.y,v4.z
+]);
+planeGeo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+planeGeo.computeVertexNormals();
+const planeMesh = new THREE.Mesh(planeGeo, new THREE.MeshPhongMaterial({
+  color: 0x6488ff, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false
+}));
+scene.add(planeMesh);
+
+// Plane border
+const planeBorderPts = [v1, v2, v3, v4, v1];
+const planeBorderGeo = new THREE.BufferGeometry().setFromPoints(planeBorderPts);
+scene.add(new THREE.Line(planeBorderGeo, new THREE.LineBasicMaterial({color: 0x6488ff, transparent: true, opacity: 0.4})));
+
+// Plane grid lines
+for (let i = -6; i <= 6; i += 1.5) {
+  const start1 = Q.clone().add(t1.clone().multiplyScalar(i)).add(t2.clone().multiplyScalar(-planeSize));
+  const end1   = Q.clone().add(t1.clone().multiplyScalar(i)).add(t2.clone().multiplyScalar( planeSize));
+  const start2 = Q.clone().add(t2.clone().multiplyScalar(i)).add(t1.clone().multiplyScalar(-planeSize));
+  const end2   = Q.clone().add(t2.clone().multiplyScalar(i)).add(t1.clone().multiplyScalar( planeSize));
+  const gmat = new THREE.LineBasicMaterial({color: 0x6488ff, transparent: true, opacity: 0.08});
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([start1, end1]), gmat));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([start2, end2]), gmat));
+}
+
+// --- Key geometry ---
+
+// Perpendicular line P → Q → P' (dashed)
+addEdge(P, Q, 0xccaa00, true);
+addEdge(Q, Pp, 0xccaa00, true);
+
+// Normal vector arrow from Q (short, to show direction)
+const normalEnd = Q.clone().add(normal.clone().multiplyScalar(2.5));
+addEdge(Q, normalEnd, 0xd85a30, false);
+// Arrowhead sphere
+addSphere(normalEnd, 0xd85a30, 0.1);
+
+// Right angle marker at Q (small square in the plane)
+const raSize = 0.35;
+const ra1 = Q.clone().add(normal.clone().multiplyScalar(raSize)).add(t1.clone().multiplyScalar(raSize));
+const ra2 = Q.clone().add(t1.clone().multiplyScalar(raSize));
+const ra3 = Q.clone().add(normal.clone().multiplyScalar(raSize));
+const raGeo = new THREE.BufferGeometry().setFromPoints([ra3, ra1, ra2]);
+scene.add(new THREE.Line(raGeo, new THREE.LineBasicMaterial({color: 0x666666})));
+
+// Points
+addSphere(P,  0x5b4dc7, 0.22);
+addSphere(Q,  0x0f6e56, 0.22);
+addSphere(Pp, 0xd85a30, 0.22);
+
+// Labels
+makeLabel('P (5, 7, 3)', P.clone().add(new THREE.Vector3(0.2, 0.2, 0)), '#4a3aad', 0.45);
+makeLabel('Q (29/7, 40/7, 3/7)', Q.clone().add(new THREE.Vector3(-0.3, -0.5, 0)), '#0a7a5a', 0.4);
+makeLabel("P' (23/7, 31/7, −15/7)", Pp.clone().add(new THREE.Vector3(0.2, 0.2, 0)), '#c04020', 0.4);
+makeLabel('n̂', normalEnd.clone().add(new THREE.Vector3(0.2, 0.1, 0)), '#d85a30', 0.38);
+
+// Distance labels along the perpendicular
+const midPQ = new THREE.Vector3().lerpVectors(P, Q, 0.5);
+makeLabel('PQ = 3', midPQ.clone().add(t1.clone().multiplyScalar(0.7)), '#888', 0.35);
+const midQPp = new THREE.Vector3().lerpVectors(Q, Pp, 0.5);
+makeLabel("QP' = 3", midQPp.clone().add(t1.clone().multiplyScalar(0.7)), '#888', 0.35);
+
+// Plane label
+makeLabel('2x + 3y + 6z = 28', Q.clone().add(t1.clone().multiplyScalar(4.5)).add(t2.clone().multiplyScalar(-3)), '#4466aa', 0.42);
+
+// --- Coordinate axes (subtle) ---
+const axLen = 3;
+const axOrig = new THREE.Vector3(0, 0, 0);
+// We'll place small axes near bottom for reference
+const axBase = new THREE.Vector3(-2, -1, -3);
+addEdge(axBase, axBase.clone().add(new THREE.Vector3(axLen,0,0)), 0xaaaaaa, false);
+addEdge(axBase, axBase.clone().add(new THREE.Vector3(0,axLen,0)), 0xaaaaaa, false);
+addEdge(axBase, axBase.clone().add(new THREE.Vector3(0,0,axLen)), 0xaaaaaa, false);
+makeLabel('x', axBase.clone().add(new THREE.Vector3(axLen+0.3, 0, 0)), '#aaa', 0.3);
+makeLabel('y', axBase.clone().add(new THREE.Vector3(0, axLen+0.3, 0)), '#aaa', 0.3);
+makeLabel('z', axBase.clone().add(new THREE.Vector3(0, 0, axLen+0.3)), '#aaa', 0.3);
+
+// --- Orbit controls ---
+let autoRotate = true, isDragging = false, prevMouse = {x:0, y:0};
+let theta = Math.PI / 3.5, phi = Math.PI / 5, radius = 22;
+
+function updateCam() {
+  camera.position.set(
+    center.x + radius * Math.cos(phi) * Math.sin(theta),
+    center.y + radius * Math.sin(phi) + 2,
+    center.z + radius * Math.cos(phi) * Math.cos(theta)
+  );
+  camera.lookAt(center);
+}
+updateCam();
+
+renderer.domElement.addEventListener('pointerdown', e => {
+  isDragging = true; prevMouse = {x: e.clientX, y: e.clientY};
+});
+window.addEventListener('pointerup', () => isDragging = false);
+window.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouse.x, dy = e.clientY - prevMouse.y;
+  theta -= dx * 0.008;
+  phi = Math.max(-0.3, Math.min(Math.PI / 2.2, phi + dy * 0.008));
+  prevMouse = {x: e.clientX, y: e.clientY};
+  updateCam();
+});
+renderer.domElement.addEventListener('wheel', e => {
+  radius = Math.max(10, Math.min(50, radius + e.deltaY * 0.03));
+  updateCam();
+}, {passive: true});
+
+function toggleRotate() {
+  autoRotate = !autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', autoRotate);
+}
+function resetCam() { theta = Math.PI/3.5; phi = Math.PI/5; radius = 22; updateCam(); }
+
+window.setRotation = function(deg) { autoRotate = false; theta = deg * Math.PI / 180; updateCam(); };
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (autoRotate && !isDragging) { theta += 0.004; updateCam(); }
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
