@@ -471,13 +471,14 @@ You receive:
   <!-- Legend with colored dots/swatches -->
 </div>
 <div id="controls">
-  <button id="btnRotate" class="active" onclick="toggleRotate()">Auto-rotate</button>
+  <button id="btnRotate" onclick="toggleRotate()">Auto-rotate</button>
   <button onclick="resetCam()">Reset view</button>
 </div>
 <!-- No sliders — 3D has orbit/zoom only -->
 <div id="info">Drag to orbit · Scroll to zoom</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 // Scene setup
 const scene = new THREE.Scene();
@@ -575,45 +576,39 @@ function addCircle3D(center, normal, radius, color, segments) {
   scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({color})));
 }
 
-// === ORBIT CONTROLS (hand-rolled) ===
-let autoRotate = true, isDragging = false, prevMouse = {x:0, y:0};
-let theta = Math.PI/4, phi = Math.PI/5, camRadius = 25;
+// === ORBIT CONTROLS (Three.js OrbitControls) ===
+camera.position.set(18, 14, 18);
+camera.lookAt(0, 2, 0);
 
-function updateCam() {
-  camera.position.set(
-    camRadius * Math.cos(phi) * Math.sin(theta),
-    camRadius * Math.sin(phi) + 3,
-    camRadius * Math.cos(phi) * Math.cos(theta)
-  );
-  camera.lookAt(0, 2, 0);
-}
-updateCam();
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 2, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = false;
+controls.autoRotateSpeed = 2.0;
+controls.minDistance = 5;
+controls.maxDistance = 60;
+controls.maxPolarAngle = Math.PI * 0.85;
+controls.update();
 
-renderer.domElement.addEventListener('pointerdown', function(e) {
-  isDragging = true; prevMouse = {x: e.clientX, y: e.clientY};
-});
-window.addEventListener('pointerup', function() { isDragging = false; });
-window.addEventListener('pointermove', function(e) {
-  if (!isDragging) return;
-  theta -= (e.clientX - prevMouse.x) * 0.008;
-  phi = Math.max(-0.2, Math.min(Math.PI/2.2, phi + (e.clientY - prevMouse.y) * 0.008));
-  prevMouse = {x: e.clientX, y: e.clientY};
-  updateCam();
-});
-renderer.domElement.addEventListener('wheel', function(e) {
-  camRadius = Math.max(8, Math.min(60, camRadius + e.deltaY * 0.03));
-  updateCam();
-}, {passive: true});
+const _initPos = camera.position.clone();
+const _initTarget = controls.target.clone();
 
 function toggleRotate() {
-  autoRotate = !autoRotate;
-  document.getElementById('btnRotate').classList.toggle('active', autoRotate);
+  controls.autoRotate = !controls.autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', controls.autoRotate);
 }
-function resetCam() { theta = Math.PI/4; phi = Math.PI/5; camRadius = 25; updateCam(); }
+function resetCam() {
+  camera.position.copy(_initPos);
+  controls.target.copy(_initTarget);
+  controls.autoRotate = false;
+  document.getElementById('btnRotate').classList.remove('active');
+  controls.update();
+}
 
 function animate() {
   requestAnimationFrame(animate);
-  if (autoRotate && !isDragging) { theta += 0.005; updateCam(); }
+  controls.update();
   renderer.render(scene, camera);
 }
 animate();
@@ -690,7 +685,7 @@ window.addEventListener('resize', function() {
 - NEVER use `var(--name)` as a JS expression — CSS only
 - Use hex strings for colors in JS: "#5b4dc7", 0x5b4dc7
 - Use `const` and `let` instead of `var` for declarations
-- Do NOT import OrbitControls — use the hand-rolled version in the template
+- OrbitControls is already loaded from CDN and initialized in the template — do NOT create your own orbit controls or camera animation loop
 - Do NOT show solutions or answers
 - The helper functions (addEdge, addSphere, etc.) are already in the template. Use them directly.
 
