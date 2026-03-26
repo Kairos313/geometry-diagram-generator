@@ -26,6 +26,9 @@ sys.path.insert(0, str(ROOT_DIR / "frontend"))
 from dotenv import load_dotenv
 load_dotenv(ROOT_DIR / ".env")
 
+# Also check for env vars set directly (Render sets them in the environment)
+# No .env file needed on Render — env vars are set in the dashboard
+
 # Suppress noisy loggers
 for name in ["httpx", "httpcore", "openai", "google", "google_genai"]:
     logging.getLogger(name).setLevel(logging.WARNING)
