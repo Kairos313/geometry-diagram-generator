@@ -375,7 +375,7 @@ if (uploadZone) {
 let lastGeneratedHTML = null;
 let isGenerating = false;
 let abortController = null;
-const TIMEOUT_MS = 180000; // 3 min timeout
+const TIMEOUT_MS = 390000; // 6.5 min client timeout (server has 180s per attempt, retry = 360s max + buffer)
 
 document.getElementById("generateBtn").addEventListener("click", function() {
   if (isGenerating) { cancelGeneration(); } else { generate(); }

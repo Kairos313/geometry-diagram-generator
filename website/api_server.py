@@ -113,6 +113,49 @@ def get_recent_html(index):
         return jsonify({"html": recent_generations[index]["html"]})
 
 
+SERVER_TIMEOUT = 180  # seconds per attempt (including retry)
+
+
+def _run_with_timeout(func, timeout=180, **kwargs):
+    """Run a function in a thread with a timeout.
+    Returns the function's result or a timeout error dict.
+    """
+    result = [None]
+    error = [None]
+
+    def target():
+        try:
+            result[0] = func(**kwargs)
+        except Exception as e:
+            error[0] = str(e)
+
+    t = threading.Thread(target=target)
+    t.daemon = True
+    t.start()
+    t.join(timeout)
+
+    if t.is_alive():
+        logger.error("Server-side timeout after %ds", timeout)
+        return {
+            "success": False,
+            "html": "",
+            "dimension": kwargs.get("dimension_type", "2d").replace("coordinate_", ""),
+            "duration": timeout,
+            "error": "Generation timed out after {} seconds. Try using the Fast preset or a simpler question.".format(timeout),
+        }
+
+    if error[0]:
+        return {
+            "success": False,
+            "html": "",
+            "dimension": kwargs.get("dimension_type", "2d").replace("coordinate_", ""),
+            "duration": 0,
+            "error": error[0],
+        }
+
+    return result[0]
+
+
 def _is_geometry_question(text):
     """Quick check if the input looks like a geometry question.
     Uses keyword matching first (free, instant), falls back to LLM only if ambiguous.
@@ -183,7 +226,9 @@ def generate():
         from generate_js_pipeline import generate_diagram_openrouter
 
         start = time.time()
-        result = generate_diagram_openrouter(
+        result = _run_with_timeout(
+            generate_diagram_openrouter,
+            timeout=180,
             question_text=question,
             dimension_type=dimension,
             openrouter_key=os.getenv("OPENROUTER_WEBSITE_API_KEY"),
@@ -327,7 +372,9 @@ def generate_from_image():
         from generate_js_pipeline import generate_diagram_openrouter
 
         start = time.time()
-        result = generate_diagram_openrouter(
+        result = _run_with_timeout(
+            generate_diagram_openrouter,
+            timeout=SERVER_TIMEOUT,
             question_text=extracted_text,
             dimension_type=dimension,
             openrouter_key=os.getenv("OPENROUTER_WEBSITE_API_KEY"),
