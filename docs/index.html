@@ -292,7 +292,7 @@
           <option value="balanced" selected>Balanced (Gemini + Claude)</option>
           <option value="best">Best (Claude + Claude)</option>
         </select>
-        <button class="btn btn-primary" id="generateBtn" onclick="generate()">Generate Diagram</button>
+        <button class="btn btn-primary" id="generateBtn">Generate Diagram</button>
       </div>
       <div class="try-status" id="status"></div>
       <div class="try-output" id="output"></div>
@@ -376,6 +376,10 @@ let isGenerating = false;
 let abortController = null;
 const TIMEOUT_MS = 180000; // 3 min timeout
 
+document.getElementById("generateBtn").addEventListener("click", function() {
+  if (isGenerating) { cancelGeneration(); } else { generate(); }
+});
+
 async function generate() {
   // Prevent double-click
   if (isGenerating) return;
@@ -398,9 +402,7 @@ async function generate() {
   const extractedDiv = document.getElementById("extractedText");
   if (extractedDiv) extractedDiv.style.display = "none";
 
-  btn.disabled = true;
   btn.textContent = "Cancel";
-  btn.onclick = cancelGeneration;
   output.style.display = "none";
   document.getElementById("downloadBtn").style.display = "none";
   setStatus(isImageMode ? "Extracting text from image..." : "Classifying question...");
@@ -469,9 +471,7 @@ async function generate() {
   } finally {
     isGenerating = false;
     abortController = null;
-    btn.disabled = false;
     btn.textContent = "Generate Diagram";
-    btn.onclick = generate;
   }
 }
 
