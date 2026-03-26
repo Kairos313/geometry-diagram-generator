@@ -372,15 +372,23 @@ if (uploadZone) {
   });
 }
 
+let isGenerating = false;
+let abortController = null;
+const TIMEOUT_MS = 180000; // 3 min timeout
+
 async function generate() {
+  // Prevent double-click
+  if (isGenerating) return;
+  isGenerating = true;
+
   const activeTab = document.querySelector('.input-tab.active').textContent.trim();
   const isImageMode = activeTab === 'Image';
 
   if (isImageMode) {
-    if (!selectedImage) { setStatus("Please upload an image first.", true); return; }
+    if (!selectedImage) { setStatus("Please upload an image first.", true); isGenerating = false; return; }
   } else {
     const question = document.getElementById("question").value.trim();
-    if (!question) { setStatus("Please enter a question.", true); return; }
+    if (!question) { setStatus("Please enter a question.", true); isGenerating = false; return; }
   }
 
   const dim = document.getElementById("dim").value;
@@ -391,19 +399,25 @@ async function generate() {
   if (extractedDiv) extractedDiv.style.display = "none";
 
   btn.disabled = true;
-  btn.textContent = "Generating...";
+  btn.textContent = "Cancel";
+  btn.onclick = cancelGeneration;
   output.style.display = "none";
   document.getElementById("downloadBtn").style.display = "none";
   setStatus(isImageMode ? "Extracting text from image..." : "Classifying question...");
+
+  abortController = new AbortController();
+  const timeoutId = setTimeout(function() { abortController.abort(); }, TIMEOUT_MS);
 
   try {
     const startTime = Date.now();
     let resp;
 
-    const statusTimer = setInterval(() => {
+    const statusTimer = setInterval(function() {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+      const remaining = Math.max(0, Math.floor((TIMEOUT_MS - (Date.now() - startTime)) / 1000));
       if (isImageMode && elapsed < 10) setStatus("Extracting text from image... (" + elapsed + "s)");
       else if (elapsed < 20) setStatus("Computing coordinates and geometry... (" + elapsed + "s)");
+      else if (remaining < 30) setStatus("Generating diagram... (" + elapsed + "s) — timeout in " + remaining + "s");
       else setStatus("Generating interactive diagram... (" + elapsed + "s)");
     }, 1000);
 
@@ -417,6 +431,7 @@ async function generate() {
       resp = await fetch(API_URL + "/api/generate-from-image", {
         method: "POST",
         body: formData,
+        signal: abortController.signal,
       });
     } else {
       const question = document.getElementById("question").value.trim();
@@ -424,9 +439,11 @@ async function generate() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: question, dimension: dim, preset: preset }),
+        signal: abortController.signal,
       });
     }
 
+    clearTimeout(timeoutId);
     clearInterval(statusTimer);
     const data = await resp.json();
 
@@ -435,7 +452,6 @@ async function generate() {
       output.style.display = "block";
       output.innerHTML = '<iframe srcdoc="' + escapeHtml(data.html) + '" style="width:100%;height:450px;border:none;border-radius:6px;"></iframe>';
       document.getElementById("downloadBtn").style.display = "inline-block";
-      // Show extracted text for image uploads
       if (data.extracted_text && extractedDiv) {
         extractedDiv.textContent = "Extracted: " + data.extracted_text;
         extractedDiv.style.display = "block";
@@ -445,10 +461,24 @@ async function generate() {
       setStatus("Error: " + data.error, true);
     }
   } catch (e) {
-    setStatus("Connection error: " + e.message + ". Is the API server running?", true);
+    if (e.name === 'AbortError') {
+      setStatus("Generation timed out after 3 minutes. Try using the Fast preset or a simpler question.", true);
+    } else {
+      setStatus("Connection error: " + e.message + ". Is the API server running?", true);
+    }
   } finally {
+    isGenerating = false;
+    abortController = null;
     btn.disabled = false;
     btn.textContent = "Generate Diagram";
+    btn.onclick = generate;
+  }
+}
+
+function cancelGeneration() {
+  if (abortController) {
+    abortController.abort();
+    setStatus("Generation cancelled.", true);
   }
 }
 
