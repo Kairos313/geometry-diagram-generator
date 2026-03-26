@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Geometry Diagram</title>
 <style>
-
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#ffffff;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
 canvas{display:block}
@@ -17,29 +16,24 @@ canvas{display:block}
 #controls button{background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.15);color:#333;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .2s}
 #controls button:hover{background:rgba(0,0,0,.1)}
 #controls button.active{background:rgba(100,140,255,.2);border-color:rgba(100,140,255,.5);color:#1a4eaa}
-/* No slider styles needed — 3D has orbit/zoom only */
-
 </style>
 </head>
 <body>
 <div id="legend">
-  <div><span class="dot" style="background:#5b4dc7"></span>Vertices & solid edges</div>
-  <div><span class="dot" style="background:#888780"></span>Hidden edges</div>
-  <div><span class="dot" style="background:#7b68ee"></span>Base face</div>
-  <div><span class="dot" style="background:#4ae0b0"></span>Pyramid faces</div>
-  <div><span class="dot" style="background:#d85a30"></span>Asked segment (VM)</div>
+  <div><span class="dot" style="background:#5b4dc7"></span>Pyramid vertices &amp; edges</div>
+  <div><span class="dot" style="background:#d85a30"></span>Slant height VM (asked)</div>
+  <div><span class="dot" style="background:#888780"></span>Construction lines (dashed)</div>
+  <div><span class="dot" style="background:#ba7517"></span>Right angle at O</div>
 </div>
 <div id="controls">
   <button id="btnRotate" onclick="toggleRotate()">Auto-rotate</button>
   <button onclick="resetCam()">Reset view</button>
 </div>
-<!-- No sliders — 3D has orbit/zoom only -->
 <div id="info">Drag to orbit · Scroll to zoom</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
-// Scene setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -48,13 +42,10 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setClearColor(0xffffff);
 document.body.appendChild(renderer.domElement);
 
-// Lighting
 scene.add(new THREE.AmbientLight(0xffffff, 0.7));
 const dl = new THREE.DirectionalLight(0xffffff, 0.8);
 dl.position.set(10, 20, 15);
 scene.add(dl);
-
-// === HELPER FUNCTIONS ===
 
 function addEdge(a, b, color, dashed) {
   const mat = dashed
@@ -89,7 +80,7 @@ function makeLabel(text, pos, color, size) {
   const tex = new THREE.CanvasTexture(c);
   const mat = new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false});
   const sp = new THREE.Sprite(mat);
-  sp.position.copy(pos).add(new THREE.Vector3(0, 0.5, 0));
+  sp.position.copy(pos);
   sp.scale.set(size * 4, size, 1);
   scene.add(sp);
   return sp;
@@ -97,7 +88,6 @@ function makeLabel(text, pos, color, size) {
 
 function addFace(vertices, color, opacity) {
   opacity = opacity || 0.12;
-  // Triangulate fan from first vertex
   const positions = [];
   for (let i = 1; i < vertices.length - 1; i++) {
     positions.push(vertices[0].x, vertices[0].y, vertices[0].z);
@@ -113,84 +103,6 @@ function addFace(vertices, color, opacity) {
   scene.add(new THREE.Mesh(geo, mat));
 }
 
-function addCircle3D(center, normal, radius, color, segments) {
-  segments = segments || 64;
-  color = color || 0x5b4dc7;
-  // Build orthonormal basis in the circle's plane
-  const n = normal.clone().normalize();
-  let up = new THREE.Vector3(0, 1, 0);
-  if (Math.abs(n.dot(up)) > 0.99) up = new THREE.Vector3(1, 0, 0);
-  const u = new THREE.Vector3().crossVectors(n, up).normalize();
-  const v = new THREE.Vector3().crossVectors(n, u).normalize();
-  const pts = [];
-  for (let i = 0; i <= segments; i++) {
-    const a = (i / segments) * Math.PI * 2;
-    pts.push(new THREE.Vector3(
-      center.x + radius * (Math.cos(a) * u.x + Math.sin(a) * v.x),
-      center.y + radius * (Math.cos(a) * u.y + Math.sin(a) * v.y),
-      center.z + radius * (Math.cos(a) * u.z + Math.sin(a) * v.z)
-    ));
-  }
-  const geo = new THREE.BufferGeometry().setFromPoints(pts);
-  scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({color})));
-}
-
-// === ORBIT CONTROLS (Three.js OrbitControls) ===
-camera.position.set(18, 14, 18);
-camera.lookAt(0, 2, 0);
-
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 2, 0);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.autoRotate = false;
-controls.autoRotateSpeed = 2.0;
-controls.minDistance = 5;
-controls.maxDistance = 60;
-controls.maxPolarAngle = Math.PI * 0.85;
-controls.update();
-
-const _initPos = camera.position.clone();
-const _initTarget = controls.target.clone();
-
-function toggleRotate() {
-  controls.autoRotate = !controls.autoRotate;
-  document.getElementById('btnRotate').classList.toggle('active', controls.autoRotate);
-}
-function resetCam() {
-  camera.position.copy(_initPos);
-  controls.target.copy(_initTarget);
-  controls.autoRotate = false;
-  document.getElementById('btnRotate').classList.remove('active');
-  controls.update();
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
-}
-animate();
-
-window.addEventListener('resize', function() {
-  camera.aspect = innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
-
-
-/**
- * Draw a 3D angle arc at vertex between rays vertex→p1 and vertex→p2.
- * Uses quaternion rotation to sweep correctly in 3D space.
- *
- * @param {THREE.Vector3} vertex - the angle vertex
- * @param {THREE.Vector3} p1 - point on first ray
- * @param {THREE.Vector3} p2 - point on second ray
- * @param {number} radius - arc radius
- * @param {number} color - hex color (e.g. 0xba7517)
- * @param {boolean} isRightAngle - if true, draw a square marker
- * @returns {object} {line, labelPos} - the THREE.Line and label position
- */
 function drawAngleArc3D(vertex, p1, p2, radius, color, isRightAngle) {
   const v1 = new THREE.Vector3().subVectors(p1, vertex);
   const v2 = new THREE.Vector3().subVectors(p2, vertex);
@@ -225,79 +137,137 @@ function drawAngleArc3D(vertex, p1, p2, radius, color, isRightAngle) {
   const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color: color}));
   scene.add(line);
 
-  // Label position at arc midpoint, pushed outward
   const midT = angle / 2;
   const qMid = new THREE.Quaternion().setFromAxisAngle(axis, midT);
   const labelPos = v1.clone().applyQuaternion(qMid).multiplyScalar(radius * 1.6).add(vertex);
   return { labelPos: labelPos };
 }
 
+// === GEOMETRY ===
+// Scale: notes use half-size coords (4 = half of 8cm side), height 3 = half of 6cm
+// We'll scale up by 1.5 for better visibility: side=8 units, height=6 units
 
-// === YOUR GEOMETRY CODE BELOW ===
-// Use the coordinates from the computation notes.
-// Use addEdge, addSphere, makeLabel, addFace, addCircle3D, drawAngleArc3D helpers.
+// Coordinates from notes, mapped to 3D (Y is up)
+// Base is in XZ plane (y=0), apex is at y=6
+const A = new THREE.Vector3( 4,  0,  4);
+const B = new THREE.Vector3( 4,  0, -4);
+const C = new THREE.Vector3(-4,  0, -4);
+const D = new THREE.Vector3(-4,  0,  4);
+const O = new THREE.Vector3( 0,  0,  0);
+const V = new THREE.Vector3( 0,  6,  0);
+// M = midpoint of AB
+const M = new THREE.Vector3( 4,  0,  0);
 
-// Coordinates (Y is UP)
-const A = new THREE.Vector3(2.0, 0.0, -2.0);
-const B = new THREE.Vector3(2.0, 0.0, 2.0);
-const C = new THREE.Vector3(-2.0, 0.0, 2.0);
-const D = new THREE.Vector3(-2.0, 0.0, -2.0);
-const V = new THREE.Vector3(0.0, 3.0, 0.0);
-const O = new THREE.Vector3(0.0, 0.0, 0.0);
-const M = new THREE.Vector3(2.0, 0.0, 0.0);
+// === FACES ===
+addFace([A, B, C, D], 0x7b68ee, 0.13);
+addFace([V, A, B], 0x4ae0b0, 0.13);
+addFace([V, B, C], 0x4ae0b0, 0.13);
+addFace([V, C, D], 0x4ae0b0, 0.13);
+addFace([V, D, A], 0x4ae0b0, 0.13);
 
-// Points
-addSphere(A, 0x5b4dc7);
-addSphere(B, 0x5b4dc7);
-addSphere(C, 0x5b4dc7);
-addSphere(D, 0x5b4dc7);
-addSphere(V, 0x5b4dc7);
-addSphere(O, 0x5b4dc7);
+// === BASE EDGES ===
+// Solid: AB, BC
+addEdge(A, B, 0x5b4dc7, false);
+addEdge(B, C, 0x5b4dc7, false);
+// Dashed: CD, DA (back edges)
+addEdge(C, D, 0x888780, true);
+addEdge(D, A, 0x888780, true);
+
+// === LATERAL EDGES ===
+addEdge(V, A, 0x5b4dc7, false);
+addEdge(V, B, 0x5b4dc7, false);
+addEdge(V, C, 0x5b4dc7, false);
+addEdge(V, D, 0x5b4dc7, false);
+
+// === CONSTRUCTION LINES ===
+// VO (height, dashed)
+addEdge(V, O, 0x888780, true);
+// OM (dashed)
+addEdge(O, M, 0x888780, true);
+// VM (slant height, highlighted)
+addEdge(V, M, 0xd85a30, false);
+
+// === VERTICES ===
+addSphere(A, 0x5b4dc7, 0.18);
+addSphere(B, 0x5b4dc7, 0.18);
+addSphere(C, 0x5b4dc7, 0.18);
+addSphere(D, 0x5b4dc7, 0.18);
+addSphere(O, 0x888780, 0.15);
+addSphere(V, 0x5b4dc7, 0.22);
 addSphere(M, 0xd85a30, 0.22);
 
-// Labels
-makeLabel('A', A, '#4a3aad');
-makeLabel('B', B, '#4a3aad');
-makeLabel('C', C, '#4a3aad');
-makeLabel('D', D, '#4a3aad');
-makeLabel('V', V, '#4a3aad');
-makeLabel('O', O, '#4a3aad');
-makeLabel('M', M, '#d85a30');
+// === VERTEX LABELS ===
+makeLabel('A', A.clone().add(new THREE.Vector3( 0.6, -0.5,  0.6)), '#4a3aad', 0.55);
+makeLabel('B', B.clone().add(new THREE.Vector3( 0.6, -0.5, -0.6)), '#4a3aad', 0.55);
+makeLabel('C', C.clone().add(new THREE.Vector3(-0.6, -0.5, -0.6)), '#4a3aad', 0.55);
+makeLabel('D', D.clone().add(new THREE.Vector3(-0.6, -0.5,  0.6)), '#4a3aad', 0.55);
+makeLabel('V', V.clone().add(new THREE.Vector3( 0,    0.7,  0  )), '#4a3aad', 0.55);
+makeLabel('O', O.clone().add(new THREE.Vector3(-0.6, -0.4,  0  )), '#666666', 0.50);
+makeLabel('M', M.clone().add(new THREE.Vector3( 0.7, -0.4,  0  )), '#d85a30', 0.55);
 
-// Edges
-addEdge(A, B, 0x5b4dc7, false); // AB solid
-addEdge(B, C, 0x5b4dc7, false); // BC solid
-addEdge(C, D, 0x888780, true); // CD dashed
-addEdge(D, A, 0x888780, true); // DA dashed
-addEdge(V, A, 0x5b4dc7, false); // VA solid
-addEdge(V, B, 0x5b4dc7, false); // VB solid
-addEdge(V, C, 0x888780, true); // VC dashed
-addEdge(V, D, 0x888780, true); // VD dashed
-addEdge(V, O, 0x888780, true); // VO dashed
-addEdge(V, M, 0xd85a30, false); // VM solid (asked)
-addEdge(O, M, 0x888780, true); // OM dashed
-
-// Edge labels
+// === EDGE LABELS ===
+// AB midpoint
 const midAB = new THREE.Vector3().addVectors(A, B).multiplyScalar(0.5);
-makeLabel('8 cm', midAB, '#555', 0.45);
+makeLabel('8 cm', midAB.clone().add(new THREE.Vector3(0.8, -0.5, 0)), '#555', 0.45);
 
+// BC midpoint
+const midBC = new THREE.Vector3().addVectors(B, C).multiplyScalar(0.5);
+makeLabel('8 cm', midBC.clone().add(new THREE.Vector3(0, -0.5, -0.8)), '#555', 0.45);
+
+// VO label (height)
 const midVO = new THREE.Vector3().addVectors(V, O).multiplyScalar(0.5);
-makeLabel('6 cm', midVO, '#555', 0.45);
+makeLabel('6 cm', midVO.clone().add(new THREE.Vector3(-1.0, 0, 0)), '#555', 0.45);
 
+// VM label (asked)
 const midVM = new THREE.Vector3().addVectors(V, M).multiplyScalar(0.5);
-makeLabel('?', midVM, '#d85a30', 0.5);
+makeLabel('?', midVM.clone().add(new THREE.Vector3(1.0, 0.3, 0)), '#d85a30', 0.60);
 
-// Faces
-addFace([A, B, C, D], 0x7b68ee, 0.14); // Base
-addFace([V, A, B], 0x4ae0b0, 0.12); // VAB
-addFace([V, B, C], 0x4ae0b0, 0.12); // VBC
-addFace([V, C, D], 0x4ae0b0, 0.12); // VCD
-addFace([V, D, A], 0x4ae0b0, 0.12); // VDA
+// === RIGHT ANGLE AT O ===
+// Angle between OV (upward) and OM (toward M)
+const arc = drawAngleArc3D(O, V, M, 1.0, 0xba7517, true);
 
-// Right angle at O in triangle VOM
-const arcVO = drawAngleArc3D(O, V, M, 0.9, 0xba7517, true);
-if (arcVO) makeLabel('90°', arcVO.labelPos, '#ba7517', 0.45);
+// === CAMERA ===
+camera.position.set(18, 14, 18);
+camera.lookAt(0, 2, 0);
 
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 2, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = false;
+controls.autoRotateSpeed = 2.0;
+controls.minDistance = 8;
+controls.maxDistance = 60;
+controls.maxPolarAngle = Math.PI * 0.85;
+controls.update();
+
+const _initPos = camera.position.clone();
+const _initTarget = controls.target.clone();
+
+function toggleRotate() {
+  controls.autoRotate = !controls.autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', controls.autoRotate);
+}
+function resetCam() {
+  camera.position.copy(_initPos);
+  controls.target.copy(_initTarget);
+  controls.autoRotate = false;
+  document.getElementById('btnRotate').classList.remove('active');
+  controls.update();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', function() {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
 </script>
 </body>
 </html>

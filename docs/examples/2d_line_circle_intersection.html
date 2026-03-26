@@ -11,316 +11,203 @@ svg{display:block;max-width:100%;max-height:90vh}
 #legend{position:absolute;top:20px;left:20px;color:rgba(0,0,0,.8);font-size:13px;line-height:2.1}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .line-sw{display:inline-block;width:16px;height:2px;margin-right:6px;vertical-align:middle;border-radius:1px}
-#controls{position:absolute;top:20px;right:20px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-#controls label{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(0,0,0,.7)}
-#controls input[type=range]{width:140px}
 #info{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(0,0,0,.45);font-size:13px;text-align:center;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="legend">
-  <div><span class="dot" style="background:#5b4dc7"></span> Circle & Line</div>
-  <div><span class="dot" style="background:#d85a30"></span> Intersection Points (asked)</div>
-  <div><span class="line-sw" style="background:#888780"></span> Grid</div>
+  <div><span class="dot" style="background:#5b4dc7"></span>Circle C: (x−2)²+(y−3)²=25</div>
+  <div><span class="line-sw" style="background:#0f6e56"></span>Line L: y = x + 4</div>
+  <div><span class="dot" style="background:#d85a30"></span>Intersection points P1, P2</div>
 </div>
-<div id="controls">
-  <!-- No controls for 2D static diagram -->
-</div>
-<div id="info">Circle: (x-2)² + (y-3)² = 25 | Line: y = x + 4</div>
+<div id="info">L is a secant — it intersects the circle at two points</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
-
-/**
- * Draw an angle arc at vertex between rays vertex→p1 and vertex→p2.
- * Works correctly in SVG coordinates (Y-down).
- *
- * @param {SVGElement} svg - D3 selection to append to
- * @param {number} vx, vy - vertex position (SVG coords)
- * @param {number} p1x, p1y - first ray endpoint (SVG coords)
- * @param {number} p2x, p2y - second ray endpoint (SVG coords)
- * @param {number} radius - arc radius in pixels
- * @param {string} color - stroke color
- * @param {number|null} expectedDeg - expected angle in degrees (helps pick correct sweep)
- * @param {boolean} isRightAngle - if true, draw a square marker instead
- * @returns {object} {path, labelPos} - the SVG path element and label position {x, y}
- */
-function drawAngleArc(svg, vx, vy, p1x, p1y, p2x, p2y, radius, color, expectedDeg, isRightAngle) {
-  // Vectors from vertex to each point (in math coords: negate Y for SVG)
-  const dx1 = p1x - vx, dy1 = -(p1y - vy);
-  const dx2 = p2x - vx, dy2 = -(p2y - vy);
-  const len1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-  const len2 = Math.sqrt(dx2*dx2 + dy2*dy2);
-  if (len1 < 1e-9 || len2 < 1e-9) return null;
-
-  // Unit vectors
-  const u1x = dx1/len1, u1y = dy1/len1;
-  const u2x = dx2/len2, u2y = dy2/len2;
-
-  // Right angle marker
-  if (isRightAngle) {
-    const s = radius * 0.7;
-    const ax = vx + u1x * s, ay = vy - u1y * s;
-    const cx = vx + u2x * s, cy = vy - u2y * s;
-    const bx = ax + u2x * s, by = ay - u2y * s;
-    svg.append("path")
-      .attr("d", "M"+ax+","+ay+"L"+bx+","+by+"L"+cx+","+cy)
-      .attr("fill", "none").attr("stroke", color).attr("stroke-width", 1.4);
-    return { labelPos: {x: bx, y: by} };
-  }
-
-  // Cross product Z-component determines sweep direction
-  const cross = u1x * u2y - u1y * u2x;
-  // Angle between vectors
-  const dot = Math.max(-1, Math.min(1, u1x*u2x + u1y*u2y));
-  const angleBetween = Math.acos(dot);
-
-  // Determine sweep: from u1 toward u2
-  // If cross >= 0, CCW sweep from u1 to u2 is the interior angle
-  // If cross < 0, CW sweep (= CCW with negative angle) is interior
-  let sweepAngle = angleBetween;
-  let startU = {x: u1x, y: u1y};
-  // perpendicular axis for parametric arc
-  let perpX, perpY;
-  if (cross >= 0) {
-    perpX = -u1y; perpY = u1x;
-  } else {
-    perpX = u1y; perpY = -u1x;
-  }
-
-  // If expectedDeg is given and the computed angle doesn't match,
-  // try the supplementary ray directions (handles tangent-line cases)
-  if (expectedDeg != null) {
-    const computedDeg = sweepAngle * 180 / Math.PI;
-    if (Math.abs(computedDeg - expectedDeg) > 25) {
-      // Try all 4 ray direction combos: (u1, u2), (-u1, u2), (u1, -u2), (-u1, -u2)
-      const candidates = [
-        {u1: {x:u1x,y:u1y}, u2: {x:u2x,y:u2y}},
-        {u1: {x:-u1x,y:-u1y}, u2: {x:u2x,y:u2y}},
-        {u1: {x:u1x,y:u1y}, u2: {x:-u2x,y:-u2y}},
-        {u1: {x:-u1x,y:-u1y}, u2: {x:-u2x,y:-u2y}},
-      ];
-      let bestDiff = 999, bestC = null;
-      for (const c of candidates) {
-        const d = Math.max(-1, Math.min(1, c.u1.x*c.u2.x + c.u1.y*c.u2.y));
-        const a = Math.acos(d) * 180 / Math.PI;
-        const diff = Math.abs(a - expectedDeg);
-        if (diff < bestDiff) {
-          bestDiff = diff;
-          bestC = c;
-          sweepAngle = a * Math.PI / 180;
-        }
-      }
-      if (bestC) {
-        startU = bestC.u1;
-        const cr = bestC.u1.x * bestC.u2.y - bestC.u1.y * bestC.u2.x;
-        if (cr >= 0) {
-          perpX = -bestC.u1.y; perpY = bestC.u1.x;
-        } else {
-          perpX = bestC.u1.y; perpY = -bestC.u1.x;
-        }
-      }
-    }
-  }
-
-  // Sample arc points
-  const pts = [];
-  const N = 40;
-  for (let i = 0; i <= N; i++) {
-    const t = (i / N) * sweepAngle;
-    const px = vx + radius * (Math.cos(t) * startU.x + Math.sin(t) * perpX);
-    const py = vy - radius * (Math.cos(t) * startU.y + Math.sin(t) * perpY);
-    pts.push([px, py]);
-  }
-
-  // Draw arc path
-  let d = "M" + pts[0][0] + "," + pts[0][1];
-  for (let i = 1; i < pts.length; i++) d += "L" + pts[i][0] + "," + pts[i][1];
-  svg.append("path").attr("d", d)
-    .attr("fill", "none").attr("stroke", color).attr("stroke-width", 1.4);
-
-  // Label position at midpoint of arc, pushed outward
-  const midIdx = Math.floor(N / 2);
-  const labelR = radius * 1.6;
-  const tMid = (midIdx / N) * sweepAngle;
-  const lx = vx + labelR * (Math.cos(tMid) * startU.x + Math.sin(tMid) * perpX);
-  const ly = vy - labelR * (Math.cos(tMid) * startU.y + Math.sin(tMid) * perpY);
-
-  return { labelPos: {x: lx, y: ly} };
-}
-
-// Main drawing code
-const W = 680, H = 500, margin = 60;
-
-// Math coordinate ranges
-const xMin = -5.0, xMax = 9.0, yMin = -4.0, yMax = 10.0;
+const W = 720, H = 540, margin = 60;
+const xMin = -9, xMax = 9, yMin = -4, yMax = 10;
 const xSpan = xMax - xMin, ySpan = yMax - yMin;
-
-// Uniform scaling: same pixels per unit in both axes
 const pxPerUnit = Math.min((W - 2*margin) / xSpan, (H - 2*margin) / ySpan);
 const cx = W/2, cy = H/2;
 const midX = (xMin + xMax)/2, midY = (yMin + yMax)/2;
-
 function sx(x) { return cx + (x - midX) * pxPerUnit; }
 function sy(y) { return cy - (y - midY) * pxPerUnit; }
 function sr(r) { return r * pxPerUnit; }
 
-// Create SVG
 const svg = d3.select("body").append("svg")
   .attr("width", W).attr("height", H)
-  .attr("viewBox", `0 0 ${W} ${H}`);
+  .attr("viewBox", "0 0 " + W + " " + H);
 
 // Grid lines
-if (true) {
-  const gridGroup = svg.append("g").attr("stroke", "#e0dfdb").attr("stroke-width", 0.5);
-  // Vertical lines
-  const xStep = xSpan > 20 ? 5 : xSpan > 50 ? 10 : 1;
-  for (let x = Math.ceil(xMin/xStep)*xStep; x <= xMax; x += xStep) {
-    const sxVal = sx(x);
-    gridGroup.append("line")
-      .attr("x1", sxVal).attr("y1", sy(yMin))
-      .attr("x2", sxVal).attr("y2", sy(yMax));
-  }
-  // Horizontal lines
-  const yStep = ySpan > 20 ? 5 : ySpan > 50 ? 10 : 1;
-  for (let y = Math.ceil(yMin/yStep)*yStep; y <= yMax; y += yStep) {
-    const syVal = sy(y);
-    gridGroup.append("line")
-      .attr("x1", sx(xMin)).attr("y1", syVal)
-      .attr("x2", sx(xMax)).attr("y2", syVal);
-  }
+const xStep = 1, yStep = 1;
+for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+  svg.append("line")
+    .attr("x1", sx(x)).attr("y1", sy(yMin))
+    .attr("x2", sx(x)).attr("y2", sy(yMax))
+    .attr("stroke", "#e0dfdb").attr("stroke-width", 0.5);
+}
+for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+  svg.append("line")
+    .attr("x1", sx(xMin)).attr("y1", sy(y))
+    .attr("x2", sx(xMax)).attr("y2", sy(y))
+    .attr("stroke", "#e0dfdb").attr("stroke-width", 0.5);
 }
 
-// Axes
-const axisGroup = svg.append("g").attr("stroke", "#999").attr("stroke-width", 1.5);
-// x-axis
-axisGroup.append("line")
+// Axes arrows
+const defs = svg.append("defs");
+defs.append("marker")
+  .attr("id","arrowhead").attr("markerWidth",8).attr("markerHeight",6)
+  .attr("refX",8).attr("refY",3).attr("orient","auto")
+  .append("polygon").attr("points","0 0, 8 3, 0 6").attr("fill","#999");
+
+// X axis
+svg.append("line")
   .attr("x1", sx(xMin)).attr("y1", sy(0))
   .attr("x2", sx(xMax)).attr("y2", sy(0))
-  .attr("marker-end", "url(#arrow)");
-// y-axis
-axisGroup.append("line")
+  .attr("stroke","#999").attr("stroke-width",1.2)
+  .attr("marker-end","url(#arrowhead)");
+// Y axis
+svg.append("line")
   .attr("x1", sx(0)).attr("y1", sy(yMin))
   .attr("x2", sx(0)).attr("y2", sy(yMax))
-  .attr("marker-end", "url(#arrow)");
-
-// Arrow marker
-svg.append("defs").append("marker")
-  .attr("id", "arrow")
-  .attr("viewBox", "0 0 10 10")
-  .attr("refX", 9).attr("refY", 5)
-  .attr("markerWidth", 6).attr("markerHeight", 6)
-  .attr("orient", "auto")
-  .append("path")
-  .attr("d", "M 0 0 L 10 5 L 0 10 z")
-  .attr("fill", "#999");
+  .attr("stroke","#999").attr("stroke-width",1.2)
+  .attr("marker-end","url(#arrowhead)");
 
 // Axis labels
-svg.append("text").attr("x", sx(xMax-0.5)).attr("y", sy(0)-10)
-  .attr("text-anchor", "middle").attr("font-size", 14).attr("fill", "#333")
-  .text("x");
-svg.append("text").attr("x", sx(0)+10).attr("y", sy(yMax-0.5))
-  .attr("text-anchor", "middle").attr("font-size", 14).attr("fill", "#333")
-  .text("y");
-svg.append("text").attr("x", sx(0)-10).attr("y", sy(0)+20)
-  .attr("text-anchor", "end").attr("font-size", 14).attr("fill", "#333")
-  .text("O");
+svg.append("text").attr("x", sx(xMax)+8).attr("y", sy(0)+4)
+  .attr("font-size",14).attr("fill","#666").text("x");
+svg.append("text").attr("x", sx(0)+6).attr("y", sy(yMax)-6)
+  .attr("font-size",14).attr("fill","#666").text("y");
 
 // Tick marks and labels
-const tickStep = xSpan > 20 ? 5 : 1;
-for (let x = Math.ceil(xMin/tickStep)*tickStep; x <= xMax; x += tickStep) {
-  if (Math.abs(x) < 1e-9) continue;
-  const sxVal = sx(x);
-  axisGroup.append("line")
-    .attr("x1", sxVal).attr("y1", sy(0)-4)
-    .attr("x2", sxVal).attr("y2", sy(0)+4);
-  svg.append("text").attr("x", sxVal).attr("y", sy(0)+18)
-    .attr("text-anchor", "middle").attr("font-size", 11).attr("fill", "#666")
-    .text(x);
+for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+  if (x === 0) continue;
+  svg.append("line")
+    .attr("x1", sx(x)).attr("y1", sy(0)-4)
+    .attr("x2", sx(x)).attr("y2", sy(0)+4)
+    .attr("stroke","#999").attr("stroke-width",1);
+  if (x % 2 === 0) {
+    svg.append("text").attr("x", sx(x)).attr("y", sy(0)+16)
+      .attr("text-anchor","middle").attr("font-size",11).attr("fill","#888").text(x);
+  }
 }
-for (let y = Math.ceil(yMin/tickStep)*tickStep; y <= yMax; y += tickStep) {
-  if (Math.abs(y) < 1e-9) continue;
-  const syVal = sy(y);
-  axisGroup.append("line")
-    .attr("x1", sx(0)-4).attr("y1", syVal)
-    .attr("x2", sx(0)+4).attr("y2", syVal);
-  svg.append("text").attr("x", sx(0)-10).attr("y", syVal+4)
-    .attr("text-anchor", "end").attr("font-size", 11).attr("fill", "#666")
-    .text(y);
+for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+  if (y === 0) continue;
+  svg.append("line")
+    .attr("x1", sx(0)-4).attr("y1", sy(y))
+    .attr("x2", sx(0)+4).attr("y2", sy(y))
+    .attr("stroke","#999").attr("stroke-width",1);
+  if (y % 2 === 0) {
+    svg.append("text").attr("x", sx(0)-10).attr("y", sy(y)+4)
+      .attr("text-anchor","end").attr("font-size",11).attr("fill","#888").text(y);
+  }
 }
+// Origin label
+svg.append("text").attr("x", sx(0)-12).attr("y", sy(0)+14)
+  .attr("font-size",12).attr("fill","#888").text("O");
 
 // Circle
-const centerX = 2.0, centerY = 3.0, radius = 5.0;
 svg.append("circle")
-  .attr("cx", sx(centerX)).attr("cy", sy(centerY))
-  .attr("r", sr(radius))
-  .attr("fill", "none")
-  .attr("stroke", "#5b4dc7")
-  .attr("stroke-width", 1.8);
+  .attr("cx", sx(2)).attr("cy", sy(3))
+  .attr("r", sr(5))
+  .attr("fill","#5b4dc7").attr("fill-opacity",0.06)
+  .attr("stroke","#5b4dc7").attr("stroke-width",1.8);
 
-// Circle label
-svg.append("text")
-  .attr("x", sx(centerX + radius*0.7)).attr("y", sy(centerY - radius*0.7))
-  .attr("text-anchor", "middle").attr("font-size", 14).attr("fill", "#5b4dc7")
-  .text("(x-2)² + (y-3)² = 25");
+// Line L: y = x + 4, draw across visible range
+const lineData = [];
+for (let x = xMin; x <= xMax; x += 0.1) {
+  const y = x + 4;
+  if (y >= yMin && y <= yMax) lineData.push([x, y]);
+}
+// Extend to boundaries
+const xAtYmin = yMin - 4; // x = y - 4
+const xAtYmax = yMax - 4;
+const yAtXmin = xMin + 4;
+const yAtXmax = xMax + 4;
 
-// Line segment (extended for visibility)
-const L_start = {x: -4.0, y: 0.0}, L_end = {x: 6.0, y: 10.0};
-svg.append("line")
-  .attr("x1", sx(L_start.x)).attr("y1", sy(L_start.y))
-  .attr("x2", sx(L_end.x)).attr("y2", sy(L_end.y))
-  .attr("stroke", "#5b4dc7")
-  .attr("stroke-width", 1.8);
+// Clip line to view
+const linePoints = [];
+// Find entry/exit points
+const candidates = [];
+if (yAtXmin >= yMin && yAtXmin <= yMax) candidates.push([xMin, yAtXmin]);
+if (yAtXmax >= yMin && yAtXmax <= yMax) candidates.push([xMax, yAtXmax]);
+if (xAtYmin >= xMin && xAtYmin <= xMax) candidates.push([xAtYmin, yMin]);
+if (xAtYmax >= xMin && xAtYmax <= xMax) candidates.push([xAtYmax, yMax]);
 
-// Line label
-const lineMidX = (L_start.x + L_end.x)/2, lineMidY = (L_start.y + L_end.y)/2;
-svg.append("text")
-  .attr("x", sx(lineMidX + 1)).attr("y", sy(lineMidY - 1))
-  .attr("text-anchor", "middle").attr("font-size", 14).attr("fill", "#5b4dc7")
-  .text("y = x + 4");
+// Remove duplicates and sort by x
+const uniqueCands = [];
+for (const c of candidates) {
+  if (!uniqueCands.some(u => Math.abs(u[0]-c[0])<0.001 && Math.abs(u[1]-c[1])<0.001)) {
+    uniqueCands.push(c);
+  }
+}
+uniqueCands.sort((a,b) => a[0]-b[0]);
 
-// Intersection points (asked)
-const P1 = {x: 3.702, y: 7.702}, P2 = {x: -2.702, y: 1.298};
-const points = [P1, P2];
-points.forEach(p => {
-  svg.append("circle")
-    .attr("cx", sx(p.x)).attr("cy", sy(p.y))
-    .attr("r", 4)
-    .attr("fill", "#d85a30")
-    .attr("stroke", "none");
-  // Label with "?"
-  const offset = 16;
-  const centroidX = (P1.x + P2.x + centerX)/3;
-  const centroidY = (P1.y + P2.y + centerY)/3;
-  const dx = p.x - centroidX, dy = p.y - centroidY;
-  const dist = Math.sqrt(dx*dx + dy*dy);
-  const labelX = sx(p.x + offset * dx/dist);
-  const labelY = sy(p.y + offset * dy/dist);
-  svg.append("text")
-    .attr("x", labelX).attr("y", labelY)
-    .attr("text-anchor", "middle").attr("font-size", 14)
-    .attr("font-weight", 500).attr("fill", "#d85a30")
-    .text("?");
-});
+if (uniqueCands.length >= 2) {
+  const lp1 = uniqueCands[0], lp2 = uniqueCands[uniqueCands.length-1];
+  svg.append("line")
+    .attr("x1", sx(lp1[0])).attr("y1", sy(lp1[1]))
+    .attr("x2", sx(lp2[0])).attr("y2", sy(lp2[1]))
+    .attr("stroke","#0f6e56").attr("stroke-width",2.0);
+}
 
 // Center point
 svg.append("circle")
-  .attr("cx", sx(centerX)).attr("cy", sy(centerY))
+  .attr("cx", sx(2)).attr("cy", sy(3))
   .attr("r", 4)
-  .attr("fill", "#5b4dc7")
-  .attr("stroke", "none");
+  .attr("fill","#5b4dc7");
 svg.append("text")
-  .attr("x", sx(centerX)).attr("y", sy(centerY) - 20)
-  .attr("text-anchor", "middle").attr("font-size", 14)
-  .attr("font-weight", 500).attr("fill", "#5b4dc7")
-  .text("O(2,3)");
+  .attr("x", sx(2)+10).attr("y", sy(3)-8)
+  .attr("font-size",13).attr("fill","#5b4dc7").attr("font-weight","500")
+  .text("C(2, 3)");
 
-// Relation type label (asked)
+// Intersection points
+const P1 = {x: 3.701, y: 7.701};
+const P2 = {x: -2.701, y: 1.299};
+
+// P1
+svg.append("circle")
+  .attr("cx", sx(P1.x)).attr("cy", sy(P1.y))
+  .attr("r", 5)
+  .attr("fill","#d85a30");
 svg.append("text")
-  .attr("x", sx((xMin + xMax)/2)).attr("y", sy(yMin) + 30)
-  .attr("text-anchor", "middle").attr("font-size", 16)
-  .attr("font-weight", 600).attr("fill", "#d85a30")
-  .text("Relation: ?");
+  .attr("x", sx(P1.x)+12).attr("y", sy(P1.y)-8)
+  .attr("font-size",13).attr("fill","#d85a30").attr("font-weight","600")
+  .text("P₁(≈3.70, ≈7.70)");
+
+// P2
+svg.append("circle")
+  .attr("cx", sx(P2.x)).attr("cy", sy(P2.y))
+  .attr("r", 5)
+  .attr("fill","#d85a30");
+svg.append("text")
+  .attr("x", sx(P2.x)-14).attr("y", sy(P2.y)+18)
+  .attr("text-anchor","end").attr("font-size",13).attr("fill","#d85a30").attr("font-weight","600")
+  .text("P₂(≈−2.70, ≈1.30)");
+
+// Radius line from C to P1 (dashed construction)
+svg.append("line")
+  .attr("x1", sx(2)).attr("y1", sy(3))
+  .attr("x2", sx(P1.x)).attr("y2", sy(P1.y))
+  .attr("stroke","#888780").attr("stroke-dasharray","6 4").attr("stroke-width",1.2);
+
+// Radius line from C to P2 (dashed construction)
+svg.append("line")
+  .attr("x1", sx(2)).attr("y1", sy(3))
+  .attr("x2", sx(P2.x)).attr("y2", sy(P2.y))
+  .attr("stroke","#888780").attr("stroke-dasharray","6 4").attr("stroke-width",1.2);
+
+// Circle equation label
+svg.append("text")
+  .attr("x", sx(2)+sr(5)+6).attr("y", sy(3)+sr(5)*0.3)
+  .attr("font-size",12).attr("fill","#5b4dc7").attr("font-style","italic")
+  .text("(x−2)²+(y−3)²=25");
+
+// Line label
+svg.append("text")
+  .attr("x", sx(xMax-1.5)).attr("y", sy(xMax-1.5+4)-10)
+  .attr("font-size",12).attr("fill","#0f6e56").attr("font-style","italic")
+  .text("y = x+4");
 
 </script>
 </body>
