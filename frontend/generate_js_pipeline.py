@@ -545,46 +545,64 @@ def generate_diagram_openrouter(
                 "duration": time.time() - total_start,
                 "error": "Blueprint failed: {}".format(e)}
 
-    # Stage 3: JS code via OpenRouter
-    try:
-        system_prompt = get_js_prompt(render_dim)
-        user_message = (
-            "=== ORIGINAL QUESTION ===\n{q}\n\n"
-            "=== COMPUTATION NOTES ===\n{notes}\n=== END ==="
-        ).format(q=question_text, notes=math_notes)
+    # Stage 3: JS code via OpenRouter (with retry on failure)
+    system_prompt = get_js_prompt(render_dim)
+    user_message = (
+        "=== ORIGINAL QUESTION ===\n{q}\n\n"
+        "=== COMPUTATION NOTES ===\n{notes}\n=== END ==="
+    ).format(q=question_text, notes=math_notes)
 
-        js_resp = client.chat.completions.create(
-            model=codegen_model,
-            messages=[
+    for attempt in range(2):
+        try:
+            messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
-            ],
-            max_tokens=16384,
-            temperature=0.0,
-        )
-        content = js_resp.choices[0].message.content or ""
-        html = extract_html(content)
-        if not html:
-            return {"success": False, "html": "", "dimension": render_dim,
-                    "duration": time.time() - total_start,
-                    "error": "No valid HTML in DeepSeek response"}
+            ]
 
-        html = postprocess_js(html)
-        duration = time.time() - total_start
-        logger.info("Pipeline completed via OpenRouter in {:.1f}s".format(duration))
+            if attempt > 0:
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "--- PREVIOUS ATTEMPT FAILED ---\n"
+                        "The previous code had this error:\n{err}\n"
+                        "Please fix the issue and generate corrected code.\n"
+                        "--- END ERROR ---"
+                    ).format(err=last_error),
+                })
+                logger.warning("Retry attempt {} after error: {}".format(attempt, last_error[:80]))
 
-        return {
-            "success": True,
-            "html": html,
-            "dimension": render_dim,
-            "duration": round(duration, 1),
-            "error": None,
-        }
+            js_resp = client.chat.completions.create(
+                model=codegen_model,
+                messages=messages,
+                max_tokens=16384,
+                temperature=0.0,
+            )
+            content = js_resp.choices[0].message.content or ""
+            html = extract_html(content)
+            if not html:
+                last_error = "No valid HTML found in response"
+                continue
 
-    except Exception as e:
-        return {"success": False, "html": "", "dimension": render_dim,
-                "duration": time.time() - total_start,
-                "error": "JS generation failed: {}".format(e)}
+            html = postprocess_js(html)
+            duration = time.time() - total_start
+            logger.info("Pipeline completed via OpenRouter in {:.1f}s{}".format(
+                duration, " (after retry)" if attempt > 0 else ""))
+
+            return {
+                "success": True,
+                "html": html,
+                "dimension": render_dim,
+                "duration": round(duration, 1),
+                "error": None,
+            }
+
+        except Exception as e:
+            last_error = str(e)
+            logger.error("JS generation error (attempt {}): {}".format(attempt + 1, last_error))
+
+    return {"success": False, "html": "", "dimension": render_dim,
+            "duration": time.time() - total_start,
+            "error": "JS generation failed after retry: {}".format(last_error)}
 
 
 def main():
